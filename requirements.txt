@@ -1,0 +1,15 @@
+# Dependencias del caso BreastDCEDL.
+#
+# PyTorch NO esta aqui a proposito: la rueda depende de si la maquina tiene GPU
+# y de que version de CUDA lleve. Lo instala `configurar.ps1`, que lo detecta.
+# Si lo haces a mano:
+#   GPU NVIDIA : pip install torch --index-url https://download.pytorch.org/whl/cu124
+#   sin GPU    : pip install torch --index-url https://download.pytorch.org/whl/cpu
+
+numpy
+pandas
+pillow
+matplotlib
+scikit-learn
+requests
+tqdm
