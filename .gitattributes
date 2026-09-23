@@ -1,0 +1,13 @@
+# Normaliza finales de linea: el repo se usa en varias maquinas y sin esto
+# cada una reescribe ficheros enteros y el diff deja de ser legible.
+* text=auto eol=lf
+
+*.ps1   text eol=crlf
+*.bat   text eol=crlf
+*.cmd   text eol=crlf
+
+*.png   binary
+*.pdf   binary
+*.pt    binary
+*.pth   binary
+*.ipynb text eol=lf

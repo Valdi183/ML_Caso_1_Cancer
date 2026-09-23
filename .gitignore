@@ -1,0 +1,33 @@
+# --- Datos -----------------------------------------------------------------
+# 1,27 GB en 38.109 ficheros: nunca se versionan, se vuelven a descargar
+# con `python descargar_datos.py`.
+breastdcedl/
+bdcedl/
+data/
+datos/
+
+# Ruta del dataset: es propia de cada maquina
+.bdcedl_ruta
+
+# --- Entorno ---------------------------------------------------------------
+.venv/
+venv/
+env/
+__pycache__/
+*.py[cod]
+.ipynb_checkpoints/
+
+# --- Entrenamiento ---------------------------------------------------------
+runs/
+logs/
+checkpoints/
+*.pt
+*.pth
+*.ckpt
+# ... salvo los pesos que se entregan
+!modelos/*.pt
+
+# --- Sistema ---------------------------------------------------------------
+.DS_Store
+Thumbs.db
+desktop.ini
