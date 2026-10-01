@@ -26,6 +26,9 @@ checkpoints/
 *.ckpt
 # ... salvo los pesos que se entregan
 !modelos/*.pt
+# Las pruebas de `entrenar.py --rapido` no valen como resultado
+modelos/rapido_*
+resultados/rapido_*/
 
 # --- Sistema ---------------------------------------------------------------
 .DS_Store
