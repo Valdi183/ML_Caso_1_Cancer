@@ -1,0 +1,7 @@
+{
+    // El laboratorio es compartido. Sin esto, al hacer push VS Code ofrece
+    // "Sign in with GitHub": una sesion con acceso a TODA la cuenta que se queda
+    // guardada en el perfil del equipo. Desactivado, pide usuario y contrasena
+    // en un recuadro, y ahi se pega el token, que no se guarda en ningun sitio.
+    "github.gitAuthentication": false
+}
