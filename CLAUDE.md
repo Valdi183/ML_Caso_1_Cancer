@@ -36,8 +36,11 @@ dentro de la red, en `modelo.py`). Entrega hacia el 25-10-2026.
 
 - **Portatil** (Windows 11, i3, 8 GB, sin GPU): se escribe el codigo y se prueba con
   `python entrenar.py --rapido`. Entrenar de verdad aqui es inviable (~17 min/epoca).
-- **Laboratorio** (Linux, GPU NVIDIA): entrenamiento real. Se prepara con
-  `bash configurar.sh`; se puede dejar entrenando dia y noche (`nohup ... &` y
+- **Laboratorio** (Linux, GPU AMD RX 6700 XT, ROCm 7.14; no hay NVIDIA ni
+  `nvidia-smi`): entrenamiento real. PyTorch para ROCm usa la misma API
+  `torch.cuda` (`torch.cuda.is_available()` es True y el dispositivo se llama
+  "cuda"), asi que el codigo no cambia. Se prepara con `bash configurar.sh`, que
+  detecta la GPU AMD e instala la rueda ROCm; se puede dejar entrenando dia y noche (`nohup ... &` y
   bloquear pantalla, no cerrar sesion). **No se puede instalar nada** fuera de un
   entorno virtual: todo paquete va en `.venv`, y no hay sudo. Claude se usa desde
   el navegador, asi que alli Claude no ejecuta nada: el usuario pega codigo y salidas.
