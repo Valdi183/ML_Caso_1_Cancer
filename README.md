@@ -20,13 +20,24 @@ mayoritaria acierta ese 70,6 % sin haber aprendido nada.
 
 ## Puesta en marcha en una maquina nueva
 
-Tres ordenes. Funciona igual en el portatil y en el equipo del laboratorio.
+Tres ordenes. En Windows (el portatil):
 
 ```powershell
 git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
 cd ML_Caso_1_Cancer
 .\configurar.ps1
 ```
+
+En Linux (el equipo del laboratorio):
+
+```bash
+git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
+cd ML_Caso_1_Cancer
+bash configurar.sh                 # dataset en ../bdcedl; otra ruta con --datos
+```
+
+Los dos scripts hacen lo mismo. `configurar.sh` acepta `--datos`, `--sin-datos`
+y `--torch`, y ademas deja git configurado para un equipo compartido (ver mas abajo).
 
 `configurar.ps1` crea el entorno virtual, instala las dependencias, **detecta si
 hay GPU NVIDIA** y pone la rueda de PyTorch que corresponda, descarga las 38.109
@@ -100,10 +111,15 @@ entrenamiento, validacion = uc.particion(samples, fold_val=0)
 
 ```
 ML_Caso_1_Cancer/
-├── configurar.ps1          ← prepara una maquina nueva de cero
+├── configurar.ps1          ← prepara una maquina Windows de cero
+├── configurar.sh           ← lo mismo en Linux (laboratorio)
 ├── verificar_entorno.py    ← comprueba que todo esta listo
 ├── descargar_datos.py      ← baja las 38.109 imagenes (reanudable)
 ├── config.py               ← localiza el dataset sin rutas fijas
+├── eda.ipynb               ← analisis exploratorio
+├── modelo.py               ← la CNN y su preprocesado (unica definicion)
+├── entrenar.py             ← entrena y valida por paciente (--rapido para probar)
+├── CLAUDE.md               ← contexto del proyecto para el asistente
 ├── requirements.txt
 ├── modelos/                ← pesos entregables
 ├── resultados/             ← metricas, matrices de confusion, curvas
@@ -149,28 +165,45 @@ El equipo del laboratorio es de uso publico. Dos consecuencias:
 figuras, cuadernos— se commitea y se sube antes de levantarte de la silla. Asume
 que la sesion puede borrarse.
 
-**No dejes credenciales.** Al clonar, desactiva el almacen de credenciales solo
-para este repositorio:
+**No dejes credenciales.** El almacen de credenciales se desactiva solo para este
+repositorio (`configurar.sh` lo hace solo; a mano son estas tres lineas):
 
-```powershell
-git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
-cd ML_Caso_1_Cancer
+```bash
 git config --local credential.helper ""
 git config --local user.name  "Valdi183"
 git config --local user.email "vvaldcal@myuax.com"
+git config --show-origin --list | grep -E "credential|user\."   # comprobarlo
 ```
 
-`--local` escribe en `.git/config`, que desaparece con la carpeta. Nunca uses
-`--global` en una maquina compartida: eso queda en el perfil del equipo.
+`--local` escribe en `.git/config`, dentro de la carpeta. Nunca uses `--global`
+en una maquina compartida: eso queda en el perfil del equipo.
 
 Para subir, autentica con un **token personal** (GitHub ya no acepta contraseña):
 GitHub → Settings → Developer settings → Personal access tokens → Fine-grained,
-con permiso de escritura solo sobre este repositorio y caducidad corta. Lo pegas
-como contraseña cuando `git push` lo pida. Con el helper desactivado no se guarda
-en ningun sitio.
+con `Contents: Read and write` solo sobre este repositorio y caducidad corta. Al
+hacer `git push` pide usuario (`Valdi183`) y contraseña: ahi se pega el token. Con
+el helper vacio no se guarda en ningun sitio, y lo pedira en cada push.
 
-Al terminar la sesion: borra la carpeta del repositorio y la del dataset, y
-cierra sesion en el navegador.
+**VS Code:** `.vscode/settings.json` desactiva el "Sign in with GitHub", que daria
+acceso a toda la cuenta y quedaria guardado en el equipo. Si VS Code pregunta si
+confias en la carpeta, di que si (si no, ignora ese ajuste). Si aun asi aparece un
+aviso de iniciar sesion con GitHub, cancelalo.
+
+**Entrenamientos largos:** lanzalos para que sobrevivan a cerrar la terminal, y al
+irte bloquea la pantalla en vez de cerrar sesion:
+
+```bash
+nohup python entrenar.py --ponderada > entreno.log 2>&1 &
+tail -f entreno.log          # Ctrl+C sale del tail, el entrenamiento sigue
+```
+
+**Navegador:** GitHub, claude.ai o cualquier otra cuenta, siempre en ventana
+privada, y sin dejar que el navegador guarde contraseñas.
+
+Al terminar la sesion: `git push` y cierra la ventana privada (eso cierra las
+sesiones de GitHub y claude.ai). El repo y el dataset pueden quedarse en tu
+carpeta: quien se siente despues los vera, pero sin credenciales guardadas no puede
+subir nada a tu repositorio.
 
 ---
 
