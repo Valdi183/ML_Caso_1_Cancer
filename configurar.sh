@@ -2,9 +2,10 @@
 # Prepara el entorno del caso BreastDCEDL en una maquina Linux (el laboratorio).
 #
 # Equivalente a configurar.ps1: credenciales de git solo para este repositorio,
-# entorno virtual, dependencias, PyTorch con la rueda que corresponda a la GPU,
-# dataset descargado y verificacion final. No necesita sudo ni instala nada fuera
-# de .venv: solo usa git, python3 y, si existe, nvidia-smi.
+# entorno virtual, dependencias, PyTorch con la rueda que corresponda a la GPU
+# (ROCm si es AMD, CUDA si es NVIDIA, CPU si no hay ninguna), dataset descargado
+# y verificacion final. No necesita sudo ni instala nada fuera de .venv: solo usa
+# git, python3 y, si existen, /dev/kfd (AMD) o nvidia-smi (NVIDIA).
 #
 # Es idempotente: si algo ya esta hecho, lo detecta y sigue. Si se corta a
 # medias, se relanza y retoma donde estaba.
@@ -12,7 +13,7 @@
 #     bash configurar.sh                         # dataset en ../bdcedl, junto al repo
 #     bash configurar.sh --datos ~/otra/bdcedl
 #     bash configurar.sh --sin-datos             # solo el entorno de Python
-#     bash configurar.sh --torch cu118           # forzar rueda: cu128, cu126, cu118 o cpu
+#     bash configurar.sh --torch rocm7.2         # forzar rueda: rocmX.Y, cu128, cu126, cu118 o cpu
 
 set -euo pipefail
 
@@ -21,22 +22,44 @@ DATOS="$(dirname "$REPO")/bdcedl"
 SIN_DATOS=0
 TORCH=""
 
+# Ruedas ROCm de PyTorch: la que usa el laboratorio y otra de reserva por si falla.
+# Las que existen: https://download.pytorch.org/whl/torch/ (buscar "+rocm")
+ROCM_DEFECTO="rocm7.14"
+ROCM_RESERVA="rocm7.2"
+
 while [[ $# -gt 0 ]]; do
     case "$1" in
         --datos)     DATOS="$2"; shift 2 ;;
         --sin-datos) SIN_DATOS=1; shift ;;
         --torch)     TORCH="$2"; shift 2 ;;
-        -h|--help)   sed -n '2,15p' "$0"; exit 0 ;;
+        -h|--help)   sed -n '2,16p' "$0"; exit 0 ;;
         *)           echo "Opcion desconocida: $1 (mira --help)"; exit 1 ;;
     esac
 done
-case "$TORCH" in ""|cu128|cu126|cu118|cpu) ;; *) echo "--torch debe ser cu128, cu126, cu118 o cpu"; exit 1 ;; esac
+if ! [[ "$TORCH" =~ ^(|cu128|cu126|cu118|cpu|rocm[0-9]+\.[0-9]+)$ ]]; then
+    echo "--torch debe ser rocmX.Y (p. ej. $ROCM_DEFECTO), cu128, cu126, cu118 o cpu"; exit 1
+fi
 DATOS="$(realpath -m "$DATOS")"
 
 paso()  { printf '\n\033[36m== %s\033[0m\n' "$1"; }
 bien()  { printf '   \033[32mOK\033[0m  %s\n' "$1"; }
 aviso() { printf '   \033[33m!\033[0m   %s\n' "$1"; }
 falla() { printf '\n\033[31mFALLA\033[0m %s\n' "$1"; exit 1; }
+
+# Familia de una rueda: rocm7.14 -> rocm, cu126 -> cuda, cpu -> cpu
+familia() { case "$1" in rocm*) echo rocm ;; cu*) echo cuda ;; *) echo cpu ;; esac; }
+
+# Chip AMD segun el kernel (gfx_target_version, p. ej. 100301 = gfx1031). Se lee de
+# /sys porque ahi no influye HSA_OVERRIDE_GFX_VERSION, a diferencia de rocminfo.
+gfx_amd() {
+    local f v
+    for f in /sys/class/kfd/kfd/topology/nodes/*/properties; do
+        v="$(awk '$1 == "gfx_target_version" {print $2}' "$f" 2>/dev/null || true)"
+        if [[ -n "$v" && "$v" != "0" ]]; then echo "$v"; return 0; fi   # 0 = nodo de CPU
+    done
+    return 1
+}
+nombre_gfx() { printf 'gfx%d%d%x' $(($1 / 10000)) $(($1 / 100 % 100)) $(($1 % 100)); }
 
 echo
 echo "Configuracion del caso BreastDCEDL"
@@ -116,47 +139,119 @@ bien "numpy, pandas, pillow, matplotlib, scikit-learn, requests, tqdm"
 # --------------------------------------------------------------------------- #
 paso "5/7  PyTorch"
 # --------------------------------------------------------------------------- #
-if version="$("$PYV" -c 'import torch; print(torch.__version__)' 2>/dev/null)"; then
-    bien "torch $version ya instalado (borra .venv si quieres cambiar de rueda)"
-else
-    if [[ -z "$TORCH" ]]; then
-        if ! command -v nvidia-smi >/dev/null 2>&1; then
-            TORCH="cpu"
-            aviso "sin nvidia-smi: no hay GPU NVIDIA (o no hay driver), instalo la rueda CPU"
-        else
-            cuda="$(nvidia-smi 2>/dev/null | sed -n 's/.*CUDA Version: *\([0-9]*\.[0-9]*\).*/\1/p' | head -1 || true)"
-            if [[ -n "$cuda" ]]; then
-                mayor="${cuda%%.*}"; menor="${cuda#*.}"
-                bien "GPU NVIDIA detectada, driver con CUDA $cuda"
-                if   (( mayor >= 13 ));                 then TORCH="cu128"
-                elif (( mayor == 12 && menor >= 8 ));   then TORCH="cu128"
-                elif (( mayor == 12 ));                 then TORCH="cu126"
-                else                                         TORCH="cu118"
-                fi
-            else
-                TORCH="cu126"
-                aviso "no pude leer la version de CUDA en nvidia-smi, pruebo con cu126"
+# Que rueda pide esta maquina. AMD va primero: sin nvidia-smi no significa sin GPU.
+GFX=""
+if gfx="$(gfx_amd)"; then GFX="$gfx"; fi
+
+if [[ -z "$TORCH" ]]; then
+    if [[ -e /dev/kfd ]]; then
+        TORCH="$ROCM_DEFECTO"
+        bien "GPU AMD detectada (/dev/kfd)${GFX:+, chip $(nombre_gfx "$GFX")}: rueda $TORCH"
+        if [[ ! -r /dev/kfd || ! -w /dev/kfd ]]; then
+            aviso "no tienes permiso sobre /dev/kfd: tu usuario debe estar en el grupo render (orden groups)"
+        fi
+    elif ! command -v nvidia-smi >/dev/null 2>&1; then
+        TORCH="cpu"
+        aviso "ni /dev/kfd ni nvidia-smi: no hay GPU AMD ni NVIDIA (o no hay driver), instalo la rueda CPU"
+    else
+        cuda="$(nvidia-smi 2>/dev/null | sed -n 's/.*CUDA Version: *\([0-9]*\.[0-9]*\).*/\1/p' | head -1 || true)"
+        if [[ -n "$cuda" ]]; then
+            mayor="${cuda%%.*}"; menor="${cuda#*.}"
+            bien "GPU NVIDIA detectada, driver con CUDA $cuda"
+            if   (( mayor >= 13 ));                 then TORCH="cu128"
+            elif (( mayor == 12 && menor >= 8 ));   then TORCH="cu128"
+            elif (( mayor == 12 ));                 then TORCH="cu126"
+            else                                         TORCH="cu118"
             fi
+        else
+            TORCH="cu126"
+            aviso "no pude leer la version de CUDA en nvidia-smi, pruebo con cu126"
         fi
     fi
+fi
+DESEADA="$(familia "$TORCH")"
 
-    echo "   instalando torch ($TORCH), esto tarda unos minutos ..."
-    if ! "$PYV" -m pip install --disable-pip-version-check torch \
-            --index-url "https://download.pytorch.org/whl/$TORCH"; then
-        aviso "fallo la rueda $TORCH, reintento con la de PyPI por defecto"
+# Si ya hay torch, se comprueba que sea de la familia correcta (una rueda CPU o CUDA
+# en una maquina AMD funciona, pero entrena sin GPU sin avisar).
+INSTALAR=1
+if instalada="$("$PYV" -c 'import torch; print("rocm" if torch.version.hip else "cuda" if torch.version.cuda else "cpu")' 2>/dev/null | tail -n 1)" \
+        && [[ -n "$instalada" ]]; then
+    version="$("$PYV" -c 'import torch; print(torch.__version__)' 2>/dev/null | tail -n 1)"
+    if [[ "$instalada" == "$DESEADA" ]]; then
+        bien "torch $version ya instalado (borra .venv si quieres cambiar de rueda)"
+        INSTALAR=0
+    else
+        aviso "torch $version es la rueda $instalada, pero esta maquina pide $DESEADA: la cambio"
+        "$PYV" -m pip uninstall --quiet -y torch || falla "no se pudo desinstalar la rueda anterior"
+    fi
+fi
+
+if (( INSTALAR )); then
+    candidatas=("$TORCH")
+    if [[ "$DESEADA" == "rocm" && "$TORCH" != "$ROCM_RESERVA" ]]; then
+        candidatas+=("$ROCM_RESERVA")
+    fi
+    instalado=0
+    for rueda in "${candidatas[@]}"; do
+        echo "   instalando torch ($rueda), esto tarda unos minutos ..."
+        if "$PYV" -m pip install --disable-pip-version-check torch \
+                --index-url "https://download.pytorch.org/whl/$rueda"; then
+            instalado=1
+            TORCH="$rueda"
+            break
+        fi
+        aviso "fallo la rueda $rueda"
+    done
+    if (( ! instalado )); then
+        # La rueda de PyPI por defecto es la de NVIDIA: en una maquina AMD no usaria la GPU
+        if [[ "$DESEADA" == "rocm" ]]; then
+            falla "no se pudo instalar PyTorch para ROCm. Mira que ruedas rocmX.Y existen en
+      https://download.pytorch.org/whl/torch/ y relanza con --torch rocmX.Y"
+        fi
+        aviso "reintento con la de PyPI por defecto"
         "$PYV" -m pip install --disable-pip-version-check torch || falla "no se pudo instalar PyTorch"
     fi
-    version="$("$PYV" -c 'import torch; print(torch.__version__)')" \
+    version="$("$PYV" -c 'import torch; print(torch.__version__)' 2>/dev/null | tail -n 1)" \
         || falla "PyTorch se instalo pero no se puede importar"
     bien "torch $version instalado"
 fi
 
-gpu="$("$PYV" -c 'import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "SIN GPU")')"
-if [[ "$gpu" == "SIN GPU" ]]; then
-    aviso "PyTorch no ve ninguna GPU. Si esta maquina tiene una NVIDIA, borra .venv"
-    aviso "y relanza con --torch cu128 / cu126 / cu118 segun el CUDA que diga nvidia-smi."
+# Las Radeon RX 6000 que no son gfx1030 (6700 XT = gfx1031, etc.) no estan soportadas
+# oficialmente por ROCm, pero funcionan con los kernels de gfx1030. Si el sistema ya
+# fija HSA_OVERRIDE_GFX_VERSION (en el laboratorio lo hace /etc/environment) se respeta;
+# si no, se fija en el activate del .venv para que llegue tambien a nohup.
+if [[ "$DESEADA" == "rocm" ]]; then
+    if [[ -n "${HSA_OVERRIDE_GFX_VERSION:-}" ]]; then
+        bien "HSA_OVERRIDE_GFX_VERSION=$HSA_OVERRIDE_GFX_VERSION ya viene del sistema"
+    elif [[ -n "$GFX" ]] && (( GFX > 100300 && GFX < 100400 )); then
+        if ! grep -q 'HSA_OVERRIDE_GFX_VERSION' "$VENV/bin/activate"; then
+            {
+                echo
+                echo "# Anadido por configurar.sh: ROCm no soporta oficialmente $(nombre_gfx "$GFX");"
+                echo "# se usan los kernels de gfx1030, de la misma familia (RDNA2)."
+                echo "export HSA_OVERRIDE_GFX_VERSION=10.3.0"
+            } >> "$VENV/bin/activate"
+        fi
+        export HSA_OVERRIDE_GFX_VERSION=10.3.0
+        bien "chip $(nombre_gfx "$GFX"): HSA_OVERRIDE_GFX_VERSION=10.3.0 fijado en .venv/bin/activate"
+    fi
+fi
+
+gpu="$("$PYV" -c 'import torch; print(torch.cuda.get_device_name(0) if torch.cuda.is_available() else "SIN GPU")' \
+        2>/dev/null | tail -n 1 || true)"
+if [[ -z "$gpu" || "$gpu" == "SIN GPU" ]]; then
+    case "$DESEADA" in
+        rocm)
+            aviso "PyTorch (ROCm) no ve la GPU AMD. Comprueba que estas en el grupo render (orden groups)"
+            aviso "y, si el chip no es gfx1030, el valor de HSA_OVERRIDE_GFX_VERSION." ;;
+        cuda)
+            aviso "PyTorch no ve ninguna GPU. Si esta maquina tiene una NVIDIA, borra .venv"
+            aviso "y relanza con --torch cu128 / cu126 / cu118 segun el CUDA que diga nvidia-smi." ;;
+        *)
+            aviso "PyTorch funcionara solo con CPU: sirve para --rapido, no para entrenar de verdad." ;;
+    esac
 else
-    bien "PyTorch usa la GPU: $gpu"
+    bien "PyTorch usa la GPU: $gpu (rueda $(familia "$TORCH"))"
 fi
 
 # --------------------------------------------------------------------------- #
