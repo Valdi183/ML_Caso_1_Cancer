@@ -2,18 +2,19 @@
 """
 Descarga el dataset del caso BreastDCEDL desde el bucket publico.
 
-Este fichero es autonomo: puedes descargarlo suelto y ejecutarlo en una carpeta
-vacia. Se baja el indice, la documentacion y las 38.109 imagenes.
+Este fichero es autonomo (solo necesita requests): tambien funciona suelto,
+como `python descargar.py`. Se baja el indice, la documentacion y las 38.109
+imagenes.
 
     pip install requests
-    python descargar_datos.py
+    python -m src.data.descargar
 
 Opciones utiles:
 
-    python descargar_datos.py --destino C:\bdcedl     ruta corta (Windows)
-    python descargar_datos.py --solo-test              solo el conjunto de prueba
-    python descargar_datos.py --pacientes 5            5 pacientes, para probar
-    python descargar_datos.py --hilos 32               mas paralelismo
+    python -m src.data.descargar --destino C:\bdcedl     ruta corta (Windows)
+    python -m src.data.descargar --solo-test              solo el conjunto de prueba
+    python -m src.data.descargar --pacientes 5            5 pacientes, para probar
+    python -m src.data.descargar --hilos 32               mas paralelismo
 
 Es reanudable: si se corta, vuelve a lanzarlo y solo bajara lo que falte.
 """
@@ -22,7 +23,6 @@ from __future__ import annotations
 
 import argparse
 import csv
-import io
 import sys
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path

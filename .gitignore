@@ -1,9 +1,10 @@
 # --- Datos -----------------------------------------------------------------
 # 1,27 GB en 38.109 ficheros: nunca se versionan, se vuelven a descargar
-# con `python descargar_datos.py`.
+# con `python -m src.data.descargar`. data/ existe solo como sitio posible.
+data/*
+!data/.gitkeep
 breastdcedl/
 bdcedl/
-data/
 datos/
 
 # Ruta del dataset: es propia de cada maquina
@@ -13,25 +14,37 @@ datos/
 .venv/
 venv/
 env/
+.conda/
 __pycache__/
 *.py[cod]
 .ipynb_checkpoints/
+.pytest_cache/
+.ruff_cache/
+# Secretos (no hay ninguno en este proyecto, pero por si acaso)
+.env
+
+# --- Pesos -----------------------------------------------------------------
+# Ningun peso se sube por defecto. Los que se entregan se anaden a proposito:
+#     git add -f models/<nombre>.pt
+# (GitHub rechaza ficheros de mas de 100 MB; los de esta red pesan ~1,2 MB)
+*.pt
+*.pth
+*.ckpt
+*.onnx
 
 # --- Entrenamiento ---------------------------------------------------------
 runs/
 logs/
-*.log
 checkpoints/
-*.pt
-*.pth
-*.ckpt
-# ... salvo los pesos que se entregan
-!modelos/*.pt
-# Las pruebas de `entrenar.py --rapido` no valen como resultado
-modelos/rapido_*
-resultados/rapido_*/
+*.log
+nohup.out
+# Las pruebas de `--rapido` no valen como resultado
+results/rapido_*/
 
-# --- Sistema ---------------------------------------------------------------
+# --- Editor y sistema ------------------------------------------------------
+# .vscode/ SI se versiona: settings.json desactiva el login de GitHub en el
+# equipo compartido del laboratorio.
+.idea/
 .DS_Store
 Thumbs.db
 desktop.ini

@@ -1,21 +1,31 @@
-r"""Localiza el dataset BreastDCEDL sin rutas escritas a mano.
+r"""Configuracion del proyecto: carpetas, hiperparametros por defecto y dataset.
 
+Hiperparametros
+---------------
+`DEFECTO` guarda la semilla y los hiperparametros con los que se entrena si no se
+dice otra cosa. Son parte del experimento: van versionados en git, y
+`src/training/entrenar.py` los usa como valores por defecto de sus opciones
+(`--lr`, `--lote`...). Lo que se cambie por linea de comandos queda escrito en el
+`config.json` de cada experimento.
+
+Dataset
+-------
 El dataset NO vive en el repositorio: son 1,27 GB en 38.109 ficheros. Cada
 maquina lo guarda en un sitio distinto (el portatil en `C:\bdcedl`, el equipo
 del laboratorio donde haya disco rapido), asi que ningun script debe llevar una
 ruta fija dentro. Se resuelve en este orden:
 
     1. la variable de entorno  BDCEDL
-    2. el fichero  .bdcedl_ruta  junto a este modulo (lo escribe configurar.ps1)
-    3. rutas habituales: ./breastdcedl, C:/bdcedl, ~/bdcedl, D:/bdcedl
+    2. el fichero  .bdcedl_ruta  en la raiz del repo (lo escribe configurar.ps1)
+    3. rutas habituales: data/bdcedl, ../breastdcedl, C:/bdcedl, ~/bdcedl, D:/bdcedl
 
-Uso desde cualquier script o cuaderno del repositorio:
+Uso desde cualquier script, test o cuaderno (con la raiz del repo en sys.path):
 
-    import config
+    from src import config
     uc = config.utils()            # utils_caso.py ya importable
     samples = uc.cargar_samples()
 
-`config.RAIZ` es la carpeta del dataset ya validada.
+`config.RAIZ` es la carpeta del dataset ya validada; `config.REPO`, la del repo.
 """
 
 from __future__ import annotations
@@ -24,8 +34,22 @@ import os
 import sys
 from pathlib import Path
 
-AQUI = Path(__file__).resolve().parent
-FICHERO_RUTA = AQUI / ".bdcedl_ruta"
+#: Raiz del repositorio (este fichero esta en src/)
+REPO = Path(__file__).resolve().parents[1]
+MODELOS = REPO / "models"
+RESULTADOS = REPO / "results"
+FIGURAS = REPO / "docs" / "figuras"
+FICHERO_RUTA = REPO / ".bdcedl_ruta"
+
+#: Semilla e hiperparametros por defecto del entrenamiento
+DEFECTO = {
+    "semilla": 42,
+    "epocas": 40,
+    "paciencia": 8,      # epocas sin mejorar el AUC de validacion antes de parar
+    "lote": 32,
+    "lr": 1e-3,
+    "wd": 1e-4,          # weight decay de AdamW
+}
 
 #: Ficheros que tienen que existir para considerar valida una carpeta.
 TESTIGOS = ("metadata/samples.csv", "utils_caso.py")
@@ -47,8 +71,10 @@ def _candidatas() -> list[Path]:
             rutas.append(Path(guardada))
 
     rutas += [
-        AQUI / "breastdcedl",
-        AQUI.parent / "breastdcedl",
+        REPO / "data" / "bdcedl",
+        REPO / "data" / "breastdcedl",
+        REPO.parent / "bdcedl",                # junto al repo (laboratorio)
+        REPO.parent / "breastdcedl",
         Path("C:/bdcedl"),
         Path("D:/bdcedl"),
         Path.home() / "bdcedl",
@@ -72,7 +98,7 @@ def raiz_datos() -> Path:
         "Descargalo y apunta a el de una de estas formas:\n"
         # Ojo: "\b" es el caracter de retroceso, no un escape invalido, asi que
         # Python no avisa. Las contrabarras de rutas de Windows van dobladas.
-        "  python descargar_datos.py --destino C:\\bdcedl\n"
+        "  python -m src.data.descargar --destino C:\\bdcedl\n"
         "  setx BDCEDL C:\\bdcedl          (y abre una terminal nueva)\n"
         f"  echo C:\\bdcedl > {FICHERO_RUTA}\n"
         "Buscado en:\n  " + "\n  ".join(str(c) for c in _candidatas())

@@ -5,7 +5,7 @@ Comprueba que esta maquina puede entrenar el caso BreastDCEDL.
 Lanzalo despues de configurar un equipo nuevo, o cuando algo deje de funcionar.
 No modifica nada: solo mira y dice que falta.
 
-    python verificar_entorno.py
+    python -m src.utils.verificar_entorno      (desde la raiz del repo)
 """
 
 from __future__ import annotations
@@ -32,7 +32,7 @@ def comprobar(etiqueta: str, funcion):
 
 
 # --------------------------------------------------------------------------- #
-print(f"\n=== Entorno =================================================")
+print("\n=== Entorno =================================================")
 print(f"       maquina: {platform.node()}  ({platform.system()} {platform.release()})")
 print(f"       python : {sys.version.split()[0]}  en  {sys.prefix}")
 
@@ -45,7 +45,7 @@ if Path(sys.prefix) == Path(sys.base_prefix):
 
 
 # --------------------------------------------------------------------------- #
-print(f"\n=== Paquetes ================================================")
+print("\n=== Paquetes ================================================")
 
 def version_de(modulo: str):
     def _f():
@@ -59,7 +59,7 @@ for nombre, modulo in [("numpy", "numpy"), ("pandas", "pandas"), ("pillow", "PIL
 
 
 # --------------------------------------------------------------------------- #
-print(f"\n=== PyTorch =================================================")
+print("\n=== PyTorch =================================================")
 hay_gpu = False
 try:
     import torch
@@ -78,10 +78,10 @@ except ImportError as e:
 
 
 # --------------------------------------------------------------------------- #
-print(f"\n=== Dataset =================================================")
+print("\n=== Dataset =================================================")
 raiz = None
 try:
-    import config
+    from src import config
     raiz = config.raiz_datos()
     print(f"{OK}  carpeta: {raiz}")
 except Exception as e:
@@ -92,7 +92,7 @@ if raiz is not None:
     def cuenta_imagenes():
         n = sum(1 for _ in (raiz / "dataset").rglob("*.png"))
         if n != 38109:
-            raise RuntimeError(f"{n} de 38109 PNG. Relanza descargar_datos.py, es reanudable.")
+            raise RuntimeError(f"{n} de 38109 PNG. Relanza python -m src.data.descargar, es reanudable.")
         return f"{n} PNG"
 
     comprobar("imagenes", cuenta_imagenes)
@@ -130,7 +130,7 @@ if raiz is not None:
 
 # --------------------------------------------------------------------------- #
 if raiz is not None and "torch" not in problemas:
-    print(f"\n=== Velocidad ===============================================")
+    print("\n=== Velocidad ===============================================")
     try:
         import torch
         import torch.nn as nn
@@ -171,7 +171,7 @@ if raiz is not None and "torch" not in problemas:
 
 
 # --------------------------------------------------------------------------- #
-print(f"\n=============================================================")
+print("\n=============================================================")
 if problemas:
     print(f"{len(problemas)} problema(s): {', '.join(problemas)}")
     sys.exit(1)

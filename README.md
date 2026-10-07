@@ -20,24 +20,22 @@ mayoritaria acierta ese 70,6 % sin haber aprendido nada.
 
 ## Puesta en marcha en una maquina nueva
 
-Tres ordenes. En Windows (el portatil):
+**Laboratorio (Linux, GPU AMD con ROCm):** los equipos ya vienen preparados, no
+hay que instalar nada. Basta con clonar y configurar git para un equipo compartido
+(ver [Trabajar en un equipo compartido](#trabajar-en-un-equipo-compartido)):
+
+```bash
+git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
+cd ML_Caso_1_Cancer
+```
+
+**Windows (el portatil):** tres ordenes:
 
 ```powershell
 git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
 cd ML_Caso_1_Cancer
 .\configurar.ps1
 ```
-
-En Linux (el equipo del laboratorio):
-
-```bash
-git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
-cd ML_Caso_1_Cancer
-bash configurar.sh                 # dataset en ../bdcedl; otra ruta con --datos
-```
-
-Los dos scripts hacen lo mismo. `configurar.sh` acepta `--datos`, `--sin-datos`
-y `--torch`, y ademas deja git configurado para un equipo compartido (ver mas abajo).
 
 `configurar.ps1` crea el entorno virtual, instala las dependencias, **detecta si
 hay GPU NVIDIA** y pone la rueda de PyTorch que corresponda, descarga las 38.109
@@ -65,7 +63,7 @@ Eso afecta solo a esa ventana de terminal y no toca la configuracion del equipo.
 
 ```powershell
 .\.venv\Scripts\Activate.ps1
-python verificar_entorno.py
+python -m src.utils.verificar_entorno
 ```
 
 Revisa paquetes, GPU, las 38.109 imagenes, la particion sin fuga por paciente y
@@ -80,21 +78,21 @@ El dataset **no esta en el repositorio** y nunca debe estarlo: son 1,27 GB en
 38.109 ficheros. Se descarga aparte y cada maquina lo guarda donde quiera.
 
 ```powershell
-python descargar_datos.py --destino C:\bdcedl --hilos 32
+python -m src.data.descargar --destino C:\bdcedl --hilos 32
 ```
 
-Ningun script lleva la ruta escrita dentro. [`config.py`](config.py) la resuelve
-sola, en este orden:
+Ningun script lleva la ruta escrita dentro. [`src/config.py`](src/config.py) la
+resuelve sola, en este orden:
 
 1. la variable de entorno `BDCEDL`
-2. el fichero `.bdcedl_ruta` (lo escribe `configurar.ps1`, no se versiona)
-3. rutas habituales: `./breastdcedl`, `C:\bdcedl`, `D:\bdcedl`, `~/bdcedl`,
-   `/content/breastdcedl` en Colab
+2. el fichero `.bdcedl_ruta` en la raiz (lo escribe `configurar.ps1`, no se versiona)
+3. rutas habituales: `data/bdcedl`, `../bdcedl` (junto al repo), `C:\bdcedl`,
+   `D:\bdcedl`, `~/bdcedl`, `/content/breastdcedl` en Colab
 
-Asi que desde cualquier script o cuaderno del repositorio:
+Asi que desde cualquier script, test o cuaderno del repositorio:
 
 ```python
-import config
+from src import config
 
 uc = config.utils()               # utils_caso.py ya importable
 samples = uc.cargar_samples()
@@ -109,25 +107,72 @@ entrenamiento, validacion = uc.particion(samples, fold_val=0)
 
 ## Estructura
 
+Sigue la plantilla de la asignatura (UAX). Todo el codigo vive en `src/` y se
+ejecuta **desde la raiz del repositorio** como modulo: `python -m src.<...>`.
+
 ```
 ML_Caso_1_Cancer/
-├── configurar.ps1          ← prepara una maquina Windows de cero
-├── configurar.sh           ← lo mismo en Linux (laboratorio)
-├── verificar_entorno.py    ← comprueba que todo esta listo
-├── descargar_datos.py      ← baja las 38.109 imagenes (reanudable)
-├── config.py               ← localiza el dataset sin rutas fijas
-├── eda.ipynb               ← analisis exploratorio
-├── modelo.py               ← la CNN y su preprocesado (unica definicion)
-├── entrenar.py             ← entrena y valida por paciente (--rapido para probar)
-├── CLAUDE.md               ← contexto del proyecto para el asistente
-├── requirements.txt
-├── modelos/                ← pesos entregables
-├── resultados/             ← metricas, matrices de confusion, curvas
-└── informe/figuras/        ← figuras del informe
+├── .github/workflows/ci.yml   ← CI: ruff + pytest en cada push
+├── app/                       ← demo web (pendiente)
+├── data/                      ← sitio opcional para el dataset (no se versiona)
+├── docs/figuras/              ← figuras del informe
+├── models/                    ← pesos .pt (solo se versionan los que se entregan)
+├── notebooks/eda.ipynb        ← analisis exploratorio
+├── presentations/             ← diapositivas
+├── results/<experimento>/     ← config, historial, metricas, curvas de cada entreno
+├── src/
+│   ├── config.py              ← carpetas, semilla e hiperparametros, dataset
+│   ├── data/descargar.py      ← baja las 38.109 imagenes (reanudable)
+│   ├── data/carga.py          ← cortes en memoria, lotes, aumentado
+│   ├── models/cnn.py          ← la CNN y su preprocesado (unica definicion)
+│   ├── training/entrenar.py   ← entrena y valida por paciente (--rapido para probar)
+│   └── utils/                 ← semilla, metricas y curvas, verificar_entorno
+├── tests/                     ← tests de la red (no necesitan el dataset)
+├── cola.sh                    ← varios entrenamientos seguidos (laboratorio)
+├── configurar.ps1             ← prepara el portatil Windows de cero
+├── CLAUDE.md                  ← contexto del proyecto para el asistente
+├── requirements.txt, ruff.toml, pytest.ini
 ```
 
 El dataset aporta ademas `utils_caso.py`, que ya resuelve la particion por
 paciente, el `Dataset` de PyTorch y la agregacion de cortes a paciente.
+
+**Entorno:** `venv` + `pip` con `requirements.txt` (la opcion 2 de la plantilla).
+PyTorch se instala aparte porque su rueda depende de la GPU (ver `requirements.txt`).
+
+---
+
+## Entrenar
+
+```bash
+python -m src.training.entrenar --rapido                       # prueba de minutos (CPU)
+python -m src.training.entrenar --ponderada --aumentado        # entrenamiento real
+python -m src.training.entrenar --help                         # todas las opciones
+nohup bash cola.sh > cola.log 2>&1 &                           # la cola del laboratorio
+```
+
+La semilla y los hiperparametros por defecto (`epocas`, `lote`, `lr`, `wd`,
+`paciencia`) estan en `src/config.py` (`DEFECTO`). Cada experimento guarda su
+configuracion exacta en `results/<nombre>/config.json`.
+
+Los pesos van a `models/<nombre>.pt`, que git ignora. Solo los que se entregan
+se suben, a proposito: `git add -f models/<nombre>.pt`.
+
+---
+
+## Tests y CI
+
+```bash
+pip install ruff pytest
+ruff check .        # estilo y errores comunes
+pytest -q           # tests de la red: formas, normalizacion, atencion, guardar/cargar
+```
+
+GitHub ejecuta lo mismo en cada push a `main` (pestaña *Actions* del repositorio).
+
+**Commits:** [Conventional Commits](https://www.conventionalcommits.org/es/v1.0.0/),
+en imperativo: `feat(models): añadir pooling con atencion`, `fix(data): ...`,
+`docs: ...`, `chore: ...`. Un commit, un proposito.
 
 ---
 
@@ -165,8 +210,8 @@ El equipo del laboratorio es de uso publico. Dos consecuencias:
 figuras, cuadernos— se commitea y se sube antes de levantarte de la silla. Asume
 que la sesion puede borrarse.
 
-**No dejes credenciales.** El almacen de credenciales se desactiva solo para este
-repositorio (`configurar.sh` lo hace solo; a mano son estas tres lineas):
+**No dejes credenciales.** Nada mas clonar, desactiva el almacen de credenciales
+solo para este repositorio y pon tu autor:
 
 ```bash
 git config --local credential.helper ""
@@ -193,7 +238,7 @@ aviso de iniciar sesion con GitHub, cancelalo.
 irte bloquea la pantalla en vez de cerrar sesion:
 
 ```bash
-nohup python entrenar.py --ponderada > entreno.log 2>&1 &
+nohup python -m src.training.entrenar --ponderada > entreno.log 2>&1 &
 tail -f entreno.log          # Ctrl+C sale del tail, el entrenamiento sigue
 ```
 

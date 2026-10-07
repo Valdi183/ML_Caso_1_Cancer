@@ -221,13 +221,13 @@ if ($SinDatos) {
     } else {
         Write-Host "   descargando 38.109 imagenes (1,27 GB) en $Datos ..."
     }
-    & $pyVenv (Join-Path $repo "descargar_datos.py") --destino $Datos --hilos 32
+    & $pyVenv (Join-Path $repo "src\data\descargar.py") --destino $Datos --hilos 32
     if ($LASTEXITCODE -ne 0) {
         throw "La descarga no termino. Relanza este script: es reanudable y solo bajara lo que falte."
     }
 
     $codigo = "import sys; sys.path.insert(0, r'$repo'); " +
-              "import config; print(config.fijar_ruta(r'$Datos'))"
+              "from src import config; print(config.fijar_ruta(r'$Datos'))"
     Ejecuta $pyVenv @("-c", $codigo) "guardar la ruta del dataset"
     Bien "ruta guardada en .bdcedl_ruta"
 }
@@ -235,7 +235,9 @@ if ($SinDatos) {
 # --------------------------------------------------------------------------- #
 Paso "7/7  Verificacion"
 # --------------------------------------------------------------------------- #
-& $pyVenv (Join-Path $repo "verificar_entorno.py")
+Push-Location $repo
+& $pyVenv -m src.utils.verificar_entorno
+Pop-Location
 $falloVerificacion = ($LASTEXITCODE -ne 0)
 
 Write-Host ""
