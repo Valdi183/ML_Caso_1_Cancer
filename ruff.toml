@@ -1,0 +1,16 @@
+# Configuracion de ruff (lint). Lo ejecuta la CI en cada push: `ruff check .`
+line-length = 110
+target-version = "py310"
+
+[lint]
+# E/W estilo, F errores (imports sin usar, nombres sin definir), I orden de imports
+select = ["E", "F", "W", "I"]
+
+[lint.isort]
+known-first-party = ["src"]
+
+[lint.per-file-ignores]
+# Cuadernos: los imports van despues de poner la raiz del repo en sys.path, torch
+# va antes que matplotlib a proposito (al reves el kernel muere en Windows) y las
+# lineas largas de exploracion no merecen partirse.
+"*.ipynb" = ["E402", "E501", "I001"]
