@@ -1,16 +1,16 @@
 {
-  "nombre": "ponderada_aum_lr3e-4_f0",
+  "nombre": "ponderada_aum_max_f0",
   "fold": 0,
   "ponderada": true,
   "realce": false,
   "sin_late": false,
   "aumentado": true,
   "normalizar": false,
-  "pooling": "media",
+  "pooling": "max",
   "epocas": 40,
   "paciencia": 8,
   "lote": 32,
-  "lr": 0.0003,
+  "lr": 0.001,
   "wd": 0.0001,
   "semilla": 42,
   "rapido": false,
@@ -28,7 +28,7 @@
     ],
     "dropout": 0.5,
     "normalizar": false,
-    "pooling": "media"
+    "pooling": "max"
   },
   "cortes_train": 8759,
   "cortes_val": 2186,

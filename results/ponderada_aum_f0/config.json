@@ -5,6 +5,8 @@
   "realce": false,
   "sin_late": false,
   "aumentado": true,
+  "normalizar": false,
+  "pooling": "media",
   "epocas": 40,
   "paciencia": 8,
   "lote": 32,
@@ -24,7 +26,9 @@
       64,
       128
     ],
-    "dropout": 0.5
+    "dropout": 0.5,
+    "normalizar": false,
+    "pooling": "media"
   },
   "cortes_train": 8759,
   "cortes_val": 2186,

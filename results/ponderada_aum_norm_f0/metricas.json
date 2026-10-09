@@ -1,0 +1,47 @@
+{
+  "mejor_epoca": 17,
+  "auc_val_media": 0.5549395161290323,
+  "auc_por_agregacion": {
+    "mean": 0.5549395161290323,
+    "max": 0.5482862903225806,
+    "median": 0.5530241935483872,
+    "voto": 0.558366935483871
+  },
+  "auc_por_cohorte": {
+    "duke": 0.6275659824046921,
+    "spy1": 0.4117647058823529,
+    "spy2": 0.5418653442685486
+  },
+  "umbral_05": {
+    "pacientes": 219,
+    "metodo": "mean",
+    "umbral": 0.5,
+    "matriz_confusion": {
+      "VP": 48,
+      "VN": 50,
+      "FP": 105,
+      "FN": 16
+    },
+    "accuracy": 0.4474885844748858,
+    "sensibilidad": 0.75,
+    "especificidad": 0.3225806451612903,
+    "precision": 0.3137254901960784,
+    "auc": 0.5549395161290323
+  },
+  "umbral_youden": {
+    "pacientes": 219,
+    "metodo": "mean",
+    "umbral": 0.6245151340961457,
+    "matriz_confusion": {
+      "VP": 30,
+      "VN": 110,
+      "FP": 45,
+      "FN": 34
+    },
+    "accuracy": 0.639269406392694,
+    "sensibilidad": 0.46875,
+    "especificidad": 0.7096774193548387,
+    "precision": 0.4,
+    "auc": 0.5549395161290323
+  }
+}

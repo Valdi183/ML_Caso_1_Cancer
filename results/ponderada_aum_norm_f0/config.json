@@ -1,16 +1,16 @@
 {
-  "nombre": "ponderada_aum_lr3e-4_f0",
+  "nombre": "ponderada_aum_norm_f0",
   "fold": 0,
   "ponderada": true,
   "realce": false,
   "sin_late": false,
   "aumentado": true,
-  "normalizar": false,
+  "normalizar": true,
   "pooling": "media",
   "epocas": 40,
   "paciencia": 8,
   "lote": 32,
-  "lr": 0.0003,
+  "lr": 0.001,
   "wd": 0.0001,
   "semilla": 42,
   "rapido": false,
@@ -27,7 +27,7 @@
       128
     ],
     "dropout": 0.5,
-    "normalizar": false,
+    "normalizar": true,
     "pooling": "media"
   },
   "cortes_train": 8759,
