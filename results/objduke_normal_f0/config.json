@@ -1,0 +1,38 @@
+{
+  "nombre": "objduke_normal_f0",
+  "fold": 0,
+  "ponderada": false,
+  "realce": false,
+  "sin_late": false,
+  "aumentado": false,
+  "normalizar": false,
+  "pooling": "media",
+  "objetivo": "duke",
+  "epocas": 15,
+  "paciencia": 8,
+  "lote": 32,
+  "lr": 0.001,
+  "wd": 0.0001,
+  "semilla": 42,
+  "rapido": false,
+  "dispositivo": "cuda",
+  "parametros": 294129,
+  "pos_weight": 4.295646916565901,
+  "arquitectura": {
+    "realce": false,
+    "sin_late": false,
+    "filtros": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "dropout": 0.5,
+    "normalizar": false,
+    "pooling": "media"
+  },
+  "cortes_train": 8759,
+  "cortes_val": 2186,
+  "pacientes_train": 878,
+  "pacientes_val": 219
+}
