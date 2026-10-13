@@ -17,31 +17,40 @@ import torch.nn.functional as F
 
 from src import config
 
-OBJETIVOS = ("pcr", "duke", "spy1", "spy2")
+#: Etiquetas de diagnostico: que es capaz de ver la red en la imagen.
+#: Nunca son ENTRADA de la red: solo sustituyen a pCR como respuesta a aprender.
+COHORTES = ("duke", "spy1", "spy2")
+SUBTIPOS = {"triple": "TripleNeg", "her2": "HER2pos", "hrpos": "HRposHER2neg"}
+OBJETIVOS = ("pcr", *COHORTES, *SUBTIPOS)
 
 
-def aplicar_objetivo(filas: pd.DataFrame, objetivo: str, cohorte_de: pd.Series) -> pd.DataFrame:
-    """Cambia la etiqueta que se aprende, para comprobar el circuito.
+def aplicar_objetivo(filas: pd.DataFrame, objetivo: str, pacientes: pd.DataFrame) -> pd.DataFrame:
+    """Cambia la etiqueta que se aprende, para saber que ve la red en la imagen.
 
-    Con "pcr" no toca nada. Con el nombre de una cohorte, la columna `pCR` pasa a
-    valer 1 si la paciente es de esa cohorte y 0 si no. Se reutiliza la columna
-    `pCR` a proposito: asi la particion, el pos_weight y la evaluacion por
-    paciente de utils_caso funcionan sin cambios.
+    Con "pcr" no toca nada. Si no, la columna `pCR` pasa a valer 1/0 segun:
+      - una cohorte ("duke"...): si la paciente es de ese hospital. Se ve en la
+        imagen (cada hospital procesa distinto): comprueba que el codigo funciona.
+      - un subtipo ("triple", "her2", "hrpos"): si el tumor es de ese subtipo. Es
+        biologia del tumor: comprueba si la red capta informacion del tumor.
+    Se reutiliza la columna `pCR` a proposito: asi la particion, el pos_weight y la
+    evaluacion por paciente de utils_caso funcionan sin cambios. Las pacientes sin
+    el dato (subtipo desconocido) se quitan.
 
-    La cohorte SI se ve en la imagen (cada hospital procesa distinto), asi que una
-    red que funcione deberia acertarla casi siempre. Si no, el fallo esta en el
-    codigo (datos, etiquetas, entrenamiento), no en la dificultad de la pCR.
-
-    `cohorte_de`: patient_id -> cohorte ("spy1", "spy2", "duke").
+    `pacientes`: tabla de pacientes de utils_caso indexada por `pid`.
     """
     if objetivo not in OBJETIVOS:
         raise ValueError(f"objetivo '{objetivo}' no existe; opciones: {OBJETIVOS}")
     if objetivo == "pcr":
         return filas
-    cohorte = filas.patient_id.map(cohorte_de)
-    if cohorte.isna().any():
-        raise ValueError("hay pacientes sin cohorte conocida")
-    return filas.assign(pCR=(cohorte == objetivo).astype(int).values)
+    if objetivo in COHORTES:
+        etiqueta = (pacientes.dataset == objetivo).astype(float).where(pacientes.dataset.notna())
+    else:
+        etiqueta = pacientes[SUBTIPOS[objetivo]]
+    y = filas.patient_id.map(etiqueta)
+    if y.isna().all():
+        raise ValueError(f"ninguna paciente tiene dato para '{objetivo}'")
+    con_dato = y.notna().values
+    return filas[con_dato].assign(pCR=y[con_dato].astype(int).values)
 
 
 def submuestra(filas: pd.DataFrame, pacientes: int, semilla: int) -> pd.DataFrame:

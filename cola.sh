@@ -14,15 +14,14 @@ cd "$(dirname "${BASH_SOURCE[0]}")"
 PY=python
 [[ -x .venv/bin/python ]] && PY=.venv/bin/python
 
-# Todos parten de la misma base (--ponderada --aumentado) y cambian UNA cosa,
-# para que la diferencia de AUC se pueda atribuir a ese cambio.
+# Diagnostico: ¿ve la red el tumor? Aprende el SUBTIPO tumoral en lugar de pCR
+# (la red solo recibe la imagen; el subtipo es la respuesta a adivinar).
+# Referencia: la cohorte sola da AUC 0,52-0,55 para el subtipo; la cohorte Duke
+# se aprendio con AUC 0,998 (results/objduke_normal_f0).
 experimentos=(
-    "--ponderada --aumentado"
-    "--ponderada --aumentado --lr 3e-4 --nombre ponderada_aum_lr3e-4_f0"
-    "--ponderada --aumentado --realce"
-    "--ponderada --aumentado --normalizar"
-    "--ponderada --aumentado --pooling max"
-    "--ponderada --aumentado --pooling atencion"
+    "--objetivo triple --epocas 20"
+    "--objetivo her2 --epocas 20"
+    "--objetivo hrpos --epocas 20"
 )
 
 for opciones in "${experimentos[@]}"; do

@@ -58,8 +58,8 @@ def argumentos() -> argparse.Namespace:
     p.add_argument("--pooling", choices=POOLINGS, default="media",
                    help="como se resume el mapa final antes de la capa lineal")
     p.add_argument("--objetivo", choices=OBJETIVOS, default="pcr",
-                   help="que se aprende: pcr, o una cohorte (comprobacion del circuito: "
-                        "la cohorte se ve en la imagen y deberia acertarse casi siempre)")
+                   help="que se aprende: pcr, una cohorte (comprueba el codigo: se ve en la "
+                        "imagen) o un subtipo tumoral (comprueba si la red ve el tumor)")
     p.add_argument("--epocas", type=int, default=D["epocas"])
     p.add_argument("--paciencia", type=int, default=D["paciencia"],
                    help="epocas sin mejorar el AUC antes de parar")
@@ -132,10 +132,13 @@ def main() -> None:
     entreno, valida = uc.particion(uc.cargar_samples(), fold_val=args.fold)
     if args.objetivo != "pcr":
         # A partir de aqui la columna `pCR` es la etiqueta que se aprende (ver aplicar_objetivo)
-        cohorte_de = uc.cargar_patients().set_index("pid").dataset
-        entreno = aplicar_objetivo(entreno, args.objetivo, cohorte_de)
-        valida = aplicar_objetivo(valida, args.objetivo, cohorte_de)
-        print(f"Objetivo: cohorte '{args.objetivo}' (comprobacion del circuito, no pCR)")
+        pacientes = uc.cargar_patients().set_index("pid")
+        antes = entreno.patient_id.nunique() + valida.patient_id.nunique()
+        entreno = aplicar_objetivo(entreno, args.objetivo, pacientes)
+        valida = aplicar_objetivo(valida, args.objetivo, pacientes)
+        sin_dato = antes - entreno.patient_id.nunique() - valida.patient_id.nunique()
+        print(f"Objetivo: '{args.objetivo}' en lugar de pCR (diagnostico; la red solo ve la imagen)"
+              + (f", {sin_dato} pacientes sin el dato quitadas" if sin_dato else ""))
     if args.rapido:
         entreno = submuestra(entreno, 40, args.semilla)
         valida = submuestra(valida, 20, args.semilla)

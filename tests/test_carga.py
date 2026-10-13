@@ -2,38 +2,51 @@
 
 from __future__ import annotations
 
+import numpy as np
 import pandas as pd
 import pytest
 
 from src.data.carga import aplicar_objetivo
 
 FILAS = pd.DataFrame({
-    "patient_id": ["A", "A", "B", "C", "C"],
-    "pCR": [1, 1, 0, 0, 0],
+    "patient_id": ["A", "A", "B", "C", "C", "D"],
+    "pCR": [1, 1, 0, 0, 0, 1],
 })
-COHORTE_DE = pd.Series({"A": "spy1", "B": "duke", "C": "duke"})
+PACIENTES = pd.DataFrame({
+    "dataset": ["spy1", "duke", "duke", "spy2"],
+    "TripleNeg": [1.0, 0.0, 0.0, np.nan],          # D: subtipo desconocido
+    "HER2pos": [0.0, 1.0, 0.0, np.nan],
+    "HRposHER2neg": [0.0, 0.0, 1.0, np.nan],
+}, index=pd.Index(["A", "B", "C", "D"], name="pid"))
 
 
 def test_pcr_no_cambia_nada():
-    assert aplicar_objetivo(FILAS, "pcr", COHORTE_DE) is FILAS
+    assert aplicar_objetivo(FILAS, "pcr", PACIENTES) is FILAS
 
 
 def test_cohorte_como_etiqueta():
-    salida = aplicar_objetivo(FILAS, "duke", COHORTE_DE)
-    assert salida.pCR.tolist() == [0, 0, 1, 1, 1]
-    assert FILAS.pCR.tolist() == [1, 1, 0, 0, 0]          # el original no se toca
+    salida = aplicar_objetivo(FILAS, "duke", PACIENTES)
+    assert salida.pCR.tolist() == [0, 0, 1, 1, 1, 0]
+    assert FILAS.pCR.tolist() == [1, 1, 0, 0, 0, 1]          # el original no se toca
+
+
+@pytest.mark.parametrize("objetivo, esperado", [
+    ("triple", [1, 1, 0, 0, 0]),
+    ("her2", [0, 0, 1, 0, 0]),
+    ("hrpos", [0, 0, 0, 1, 1]),
+])
+def test_subtipo_como_etiqueta_y_sin_dato_fuera(objetivo, esperado):
+    salida = aplicar_objetivo(FILAS, objetivo, PACIENTES)
+    assert "D" not in set(salida.patient_id)                  # sin subtipo: se quita
+    assert salida.pCR.tolist() == esperado
 
 
 def test_misma_etiqueta_en_todos_los_cortes_de_una_paciente():
-    salida = aplicar_objetivo(FILAS, "spy1", COHORTE_DE)
-    assert salida.groupby("patient_id").pCR.nunique().eq(1).all()
-
-
-def test_paciente_sin_cohorte():
-    with pytest.raises(ValueError):
-        aplicar_objetivo(FILAS, "duke", COHORTE_DE.drop("B"))
+    for objetivo in ("spy1", "triple"):
+        salida = aplicar_objetivo(FILAS, objetivo, PACIENTES)
+        assert salida.groupby("patient_id").pCR.nunique().eq(1).all()
 
 
 def test_objetivo_desconocido():
     with pytest.raises(ValueError):
-        aplicar_objetivo(FILAS, "edad", COHORTE_DE)
+        aplicar_objetivo(FILAS, "edad", PACIENTES)

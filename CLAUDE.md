@@ -100,9 +100,14 @@ epoca con 219 pacientes). Conclusion: ninguna variante aprende pCR; las diferenc
 son ruido. Con realce/normalizar la mejor epoca llega tarde (17-18): el aumentado
 frena la memorizacion. AUC por cohorte no interpretable (spy1: 21 pacientes, 4 pCR).
 
-Siguiente: comprobar el circuito con `--objetivo duke` (aprender la cohorte, que se
-ve en la imagen; AUC ~0,9+ = circuito bien, ~0,5 = error en el codigo). Despues,
-cambiar el planteamiento (MIL por paciente) mas que los ajustes.
+Comprobacion del circuito (`results/objduke_normal_f0`, 13-10-2026): la misma red
+aprende la cohorte Duke con AUC 0,97 en la epoca 1 y 0,998 en la 13 (41/42 Duke
+acertadas, 0 falsos positivos). El codigo funciona: el ~0,5 de pCR es falta de
+señal en este planteamiento, no un error. Dos avisos: (1) la red capta la cohorte
+trivialmente, asi que en pCR puede usarla como atajo; (2) epocas 2 y 8 con picos
+de perdida de validacion (1,98) y la sensibilidad a 0,5 hundida aunque el AUC se
+mantiene: con lr 1e-3 las probabilidades se desplazan en bloque entre epocas.
+Siguiente: cambiar el planteamiento (MIL por paciente) mas que los ajustes.
 
 Expectativas realistas (literatura, ver conversacion 13-10-2026): los autores de
 BreastDCEDL obtienen AUC 0,72 en test con un ViT (Duke 0,54, I-SPY1 0,68, I-SPY2
