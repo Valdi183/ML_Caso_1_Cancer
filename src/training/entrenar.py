@@ -36,7 +36,7 @@ import torch.nn as nn
 from tqdm import tqdm
 
 from src import config
-from src.data.carga import aumentar, cargar_en_memoria, lotes, submuestra
+from src.data.carga import OBJETIVOS, aplicar_objetivo, aumentar, cargar_en_memoria, lotes, submuestra
 from src.models.cnn import POOLINGS, CNNpCR, guardar, parametros
 from src.utils.evaluacion import dibujar_curvas, perdida_media, umbral_youden
 from src.utils.semilla import fijar_semilla
@@ -57,6 +57,9 @@ def argumentos() -> argparse.Namespace:
                    help="estandariza cada corte (media 0, desviacion 1) dentro de la red")
     p.add_argument("--pooling", choices=POOLINGS, default="media",
                    help="como se resume el mapa final antes de la capa lineal")
+    p.add_argument("--objetivo", choices=OBJETIVOS, default="pcr",
+                   help="que se aprende: pcr, o una cohorte (comprobacion del circuito: "
+                        "la cohorte se ve en la imagen y deberia acertarse casi siempre)")
     p.add_argument("--epocas", type=int, default=D["epocas"])
     p.add_argument("--paciencia", type=int, default=D["paciencia"],
                    help="epocas sin mejorar el AUC antes de parar")
@@ -71,7 +74,8 @@ def argumentos() -> argparse.Namespace:
     if a.rapido:
         a.epocas = 2
     if a.nombre is None:
-        partes = ["ponderada" if a.ponderada else "normal"]
+        partes = [] if a.objetivo == "pcr" else [f"obj{a.objetivo}"]
+        partes.append("ponderada" if a.ponderada else "normal")
         partes += [n for n, activa in (("realce", a.realce), ("sinlate", a.sin_late),
                                        ("aum", a.aumentado), ("norm", a.normalizar)) if activa]
         if a.pooling != "media":
@@ -126,6 +130,12 @@ def main() -> None:
           + (f" ({torch.cuda.get_device_name()})" if dispositivo.type == "cuda" else ""))
 
     entreno, valida = uc.particion(uc.cargar_samples(), fold_val=args.fold)
+    if args.objetivo != "pcr":
+        # A partir de aqui la columna `pCR` es la etiqueta que se aprende (ver aplicar_objetivo)
+        cohorte_de = uc.cargar_patients().set_index("pid").dataset
+        entreno = aplicar_objetivo(entreno, args.objetivo, cohorte_de)
+        valida = aplicar_objetivo(valida, args.objetivo, cohorte_de)
+        print(f"Objetivo: cohorte '{args.objetivo}' (comprobacion del circuito, no pCR)")
     if args.rapido:
         entreno = submuestra(entreno, 40, args.semilla)
         valida = submuestra(valida, 20, args.semilla)
@@ -216,8 +226,8 @@ def main() -> None:
     # Los pesos llevan lo que la app tiene que mostrar
     guardar(red, ruta_pesos, epoca=resultado["mejor_epoca"], auc_val=mejor_auc, umbral=umbral,
             metodo_agregacion="mean", entrenamiento={k: configuracion[k] for k in (
-                "fold", "ponderada", "aumentado", "normalizar", "pooling", "epocas", "lote", "lr", "wd",
-                "semilla", "pos_weight")})
+                "objetivo", "fold", "ponderada", "aumentado", "normalizar", "pooling", "epocas", "lote",
+                "lr", "wd", "semilla", "pos_weight")})
 
     y = resultado["umbral_youden"]
     print(f"\nMejor epoca {resultado['mejor_epoca']}: AUC por paciente {mejor_auc:.3f}")

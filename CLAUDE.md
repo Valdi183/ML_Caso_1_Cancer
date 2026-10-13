@@ -92,9 +92,23 @@ Primer entrenamiento completo (`results/ponderada_f0`, fold 0): AUC por paciente
 0,58 en la epoca 1, parada en la 9. La perdida de validacion nunca baja de la de
 predecir siempre 0,5 (0,979) y desde la epoca 4 memoriza (train baja, val sube);
 AUC inestable entre epocas (0,47-0,58). AUC similar por cohorte (0,55-0,59).
-`cola.sh` prueba, sobre `--ponderada --aumentado`, lr 3e-4, realce, normalizar,
-pooling max y atencion. Siguiente idea si no basta: MIL (prediccion por paciente
-con atencion sobre sus cortes). Ruido de la validacion: ±0,04 de AUC.
+Cola del fold 0 (08-10-2026, sobre `--ponderada --aumentado`: lr 3e-4, realce,
+normalizar, pooling max, atencion): mejor AUC 0,51-0,59, AUC medio por epoca
+0,48-0,54, perdida de validacion nunca claramente por debajo de 0,979. Simulado:
+un modelo SIN señal da 0,56-0,58 quedandose con la mejor de 9-25 epocas (±0,04 por
+epoca con 219 pacientes). Conclusion: ninguna variante aprende pCR; las diferencias
+son ruido. Con realce/normalizar la mejor epoca llega tarde (17-18): el aumentado
+frena la memorizacion. AUC por cohorte no interpretable (spy1: 21 pacientes, 4 pCR).
+
+Siguiente: comprobar el circuito con `--objetivo duke` (aprender la cohorte, que se
+ve en la imagen; AUC ~0,9+ = circuito bien, ~0,5 = error en el codigo). Despues,
+cambiar el planteamiento (MIL por paciente) mas que los ajustes.
+
+Expectativas realistas (literatura, ver conversacion 13-10-2026): los autores de
+BreastDCEDL obtienen AUC 0,72 en test con un ViT (Duke 0,54, I-SPY1 0,68, I-SPY2
+0,78); solo imagen en otros trabajos ~0,70-0,75. Con CNN desde cero y estos datos,
+0,60-0,65 seria un buen resultado y ~0,70 excelente. Con clinicas: 0,70-0,75.
+Plan de presentacion del usuario: modelo solo imagen + modelo imagen + clinicas.
 
 **Este diseño es PROVISIONAL, no esta fijado.** El usuario lo dijo explicitamente:
 el proyecto puede ir por otro lado. No tratarlo como decision tomada.
