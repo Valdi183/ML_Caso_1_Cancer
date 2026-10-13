@@ -107,7 +107,22 @@ señal en este planteamiento, no un error. Dos avisos: (1) la red capta la cohor
 trivialmente, asi que en pCR puede usarla como atajo; (2) epocas 2 y 8 con picos
 de perdida de validacion (1,98) y la sensibilidad a 0,5 hundida aunque el AUC se
 mantiene: con lr 1e-3 las probabilidades se desplazan en bloque entre epocas.
-Siguiente: cambiar el planteamiento (MIL por paciente) mas que los ajustes.
+Diagnostico de subtipo (`results/obj{triple,her2,hrpos}_normal_f0`, 13-10-2026): la
+red tampoco aprende el subtipo tumoral desde la imagen. Mejor AUC 0,57 (lo que da
+el azar quedandose con la mejor epoca), media por epoca 0,52-0,53, dentro de spy2
+0,54-0,57; la perdida de validacion nunca baja de la de un modelo constante
+(triple 0,668 vs 0,656; her2 0,540 vs 0,534; hrpos 0,714 vs 0,677) mientras la de
+train cae (memoriza). Conclusion: con la mama entera a 256 px la red ve el
+hospital pero no el tumor. MIL sobre las mismas imagenes no lo arreglaria: el
+siguiente paso es CENTRARSE EN EL TUMOR.
+
+Caja del tumor (`notebooks/localizacion_tumor.ipynb`, 13-10-2026): sraw/eraw/scol/ecol
+SI marcan el tumor, pero estan giradas 90 grados y en la escala del volumen original:
+filas = 256-ecol*k .. 256-scol*k, columnas = sraw*k .. eraw*k, k = 256/n_xy
+(`src/data/tumor.py::caja_en_imagen`). Fiable para n_xy <= 320 (~89 % de pacientes,
+comprobado a ojo en ~40); para n_xy 384-512 (casi todas spy2) no cae y devuelve None.
+**La caja NO llega a la app** (en la defensa solo hay imagenes): se puede usar para
+entrenar o diagnosticar, pero el modelo final tiene que localizar el tumor solo.
 
 Expectativas realistas (literatura, ver conversacion 13-10-2026): los autores de
 BreastDCEDL obtienen AUC 0,72 en test con un ViT (Duke 0,54, I-SPY1 0,68, I-SPY2
