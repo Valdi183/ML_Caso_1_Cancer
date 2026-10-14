@@ -45,7 +45,9 @@ FICHERO_RUTA = REPO / ".bdcedl_ruta"
 DEFECTO = {
     "semilla": 42,
     "epocas": 40,
-    "paciencia": 8,      # epocas sin mejorar el AUC de validacion antes de parar
+    "paciencia": 8,      # epocas sin mejorar el AUC de validacion suavizado antes de parar
+    "min_epocas": 15,    # no se para antes: el AUC de validacion sube despacio y con ruido
+    "suavizado": 3,      # la epoca se elige por la media movil del AUC de las ultimas N
     "lote": 32,
     "lr": 1e-3,
     "wd": 1e-4,          # weight decay de AdamW

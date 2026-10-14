@@ -60,9 +60,16 @@ def argumentos() -> argparse.Namespace:
     p.add_argument("--objetivo", choices=OBJETIVOS, default="pcr",
                    help="que se aprende: pcr, una cohorte (comprueba el codigo: se ve en la "
                         "imagen) o un subtipo tumoral (comprueba si la red ve el tumor)")
+    p.add_argument("--filtros", default="16,32,64,128",
+                   help="filtros de cada bloque conv, separados por comas (n bloques = n valores)")
+    p.add_argument("--dropout", type=float, default=0.5)
     p.add_argument("--epocas", type=int, default=D["epocas"])
     p.add_argument("--paciencia", type=int, default=D["paciencia"],
-                   help="epocas sin mejorar el AUC antes de parar")
+                   help="epocas sin mejorar el AUC suavizado antes de parar")
+    p.add_argument("--min-epocas", type=int, default=D["min_epocas"],
+                   help="nunca se para antes de esta epoca")
+    p.add_argument("--suavizado", type=int, default=D["suavizado"],
+                   help="la epoca se elige por la media del AUC de validacion de las ultimas N")
     p.add_argument("--lote", type=int, default=D["lote"])
     p.add_argument("--lr", type=float, default=D["lr"])
     p.add_argument("--wd", type=float, default=D["wd"], help="weight decay de AdamW")
@@ -71,8 +78,9 @@ def argumentos() -> argparse.Namespace:
                    help="prueba del circuito: 40 pacientes de train, 20 de validacion, 2 epocas")
     a = p.parse_args()
 
+    a.filtros = tuple(int(f) for f in a.filtros.split(","))
     if a.rapido:
-        a.epocas = 2
+        a.epocas, a.min_epocas = 2, 1
     if a.nombre is None:
         partes = [] if a.objetivo == "pcr" else [f"obj{a.objetivo}"]
         partes.append("ponderada" if a.ponderada else "normal")
@@ -80,6 +88,10 @@ def argumentos() -> argparse.Namespace:
                                        ("aum", a.aumentado), ("norm", a.normalizar)) if activa]
         if a.pooling != "media":
             partes.append(a.pooling)
+        if a.filtros != (16, 32, 64, 128):
+            partes.append("f" + "-".join(map(str, a.filtros)))
+        if a.dropout != 0.5:
+            partes.append(f"do{a.dropout:g}")
         partes.append(f"f{a.fold}")
         a.nombre = ("rapido_" if a.rapido else "") + "_".join(partes)
     return a
@@ -151,7 +163,7 @@ def main() -> None:
     y_valida = torch.tensor(valida.pCR.values, dtype=torch.float32)
 
     red = CNNpCR(realce=args.realce, sin_late=args.sin_late, normalizar=args.normalizar,
-                 pooling=args.pooling).to(dispositivo)
+                 pooling=args.pooling, filtros=args.filtros, dropout=args.dropout).to(dispositivo)
     peso_positivos = uc.pos_weight(entreno)
     criterio = nn.BCEWithLogitsLoss(
         pos_weight=torch.tensor(peso_positivos, device=dispositivo) if args.ponderada else None)
@@ -168,7 +180,10 @@ def main() -> None:
     n = f"{parametros(red):,}".replace(",", ".")
     print(f"Red: {n} parametros, {red.preprocesado.canales} canales de entrada")
 
-    historial, mejor_auc, sin_mejorar = [], -1.0, 0
+    # La epoca elegida es la de mejor AUC de validacion SUAVIZADO (media de las ultimas
+    # `suavizado` epocas): un pico suelto de una epoca es sobre todo ruido (±0,04 con
+    # ~220 pacientes). Y no se para antes de `min_epocas`, porque el AUC sube despacio.
+    historial, mejor_auc, sin_mejorar, epoca_elegida = [], -1.0, 0, 1
     for epoca in range(1, args.epocas + 1):
         inicio = time.perf_counter()
         perdida_train = una_epoca(red, img_entreno, y_entreno, criterio, optimizador, args,
@@ -176,27 +191,34 @@ def main() -> None:
         probs = predecir(red, img_valida, dispositivo)
         metricas = uc.evaluar_por_paciente(probs, valida, umbral=0.5, metodo="mean")
         auc = metricas["auc"]
-        planificador.step(auc)
+        # AUC de entrenamiento con la red en modo evaluacion y sin aumentado: comparable con
+        # el de validacion. Si sube a 1 mientras validacion no sube, memoriza.
+        probs_train = predecir(red, img_entreno, dispositivo)
+        auc_train = uc.evaluar_por_paciente(probs_train, entreno, umbral=0.5, metodo="mean")["auc"]
+        recientes = [h["auc_val"] for h in historial[-(args.suavizado - 1):]] if args.suavizado > 1 else []
+        auc_suave = float(np.mean(recientes + [auc]))
+        planificador.step(auc_suave)
 
         historial.append({"epoca": epoca, "perdida_train": perdida_train,
                           "perdida_val": perdida_media(probs, y_valida, criterio_cpu),
-                          "auc_val": auc, "sensibilidad_05": metricas["sensibilidad"],
+                          "auc_train": auc_train, "auc_val": auc, "auc_val_suave": auc_suave,
+                          "sensibilidad_05": metricas["sensibilidad"],
                           "especificidad_05": metricas["especificidad"],
                           "lr": optimizador.param_groups[0]["lr"],
                           "segundos": time.perf_counter() - inicio})
-        mejora = auc > mejor_auc
-        print(f"  epoca {epoca:2d}  perdida {perdida_train:.4f}  AUC val {auc:.3f}"
+        mejora = auc_suave > mejor_auc
+        print(f"  epoca {epoca:2d}  perdida {perdida_train:.4f}  AUC train {auc_train:.3f}  "
+              f"val {auc:.3f} (suave {auc_suave:.3f})"
               f"  ({historial[-1]['segundos']:.0f} s){'  *' if mejora else ''}")
         # Cada epoca, no solo al final: si el entrenamiento se corta, queda lo hecho
         pd.DataFrame(historial).to_csv(carpeta / "historial.csv", index=False)
-        dibujar_curvas(pd.DataFrame(historial), carpeta / "curvas.png", args.nombre)
-
         if mejora:
-            mejor_auc, sin_mejorar = auc, 0
+            mejor_auc, sin_mejorar, epoca_elegida = auc_suave, 0, epoca
             guardar(red, ruta_pesos, epoca=epoca, auc_val=auc)
         else:
             sin_mejorar += 1
-            if sin_mejorar >= args.paciencia:
+        dibujar_curvas(pd.DataFrame(historial), carpeta / "curvas.png", args.nombre, epoca_elegida)
+        if not mejora and epoca >= args.min_epocas and sin_mejorar >= args.paciencia:
                 print(f"  Parada temprana: {args.paciencia} epocas sin mejorar")
                 break
 
@@ -218,7 +240,11 @@ def main() -> None:
 
     resultado = {
         "mejor_epoca": int(paquete["info"]["epoca"]),
-        "auc_val_media": mejor_auc,
+        "auc_val_media": float(paquete["info"]["auc_val"]),
+        "auc_val_suave": mejor_auc,
+        "auc_train": historial[epoca_elegida - 1]["auc_train"],
+        "diferencia_train_val": historial[epoca_elegida - 1]["auc_train"] - paquete["info"]["auc_val"],
+        "epocas_entrenadas": len(historial),
         "auc_por_agregacion": agregaciones,
         "auc_por_cohorte": por_cohorte,
         "umbral_05": uc.evaluar_por_paciente(probs, valida, umbral=0.5, metodo="mean"),
@@ -227,13 +253,17 @@ def main() -> None:
     (carpeta / "metricas.json").write_text(json.dumps(resultado, indent=2), encoding="utf-8")
 
     # Los pesos llevan lo que la app tiene que mostrar
-    guardar(red, ruta_pesos, epoca=resultado["mejor_epoca"], auc_val=mejor_auc, umbral=umbral,
+    guardar(red, ruta_pesos, epoca=resultado["mejor_epoca"], auc_val=resultado["auc_val_media"],
+            umbral=umbral,
             metodo_agregacion="mean", entrenamiento={k: configuracion[k] for k in (
-                "objetivo", "fold", "ponderada", "aumentado", "normalizar", "pooling", "epocas", "lote",
+                "objetivo", "fold", "ponderada", "aumentado", "normalizar", "pooling", "filtros",
+                "dropout", "epocas", "lote",
                 "lr", "wd", "semilla", "pos_weight")})
 
     y = resultado["umbral_youden"]
-    print(f"\nMejor epoca {resultado['mejor_epoca']}: AUC por paciente {mejor_auc:.3f}")
+    print(f"\nEpoca elegida {resultado['mejor_epoca']} de {len(historial)}: "
+          f"AUC val {resultado['auc_val_media']:.3f} (suave {mejor_auc:.3f}), "
+          f"train {resultado['auc_train']:.3f}, diferencia {resultado['diferencia_train_val']:.3f}")
     print(f"Umbral Youden {umbral:.3f}: sensibilidad {y['sensibilidad']:.2f}, "
           f"especificidad {y['especificidad']:.2f}, matriz {y['matriz_confusion']}")
     print(f"AUC por cohorte: { {c: round(v, 3) for c, v in por_cohorte.items()} }")
