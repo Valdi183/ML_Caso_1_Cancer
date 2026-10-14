@@ -1,0 +1,5 @@
+# Iteracion 1 (docs/iteraciones.md): red base con el entrenamiento corregido,
+# perdida normal frente a ponderada. Una linea = un entrenamiento (opciones de
+# python -m src.training.entrenar). Las lineas con # se ignoran.
+--aumentado --nombre it1_normal_f0
+--aumentado --ponderada --nombre it1_ponderada_f0

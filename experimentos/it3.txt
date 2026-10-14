@@ -1,0 +1,6 @@
+# Iteracion 3 (docs/iteraciones.md): partir de la red pequeña y regularizada de la
+# iteracion 2 (la unica cuya validacion no cae) y cambiar UNA cosa en cada modelo.
+# A: dar el realce (EARLY-PRE, LATE-EARLY) ya calculado como canales extra.
+# B: normalizar cada corte, para quitar las diferencias de intensidad entre hospitales.
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --realce --nombre it3_pequena_realce_f0
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --normalizar --nombre it3_pequena_norm_f0
