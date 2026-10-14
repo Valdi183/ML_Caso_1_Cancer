@@ -128,6 +128,7 @@ ML_Caso_1_Cancer/
 │   ├── training/entrenar.py   ← entrena y valida por paciente (--rapido para probar)
 │   └── utils/                 ← semilla, metricas y curvas, verificar_entorno
 ├── tests/                     ← tests de la red (no necesitan el dataset)
+├── experimentos/              ← una lista de entrenamientos por iteracion + lanzar.sh / ver.sh
 ├── configurar.ps1             ← prepara el portatil Windows de cero
 ├── CLAUDE.md                  ← contexto del proyecto para el asistente
 ├── requirements.txt, ruff.toml, pytest.ini
@@ -147,7 +148,8 @@ PyTorch se instala aparte porque su rueda depende de la GPU (ver `requirements.t
 python -m src.training.entrenar --rapido                       # prueba de minutos (CPU)
 python -m src.training.entrenar --ponderada --aumentado        # entrenamiento real
 python -m src.training.entrenar --help                         # todas las opciones
-nohup python -m src.training.entrenar ... > it1.log 2>&1 &       # en el laboratorio, sobrevive a cerrar la terminal
+bash experimentos/lanzar.sh it2                               # laboratorio: la lista experimentos/it2.txt
+bash experimentos/ver.sh it2                                  # volver a ver su progreso
 ```
 
 La semilla y los hiperparametros por defecto (`epocas`, `lote`, `lr`, `wd`,

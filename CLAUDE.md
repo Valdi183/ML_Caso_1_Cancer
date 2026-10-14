@@ -43,8 +43,10 @@ dentro de la red, en `src/models/cnn.py`). Entrega hacia el 25-10-2026.
   "cuda"), asi que el codigo no cambia. ~53 s/epoca con la red base. Los equipos
   **ya vienen preparados** (lo dijo el profesor; por eso se borro `configurar.sh`):
   basta clonar y configurar git. Se deja entrenando dia y noche con
-  `nohup python -m src.training.entrenar ... > x.log 2>&1 &` (bloquear pantalla, no
-  cerrar sesion). Ya no hay `cola.sh`: se trabaja por iteraciones de 1-2 modelos
+  `bash experimentos/lanzar.sh itN` (bloquear pantalla, no cerrar sesion): entrena en
+  segundo plano cada linea de `experimentos/itN.txt` (opciones de entrenar), con log en
+  `logs/itN.log`; `bash experimentos/ver.sh itN` para ver el progreso. Se niega a
+  lanzar si PyTorch no ve la GPU. Se trabaja por iteraciones de 1-2 modelos
   (`docs/iteraciones.md`). **No se puede instalar nada** fuera de un
   entorno virtual: todo paquete va en `.venv`, y no hay sudo. Claude se usa desde
   el navegador, asi que alli Claude no ejecuta nada: el usuario pega codigo y salidas.
