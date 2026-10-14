@@ -128,7 +128,6 @@ ML_Caso_1_Cancer/
 │   ├── training/entrenar.py   ← entrena y valida por paciente (--rapido para probar)
 │   └── utils/                 ← semilla, metricas y curvas, verificar_entorno
 ├── tests/                     ← tests de la red (no necesitan el dataset)
-├── cola.sh                    ← varios entrenamientos seguidos (laboratorio)
 ├── configurar.ps1             ← prepara el portatil Windows de cero
 ├── CLAUDE.md                  ← contexto del proyecto para el asistente
 ├── requirements.txt, ruff.toml, pytest.ini
@@ -148,12 +147,13 @@ PyTorch se instala aparte porque su rueda depende de la GPU (ver `requirements.t
 python -m src.training.entrenar --rapido                       # prueba de minutos (CPU)
 python -m src.training.entrenar --ponderada --aumentado        # entrenamiento real
 python -m src.training.entrenar --help                         # todas las opciones
-nohup bash cola.sh > cola.log 2>&1 &                           # la cola del laboratorio
+nohup python -m src.training.entrenar ... > it1.log 2>&1 &       # en el laboratorio, sobrevive a cerrar la terminal
 ```
 
 La semilla y los hiperparametros por defecto (`epocas`, `lote`, `lr`, `wd`,
-`paciencia`) estan en `src/config.py` (`DEFECTO`). Cada experimento guarda su
-configuracion exacta en `results/<nombre>/config.json`.
+`paciencia`, `min_epocas`, `suavizado`) estan en `src/config.py` (`DEFECTO`). Cada experimento guarda su
+configuracion exacta en `results/<nombre>/config.json`. Las iteraciones del modelo
+(hipotesis, resultado y decision de cada una) se registran en `docs/iteraciones.md`.
 
 Los pesos van a `models/<nombre>.pt`, que git ignora. Solo los que se entregan
 se suben, a proposito: `git add -f models/<nombre>.pt`.

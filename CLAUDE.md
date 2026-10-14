@@ -43,7 +43,9 @@ dentro de la red, en `src/models/cnn.py`). Entrega hacia el 25-10-2026.
   "cuda"), asi que el codigo no cambia. ~53 s/epoca con la red base. Los equipos
   **ya vienen preparados** (lo dijo el profesor; por eso se borro `configurar.sh`):
   basta clonar y configurar git. Se deja entrenando dia y noche con
-  `nohup bash cola.sh > cola.log 2>&1 &` (bloquear pantalla, no cerrar sesion). **No se puede instalar nada** fuera de un
+  `nohup python -m src.training.entrenar ... > x.log 2>&1 &` (bloquear pantalla, no
+  cerrar sesion). Ya no hay `cola.sh`: se trabaja por iteraciones de 1-2 modelos
+  (`docs/iteraciones.md`). **No se puede instalar nada** fuera de un
   entorno virtual: todo paquete va en `.venv`, y no hay sudo. Claude se usa desde
   el navegador, asi que alli Claude no ejecuta nada: el usuario pega codigo y salidas.
 
@@ -129,6 +131,27 @@ BreastDCEDL obtienen AUC 0,72 en test con un ViT (Duke 0,54, I-SPY1 0,68, I-SPY2
 0,78); solo imagen en otros trabajos ~0,70-0,75. Con CNN desde cero y estos datos,
 0,60-0,65 seria un buen resultado y ~0,70 excelente. Con clinicas: 0,70-0,75.
 Plan de presentacion del usuario: modelo solo imagen + modelo imagen + clinicas.
+
+## Indicaciones del profesor (correo 14-10-2026) — MANDAN sobre lo anterior
+
+- El caso es una **CNN propia desde cero que predice pCR con las 3 fases**. Evaluacion
+  por paciente (media de sus cortes), umbral elegido en validacion, test una vez.
+- Las variables de patients.csv son **comparacion, no modelo principal** (en clinica
+  no se tienen todas; la app solo recibe imagenes). El modelo imagen+clinica pasa a
+  ser opcional y de baja prioridad. Los diagnosticos (cohorte, subtipo, caja) ya
+  cumplieron; no abrir mas lineas laterales.
+- Referencia: imagen pretratamiento + test independiente = 0,70-0,80 publicado; con
+  cortes 2D y 3 cohortes, **0,60-0,70 en test es buen trabajo**. IC del AUC en test
+  ±0,08. Su figura "BIEN": 5 folds, AUC de train y val suben juntos hasta ~0,66-0,74
+  en 15-25 epocas, test 0,64. La nuestra se parece a la "MAL" (val plano ~0,58).
+- Rubrica de 10: EDA; particion por paciente con **5 folds media ± desviacion**;
+  arquitectura justificada (fases no como RGB); reproducible (semilla, parada, epoca
+  elegida); **curvas de AUC de train Y validacion** y diferencia en la epoca elegida;
+  **perdida normal vs ponderada** y su efecto en la sensibilidad; umbral y agregacion
+  elegidos en validacion con **criterio clinico explicito** (que error es peor);
+  test una vez con matriz, AUC con IC, precision/recall/F1 por clase, F1 macro y
+  comparacion con "siempre no pCR"; por cohorte, calibracion, casos fallados con
+  imagenes; bibliografia, limitaciones y app con el mismo preprocesado.
 
 **Este diseño es PROVISIONAL, no esta fijado.** El usuario lo dijo explicitamente:
 el proyecto puede ir por otro lado. No tratarlo como decision tomada.
