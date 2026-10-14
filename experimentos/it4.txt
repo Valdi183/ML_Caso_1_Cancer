@@ -1,0 +1,7 @@
+# Iteracion 4 (docs/iteraciones.md): la mejor configuracion hasta ahora (2A, red
+# pequeña y regularizada) en los folds 1-4. Con el fold 0 ya hecho, da los 5 folds
+# con media ± desviacion, y dice si el ~0,57 del fold 0 es representativo.
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --fold 1 --nombre it4_pequena_reg_f1
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --fold 2 --nombre it4_pequena_reg_f2
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --fold 3 --nombre it4_pequena_reg_f3
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --fold 4 --nombre it4_pequena_reg_f4
