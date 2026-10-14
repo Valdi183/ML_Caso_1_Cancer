@@ -1,0 +1,38 @@
+{
+  "nombre": "objtriple_normal_f0",
+  "fold": 0,
+  "ponderada": false,
+  "realce": false,
+  "sin_late": false,
+  "aumentado": false,
+  "normalizar": false,
+  "pooling": "media",
+  "objetivo": "triple",
+  "epocas": 20,
+  "paciencia": 8,
+  "lote": 32,
+  "lr": 0.001,
+  "wd": 0.0001,
+  "semilla": 42,
+  "rapido": false,
+  "dispositivo": "cuda",
+  "parametros": 294129,
+  "pos_weight": 2.1814545454545455,
+  "arquitectura": {
+    "realce": false,
+    "sin_late": false,
+    "filtros": [
+      16,
+      32,
+      64,
+      128
+    ],
+    "dropout": 0.5,
+    "normalizar": false,
+    "pooling": "media"
+  },
+  "cortes_train": 8749,
+  "cortes_val": 2166,
+  "pacientes_train": 877,
+  "pacientes_val": 217
+}
