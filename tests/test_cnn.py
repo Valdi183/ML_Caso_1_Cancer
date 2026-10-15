@@ -82,7 +82,8 @@ def test_claves_de_la_red_base_sin_cambios():
     assert claves == ["cabeza.3.weight", "cabeza.3.bias"]
 
 
-@pytest.mark.parametrize("opciones", [{}, {"realce": True, "normalizar": True, "pooling": "atencion"}])
+@pytest.mark.parametrize("opciones", [{}, {"realce": True, "normalizar": True, "pooling": "atencion"},
+                                      {"reducir": 2, "filtros": (8, 16, 32, 64)}])
 def test_guardar_y_cargar(tmp_path, opciones):
     red = CNNpCR(**opciones).eval()
     ruta = tmp_path / "red.pt"
@@ -97,9 +98,21 @@ def test_guardar_y_cargar(tmp_path, opciones):
 def test_carga_pesos_antiguos(tmp_path):
     # Un .pt de antes de normalizar/pooling (config sin esas claves) sigue cargando
     red = CNNpCR().eval()
-    config_antigua = {k: v for k, v in red.config.items() if k not in ("normalizar", "pooling")}
+    config_antigua = {k: v for k, v in red.config.items() if k not in ("normalizar", "pooling", "reducir")}
     ruta = tmp_path / "antiguo.pt"
     torch.save({"config": config_antigua, "pesos": red.state_dict(), "info": {}}, ruta)
     cargada, _ = cargar(ruta)
     assert cargada.config["pooling"] == "media" and not cargada.config["normalizar"]
     assert torch.allclose(cargada(LOTE), red(LOTE))
+
+
+def test_reducir_cambia_la_resolucion_no_la_salida():
+    red = CNNpCR(reducir=2).eval()
+    assert red.preprocesado(LOTE).shape == (2, 3, 128, 128)
+    assert red(LOTE).shape == (2,)
+
+
+def test_reducir_es_la_media_de_bloques():
+    x = torch.arange(16.0).reshape(1, 1, 4, 4).repeat(1, 3, 1, 1)
+    y = Preprocesado(reducir=2)(x)
+    assert torch.allclose(y[0, 0], torch.tensor([[2.5, 4.5], [10.5, 12.5]]))

@@ -24,6 +24,7 @@ from pathlib import Path
 
 import torch
 import torch.nn as nn
+import torch.nn.functional as F
 
 
 class Preprocesado(nn.Module):
@@ -33,8 +34,10 @@ class Preprocesado(nn.Module):
     la app no pueda hacerlo distinto.
     """
 
-    def __init__(self, realce: bool = False, sin_late: bool = False, normalizar: bool = False):
+    def __init__(self, realce: bool = False, sin_late: bool = False, normalizar: bool = False,
+                 reducir: int = 1):
         super().__init__()
+        self.reducir = reducir
         self.realce = realce
         self.sin_late = sin_late
         self.normalizar = normalizar
@@ -46,6 +49,11 @@ class Preprocesado(nn.Module):
         return fases + restas
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
+        if self.reducir > 1:
+            # Media de bloques reducir x reducir: 256 -> 128 con reducir=2. La red ve
+            # zonas mas grandes de la mama con el mismo numero de capas y menos detalle
+            # fino (ruido, textura) que memorizar.
+            x = F.avg_pool2d(x, self.reducir)
         if self.normalizar:
             # Cada cohorte procesa las imagenes distinto y sus intensidades no son
             # comparables. Se estandariza cada corte con UNA media y UNA desviacion
@@ -129,16 +137,16 @@ class CNNpCR(nn.Module):
 
     def __init__(self, realce: bool = False, sin_late: bool = False,
                  filtros: tuple[int, ...] = (16, 32, 64, 128), dropout: float = 0.5,
-                 normalizar: bool = False, pooling: str = "media"):
+                 normalizar: bool = False, pooling: str = "media", reducir: int = 1):
         super().__init__()
         # Todo lo necesario para reconstruir la red: se guarda junto a los pesos.
         # Los pesos anteriores a normalizar/pooling no los llevan y cargan con los
         # valores por defecto, que reproducen la red de entonces.
         self.config = {"realce": realce, "sin_late": sin_late,
                        "filtros": list(filtros), "dropout": dropout,
-                       "normalizar": normalizar, "pooling": pooling}
+                       "normalizar": normalizar, "pooling": pooling, "reducir": reducir}
 
-        self.preprocesado = Preprocesado(realce, sin_late, normalizar)
+        self.preprocesado = Preprocesado(realce, sin_late, normalizar, reducir)
         entradas = [self.preprocesado.canales, *filtros[:-1]]
         self.bloques = nn.Sequential(*[bloque(a, b) for a, b in zip(entradas, filtros)])
         resumen = Resumen(filtros[-1], pooling)

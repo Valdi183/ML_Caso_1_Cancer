@@ -53,6 +53,8 @@ def argumentos() -> argparse.Namespace:
     p.add_argument("--realce", action="store_true", help="anade EARLY-PRE y LATE-EARLY como canales")
     p.add_argument("--sin-late", action="store_true", help="descarta la fase LATE")
     p.add_argument("--aumentado", action="store_true", help="volteos y rotaciones de hasta 15 grados")
+    p.add_argument("--reducir", type=int, default=1,
+                   help="reduce la imagen por este factor dentro de la red (2: 256 -> 128 px)")
     p.add_argument("--normalizar", action="store_true",
                    help="estandariza cada corte (media 0, desviacion 1) dentro de la red")
     p.add_argument("--pooling", choices=POOLINGS, default="media",
@@ -90,6 +92,8 @@ def argumentos() -> argparse.Namespace:
             partes.append(a.pooling)
         if a.filtros != (16, 32, 64, 128):
             partes.append("f" + "-".join(map(str, a.filtros)))
+        if a.reducir != 1:
+            partes.append(f"red{a.reducir}")
         if a.dropout != 0.5:
             partes.append(f"do{a.dropout:g}")
         partes.append(f"f{a.fold}")
@@ -162,7 +166,7 @@ def main() -> None:
     y_entreno = torch.tensor(entreno.pCR.values, dtype=torch.float32)
     y_valida = torch.tensor(valida.pCR.values, dtype=torch.float32)
 
-    red = CNNpCR(realce=args.realce, sin_late=args.sin_late, normalizar=args.normalizar,
+    red = CNNpCR(realce=args.realce, sin_late=args.sin_late, normalizar=args.normalizar, reducir=args.reducir,
                  pooling=args.pooling, filtros=args.filtros, dropout=args.dropout).to(dispositivo)
     peso_positivos = uc.pos_weight(entreno)
     criterio = nn.BCEWithLogitsLoss(
@@ -256,7 +260,7 @@ def main() -> None:
     guardar(red, ruta_pesos, epoca=resultado["mejor_epoca"], auc_val=resultado["auc_val_media"],
             umbral=umbral,
             metodo_agregacion="mean", entrenamiento={k: configuracion[k] for k in (
-                "objetivo", "fold", "ponderada", "aumentado", "normalizar", "pooling", "filtros",
+                "objetivo", "fold", "ponderada", "aumentado", "normalizar", "reducir", "pooling", "filtros",
                 "dropout", "epocas", "lote",
                 "lr", "wd", "semilla", "pos_weight")})
 
