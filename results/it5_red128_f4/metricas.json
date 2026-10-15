@@ -1,0 +1,51 @@
+{
+  "mejor_epoca": 24,
+  "auc_val_media": 0.5874255188000822,
+  "auc_val_suave": 0.5873912745702349,
+  "auc_train": 0.8314973861090366,
+  "diferencia_train_val": 0.24407186730895436,
+  "epocas_entrenadas": 32,
+  "auc_por_agregacion": {
+    "mean": 0.5874255188000822,
+    "max": 0.5779741113622354,
+    "median": 0.5896856379700021,
+    "voto": 0.5229607561125951
+  },
+  "auc_por_cohorte": {
+    "duke": 0.6029411764705882,
+    "spy1": 0.6399999999999999,
+    "spy2": 0.5712396069538928
+  },
+  "umbral_05": {
+    "pacientes": 219,
+    "metodo": "mean",
+    "umbral": 0.5,
+    "matriz_confusion": {
+      "VP": 6,
+      "VN": 151,
+      "FP": 6,
+      "FN": 56
+    },
+    "accuracy": 0.7168949771689498,
+    "sensibilidad": 0.0967741935483871,
+    "especificidad": 0.9617834394904459,
+    "precision": 0.5,
+    "auc": 0.5874255188000822
+  },
+  "umbral_youden": {
+    "pacientes": 219,
+    "metodo": "mean",
+    "umbral": 0.28197340220212935,
+    "matriz_confusion": {
+      "VP": 29,
+      "VN": 112,
+      "FP": 45,
+      "FN": 33
+    },
+    "accuracy": 0.6438356164383562,
+    "sensibilidad": 0.46774193548387094,
+    "especificidad": 0.7133757961783439,
+    "precision": 0.3918918918918919,
+    "auc": 0.5874255188000822
+  }
+}

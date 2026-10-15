@@ -1,0 +1,49 @@
+{
+  "nombre": "it5_red128_f4",
+  "fold": 4,
+  "ponderada": false,
+  "realce": false,
+  "sin_late": false,
+  "aumentado": true,
+  "reducir": 2,
+  "normalizar": false,
+  "pooling": "media",
+  "objetivo": "pcr",
+  "filtros": [
+    8,
+    16,
+    32,
+    64
+  ],
+  "dropout": 0.7,
+  "epocas": 40,
+  "paciencia": 8,
+  "min_epocas": 15,
+  "suavizado": 3,
+  "lote": 32,
+  "lr": 0.001,
+  "wd": 0.001,
+  "semilla": 42,
+  "rapido": false,
+  "dispositivo": "cuda",
+  "parametros": 73913,
+  "pos_weight": 2.37442218798151,
+  "arquitectura": {
+    "realce": false,
+    "sin_late": false,
+    "filtros": [
+      8,
+      16,
+      32,
+      64
+    ],
+    "dropout": 0.7,
+    "normalizar": false,
+    "pooling": "media",
+    "reducir": 2
+  },
+  "cortes_train": 8760,
+  "cortes_val": 2185,
+  "pacientes_train": 878,
+  "pacientes_val": 219
+}
