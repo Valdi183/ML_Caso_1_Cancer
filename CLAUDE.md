@@ -155,6 +155,13 @@ Plan de presentacion del usuario: modelo solo imagen + modelo imagen + clinicas.
   comparacion con "siempre no pCR"; por cohorte, calibracion, casos fallados con
   imagenes; bibliografia, limitaciones y app con el mismo preprocesado.
 
+## Iteraciones (detalle en `docs/iteraciones.md`)
+
+Mejor configuracion hasta ahora (2A): `--aumentado --filtros 8,16,32,64 --dropout 0.7
+--wd 1e-3`, perdida normal. 5 folds: AUC elegido 0,575 ± 0,032, medio 0,544 ± 0,020.
+Realce, normalizar y lr 1e-4 no mejoran. **La app recibe UNA muestra (un corte) por
+paciente** (GUIA.md C7): nada de 2,5D ni prediccion por paciente.
+
 **Este diseño es PROVISIONAL, no esta fijado.** El usuario lo dijo explicitamente:
 el proyecto puede ir por otro lado. No tratarlo como decision tomada.
 

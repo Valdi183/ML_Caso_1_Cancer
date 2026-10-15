@@ -1,0 +1,14 @@
+# Iteracion 5 (docs/iteraciones.md): dos cambios de fondo sobre 2A, compatibles con la
+# app (un solo corte por muestra), cada uno en los 5 folds para compararlo con la media
+# de 2A (AUC val medio 0,544 ± 0,020; suavizado elegido 0,571 ± 0,021).
+# A: la imagen reducida a 128 px dentro de la red.  B: pooling de atencion.
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --reducir 2 --fold 0 --nombre it5_red128_f0
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --reducir 2 --fold 1 --nombre it5_red128_f1
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --reducir 2 --fold 2 --nombre it5_red128_f2
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --reducir 2 --fold 3 --nombre it5_red128_f3
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --reducir 2 --fold 4 --nombre it5_red128_f4
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --pooling atencion --fold 0 --nombre it5_atencion_f0
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --pooling atencion --fold 1 --nombre it5_atencion_f1
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --pooling atencion --fold 2 --nombre it5_atencion_f2
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --pooling atencion --fold 3 --nombre it5_atencion_f3
+--aumentado --filtros 8,16,32,64 --dropout 0.7 --wd 1e-3 --pooling atencion --fold 4 --nombre it5_atencion_f4
