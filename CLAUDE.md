@@ -187,6 +187,40 @@ memorizar (Dropout2d, GroupNorm, mixup, aumentado de intensidad); contra el tumo
 diluido (atencion/max, capa cinetica 1x1 por pixel, stem 7x7, dilatadas, residuales).
 Despues: umbral clinico, test una vez, app, informe, 5 diapositivas.
 
+## Relevo: como continuar (para cualquier Claude que retome el trabajo)
+
+Hay tres asistentes: Claude Code en el portatil, Claude Code en el PC de sobremesa y
+Claude en claude.ai (tutor, no toca el repo). **La unica fuente de verdad es el repo.**
+
+- **Antes de nada `git pull`; al acabar, commit y `git push`.** Solo una maquina edita
+  CODIGO a la vez (las otras solo entrenan y suben `results/`). Si se cruzan cambios
+  sin commitear, guardar copia, `git restore`, `git pull` y volver a aplicarlos.
+- **Estado (17-10-2026):** iteracion 6 (forma de la red, folds 0 y 1) lista para
+  lanzar en el PC. **Catalogo de estructuras SIN empezar** (capa cinetica 1x1,
+  residuales, separables, GroupNorm, Dropout2d, stem 7x7, dilatadas, mixup, aumentado
+  de intensidad): quien lo empiece lo anota aqui para que el otro no lo duplique.
+- **Analizar una iteracion:** `git pull`; para cada `results/<nombre>/` leer
+  `historial.csv` y `metricas.json`. Comparar sobre todo el **AUC de validacion medio de
+  todas las epocas** (el pico de una epoca es ruido, ±0,04) y el suavizado de la epoca
+  elegida, mas la forma de las curvas (train y val juntas = sano; train sube y val cae =
+  memoriza; train no sube = no aprende). Comparar SIEMPRE con la referencia en los
+  mismos folds (base 128 px, `it5_red128_f0..f4`: AUC medio por fold 0,560 / 0,520 / 0,549 / 0,529 / 0,569;
+  5 folds 0,545 ± 0,021). Criterio fijado: cribado en folds 0 y 1, pasa a 5 folds solo
+  lo que mejora la media >= 0,03. Mirar `curvas.png` de los mejores.
+- **Registrar** en `docs/iteraciones.md` (fila: hipotesis, modelos, resultado,
+  decision) y crear `experimentos/itN+1.txt` (una linea = opciones de entrenar, con
+  `--nombre itN_<idea>_f<fold>`). Antes de proponer commit: `ruff check .` y `pytest -q`.
+- **Commits para el usuario:** un proposito por commit, en un bloque para copiar y pegar
+  en Git Bash, encadenado con `&&`, con `git commit -q -m "..." -- <ficheros>` (asi solo
+  entran esos ficheros), terminando en `git --no-pager log --stat --oneline -N && git
+  status -s && echo "=== TODO BIEN: ya puedes hacer git push"`. El push lo hace el.
+- **Tras cada iteracion**, recordar al usuario que suba `docs/iteraciones.md` (y
+  `CLAUDE.md` si cambio) al Proyecto de claude.ai.
+- **Pendiente despues de elegir el modelo:** umbral con criterio clinico (con las
+  predicciones de validacion de los 5 folds), test UNA vez con todas las metricas de la
+  rubrica, comparacion con el modelo clinico (0,69), app desplegada, informe, 5
+  diapositivas. Entrega el 30-10-2026: la app no puede dejarse para el final.
+
 
 **Este diseño es PROVISIONAL, no esta fijado.** El usuario lo dijo explicitamente:
 el proyecto puede ir por otro lado. No tratarlo como decision tomada.
