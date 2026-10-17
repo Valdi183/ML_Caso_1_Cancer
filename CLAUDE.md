@@ -30,7 +30,7 @@ del tratamiento. Es pronostico: el AUC esperable ronda 0,70-0,80.
 Entregables: repo + pesos + informe + app web **desplegada con URL** + 5 diapositivas.
 En la defensa el profesor mete 5 muestras privadas en la app sin tocar el codigo:
 el preprocesado de la app debe ser identico al del entrenamiento (por eso vive
-dentro de la red, en `src/models/cnn.py`). Entrega hacia el 25-10-2026.
+dentro de la red, en `src/models/cnn.py`). **Entrega el 30-10-2026.**
 
 ## Flujo portatil / laboratorio
 
@@ -167,6 +167,26 @@ Mejor configuracion hasta ahora (2A): `--aumentado --filtros 8,16,32,64 --dropou
 --wd 1e-3`, perdida normal. 5 folds: AUC elegido 0,575 ± 0,032, medio 0,544 ± 0,020.
 Realce, normalizar y lr 1e-4 no mejoran. **La app recibe UNA muestra (un corte) por
 paciente** (GUIA.md C7): nada de 2,5D ni prediccion por paciente.
+Iteracion 5 (5 folds): `--reducir 2` (128 px) 0,587 ± 0,017 y atencion 0,582 ± 0,031,
+iguales a 2A, pero 128 px va a 12 s/epoca (frente a 40): es la base para explorar.
+
+**Por que sobreentrena (lo vio el profesor en la perdida de validacion):** ~880
+pacientes con ~10 cortes casi iguales = pocos ejemplos distintos; la etiqueta es por
+paciente, asi que el atajo es memorizar "esta mama = pCR"; lo poco que generaliza se
+aprende en las epocas 1-2 y despues solo memoriza; la perdida de val se dispara porque
+las predicciones se vuelven seguras y erroneas. **Es un problema de estructura** (que le
+resulta facil aprender a la red), no de hiperparametros: lr, realce y normalizar no
+movieron nada; la red mas pequeña fue lo unico que ayudo.
+
+**Plan (17-10-2026), como los compañeros que mejor van (25-35 estructuras):** catalogo
+de arquitecturas en `src/models/` con `--arquitectura`; rondas de 6-8 estructuras,
+cribado en folds 0 y 1 frente a la referencia en esos folds, solo pasan a 5 folds las
+que mejoren >= 0,03 de AUC medio; cuaderno `notebooks/comparativa_modelos.ipynb` con
+las curvas de todas. Ideas por causa: menos pesos (separables, menos bloques); contra
+memorizar (Dropout2d, GroupNorm, mixup, aumentado de intensidad); contra el tumor
+diluido (atencion/max, capa cinetica 1x1 por pixel, stem 7x7, dilatadas, residuales).
+Despues: umbral clinico, test una vez, app, informe, 5 diapositivas.
+
 
 **Este diseño es PROVISIONAL, no esta fijado.** El usuario lo dijo explicitamente:
 el proyecto puede ir por otro lado. No tratarlo como decision tomada.
