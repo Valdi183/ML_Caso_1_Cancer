@@ -1,0 +1,16 @@
+# Iteracion 6 (docs/iteraciones.md), ronda 1 de estructuras: la FORMA de la red con las
+# opciones que ya existen, sobre la base de 128 px (it5_red128, 73.913 parametros).
+# Cribado en los folds 0 y 1; la referencia son it5_red128_f0 y _f1 (ya entrenados).
+# Pasa a 5 folds lo que mejore el AUC medio de esos dos folds en >= 0,03.
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --fold 0 --nombre it6_3bloques_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32,64,128 --fold 0 --nombre it6_5bloques_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 16,32,64,128 --fold 0 --nombre it6_ancha_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 4,8,16,32 --fold 0 --nombre it6_mini_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32,64 --pooling mediamax --fold 0 --nombre it6_mediamax_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 4 --filtros 8,16,32,64 --fold 0 --nombre it6_64px_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --fold 1 --nombre it6_3bloques_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32,64,128 --fold 1 --nombre it6_5bloques_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 16,32,64,128 --fold 1 --nombre it6_ancha_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 4,8,16,32 --fold 1 --nombre it6_mini_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32,64 --pooling mediamax --fold 1 --nombre it6_mediamax_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 4 --filtros 8,16,32,64 --fold 1 --nombre it6_64px_f1
