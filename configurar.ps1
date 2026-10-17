@@ -172,7 +172,8 @@ if ($r.Codigo -eq 0) {
             Aviso "sin nvidia-smi: no hay GPU NVIDIA, instalo la rueda CPU"
         } else {
             $smi = Sondea "nvidia-smi" @()
-            if ($smi.Salida -match "CUDA Version:\s*(\d+)\.(\d+)") {
+            # Los drivers recientes escriben "CUDA UMD Version" en lugar de "CUDA Version"
+            if ($smi.Salida -match "CUDA (?:UMD )?Version:\s*(\d+)\.(\d+)") {
                 $mayor = [int]$Matches[1]
                 $menor = [int]$Matches[2]
                 Bien "GPU NVIDIA detectada, driver con CUDA $mayor.$menor"
