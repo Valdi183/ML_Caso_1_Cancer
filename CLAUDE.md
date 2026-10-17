@@ -50,6 +50,12 @@ dentro de la red, en `src/models/cnn.py`). Entrega hacia el 25-10-2026.
   (`docs/iteraciones.md`). **No se puede instalar nada** fuera de un
   entorno virtual: todo paquete va en `.venv`, y no hay sudo. Claude se usa desde
   el navegador, asi que alli Claude no ejecuta nada: el usuario pega codigo y salidas.
+- **PC de sobremesa** (Windows 11, i5-11400F, 16 GB, NVIDIA RTX 3060 Ti 8 GB, desde
+  17-10-2026): tercera maquina de entrenamiento, con Claude Code. Entorno con
+  `.\configurar.ps1` (`.venv` con PyTorch CUDA cu128, dataset en `C:\bdcedl`). Se
+  lanza igual, `bash experimentos/lanzar.sh itN` desde **Git Bash**: el script
+  encuentra `.venv/Scripts/python.exe` y, sin `pgrep`, usa `logs/en_marcha.pid`.
+  Que Windows no se suspenda mientras entrena, y no jugar a la vez (comparte la VRAM).
 
 Todo script de entrenamiento: modo rapido y completo sin tocar codigo, detecta
 cuda/cpu solo, sin rutas fijas (`src/config.py`), guarda en `results/` y `models/`

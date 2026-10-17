@@ -29,7 +29,7 @@ git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
 cd ML_Caso_1_Cancer
 ```
 
-**Windows (el portatil):** tres ordenes:
+**Windows (el portatil, o el PC de sobremesa con NVIDIA):** tres ordenes:
 
 ```powershell
 git clone https://github.com/Valdi183/ML_Caso_1_Cancer.git
@@ -148,9 +148,13 @@ PyTorch se instala aparte porque su rueda depende de la GPU (ver `requirements.t
 python -m src.training.entrenar --rapido                       # prueba de minutos (CPU)
 python -m src.training.entrenar --ponderada --aumentado        # entrenamiento real
 python -m src.training.entrenar --help                         # todas las opciones
-bash experimentos/lanzar.sh it2                               # laboratorio: la lista experimentos/it2.txt
+bash experimentos/lanzar.sh it2                               # con GPU: la lista experimentos/it2.txt
 bash experimentos/ver.sh it2                                  # volver a ver su progreso
 ```
+
+`lanzar.sh` funciona en el laboratorio (Linux) y en Windows desde **Git Bash**
+(el PC con NVIDIA): usa el Python de `.venv` en los dos casos. En Windows, que el
+equipo no se suspenda mientras entrena (Configuracion → Energia → "Nunca").
 
 La semilla y los hiperparametros por defecto (`epocas`, `lote`, `lr`, `wd`,
 `paciencia`, `min_epocas`, `suavizado`) estan en `src/config.py` (`DEFECTO`). Cada experimento guarda su
