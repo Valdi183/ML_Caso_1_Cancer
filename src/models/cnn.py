@@ -176,6 +176,18 @@ class CNNpCR(nn.Module):
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.cabeza(self.bloques(self.preprocesado(x))).squeeze(1)
 
+    def con_atencion(self, x: torch.Tensor) -> tuple[torch.Tensor, torch.Tensor]:
+        """Lo mismo que `forward` y ademas los pesos de atencion (B, H, W) del mapa
+        final. Solo con pooling "atencion"; sirve para supervisarlos con la caja del
+        tumor al entrenar y para medir donde miran. No cambia la red ni sus pesos."""
+        resumen = self.cabeza[0]
+        if resumen.modo != "atencion":
+            raise ValueError("con_atencion necesita pooling 'atencion'")
+        mapa = self.bloques(self.preprocesado(x))
+        pesos = resumen.pesos_atencion(mapa)
+        vector = (mapa * pesos.unsqueeze(1)).sum(dim=(2, 3))
+        return self.cabeza[1:](vector).squeeze(1), pesos
+
 
 def parametros(red: nn.Module) -> int:
     return sum(p.numel() for p in red.parameters() if p.requires_grad)

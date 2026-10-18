@@ -11,6 +11,7 @@ Se lanza como modulo desde la raiz del repositorio:
     python -m src.training.entrenar --ponderada              # base, perdida ponderada
     python -m src.training.entrenar --ponderada --aumentado --realce
     python -m src.training.entrenar --ponderada --aumentado --normalizar --pooling atencion
+    python -m src.training.entrenar --aumentado --pooling atencion --peso-caja 0.2
 
 Cada ejecucion guarda en results/<nombre>/ la configuracion, el historial por
 epoca, las metricas de validacion, las probabilidades por corte y las curvas; y
@@ -37,8 +38,9 @@ from tqdm import tqdm
 
 from src import config
 from src.data.carga import OBJETIVOS, aplicar_objetivo, aumentar, cargar_en_memoria, lotes, submuestra
+from src.data.tumor import cajas_por_corte, en_rejilla, masa_en_caja, mascaras, perdida_caja
 from src.models.cnn import POOLINGS, CNNpCR, guardar, parametros
-from src.utils.evaluacion import dibujar_curvas, perdida_media, umbral_youden
+from src.utils.evaluacion import auc_mismo_hospital, dibujar_curvas, perdida_media, umbral_youden
 from src.utils.semilla import fijar_semilla
 
 uc = config.utils()
@@ -76,11 +78,19 @@ def argumentos() -> argparse.Namespace:
     p.add_argument("--lr", type=float, default=D["lr"])
     p.add_argument("--wd", type=float, default=D["wd"], help="weight decay de AdamW")
     p.add_argument("--semilla", type=int, default=D["semilla"])
+    p.add_argument("--peso-caja", type=float, default=0.0,
+                   help="lambda de la atencion supervisada: perdida = BCE + lambda * L_caja, con "
+                        "L_caja = -log(atencion dentro de la caja del tumor). Solo al entrenar (la "
+                        "app no la necesita); exige --pooling atencion. 0 = sin supervisar")
     p.add_argument("--rapido", action="store_true",
                    help="prueba del circuito: 40 pacientes de train, 20 de validacion, 2 epocas")
     a = p.parse_args()
 
     a.filtros = tuple(int(f) for f in a.filtros.split(","))
+    if a.peso_caja < 0:
+        p.error("--peso-caja no puede ser negativo")
+    if a.peso_caja > 0 and a.pooling != "atencion":
+        p.error("--peso-caja > 0 exige --pooling atencion (supervisa sus pesos)")
     if a.rapido:
         a.epocas, a.min_epocas = 2, 1
     if a.nombre is None:
@@ -96,6 +106,8 @@ def argumentos() -> argparse.Namespace:
             partes.append(f"red{a.reducir}")
         if a.dropout != 0.5:
             partes.append(f"do{a.dropout:g}")
+        if a.peso_caja > 0:
+            partes.append(f"caja{a.peso_caja:g}")
         partes.append(f"f{a.fold}")
         a.nombre = ("rapido_" if a.rapido else "") + "_".join(partes)
     return a
@@ -105,24 +117,38 @@ def argumentos() -> argparse.Namespace:
 # Entrenamiento y evaluacion
 # --------------------------------------------------------------------------- #
 
-def una_epoca(red, imagenes, etiquetas, criterio, optimizador, args, dispositivo, epoca) -> float:
+def una_epoca(red, imagenes, etiquetas, cajas, criterio, optimizador, args, dispositivo,
+              epoca) -> tuple[float, float]:
+    """Devuelve la BCE media (comparable con --peso-caja 0) y la L_caja media (NaN sin ella)."""
     red.train()
-    total, vistos = 0.0, 0
+    total, total_caja, vistos = 0.0, 0.0, 0
     barra = tqdm(lotes(len(imagenes), args.lote, desordenar=True), total=-(-len(imagenes) // args.lote),
                  desc=f"  epoca {epoca:2d}", leave=False, ncols=90)
     for indices in barra:
         x = imagenes[indices].to(dispositivo).float() / 255
         y = etiquetas[indices].to(dispositivo)
-        if args.aumentado:
-            x = aumentar(x)
         optimizador.zero_grad()
-        perdida = criterio(red(x), y)
-        perdida.backward()
+        if args.peso_caja > 0:
+            # La mascara de la caja va como canal extra por `aumentar`: el mismo volteo
+            # y giro que las fases, y se separa antes de entrar en la red.
+            m = mascaras(cajas[indices].to(dispositivo))
+            if args.aumentado:
+                x, m = aumentar(torch.cat([x, m], 1)).split([x.shape[1], 1], dim=1)
+            logits, pesos = red.con_atencion(x)
+            perdida = criterio(logits, y)
+            l_caja = perdida_caja(pesos, en_rejilla(m, *pesos.shape[1:]))
+            (perdida + args.peso_caja * l_caja).backward()
+            total_caja += l_caja.item() * len(indices)
+        else:
+            if args.aumentado:
+                x = aumentar(x)
+            perdida = criterio(red(x), y)
+            perdida.backward()
         optimizador.step()
         total += perdida.item() * len(indices)
         vistos += len(indices)
         barra.set_postfix(perdida=f"{total / vistos:.4f}")
-    return total / vistos
+    return total / vistos, (total_caja / vistos if args.peso_caja > 0 else float("nan"))
 
 
 @torch.no_grad()
@@ -132,6 +158,25 @@ def predecir(red, imagenes, dispositivo) -> np.ndarray:
     salidas = [torch.sigmoid(red(imagenes[i].to(dispositivo).float() / 255)).cpu()
                for i in lotes(len(imagenes), 128, desordenar=False)]
     return torch.cat(salidas).numpy()
+
+
+@torch.no_grad()
+def atencion_en_caja(red, imagenes, cajas, dispositivo) -> tuple[float, float]:
+    """Donde mira la atencion, en los cortes con caja (sin aumentado): masa media de
+    atencion dentro de la caja y fraccion media del mapa final que ocupa la caja.
+    Si la masa no supera a la fraccion, la atencion no prefiere el tumor."""
+    red.eval()
+    masas, fracciones = [], []
+    for i in lotes(len(imagenes), 128, desordenar=False):
+        _, pesos = red.con_atencion(imagenes[i].to(dispositivo).float() / 255)
+        rejilla = en_rejilla(mascaras(cajas[i].to(dispositivo)), *pesos.shape[1:])
+        con_caja = rejilla.flatten(1).sum(1) > 0
+        masas.append(masa_en_caja(pesos, rejilla)[con_caja].cpu())
+        fracciones.append(rejilla.flatten(1).mean(1)[con_caja].cpu())
+    masas, fracciones = torch.cat(masas), torch.cat(fracciones)
+    if len(masas) == 0:
+        return float("nan"), float("nan")
+    return masas.mean().item(), fracciones.mean().item()
 
 
 def main() -> None:
@@ -165,6 +210,13 @@ def main() -> None:
     img_valida = cargar_en_memoria(valida, "validacion")
     y_entreno = torch.tensor(entreno.pCR.values, dtype=torch.float32)
     y_valida = torch.tensor(valida.pCR.values, dtype=torch.float32)
+    pacientes = uc.cargar_patients().set_index("pid")
+    cohorte_paciente = pacientes.dataset
+    cajas_entreno = cajas_por_corte(entreno, pacientes)
+    cajas_valida = cajas_por_corte(valida, pacientes)
+    if args.pooling == "atencion":
+        print(f"  cortes con caja del tumor: train {(cajas_entreno[:, 0] >= 0).float().mean():.0%}, "
+              f"validacion {(cajas_valida[:, 0] >= 0).float().mean():.0%}")
 
     red = CNNpCR(realce=args.realce, sin_late=args.sin_late, normalizar=args.normalizar, reducir=args.reducir,
                  pooling=args.pooling, filtros=args.filtros, dropout=args.dropout).to(dispositivo)
@@ -190,8 +242,8 @@ def main() -> None:
     historial, mejor_auc, sin_mejorar, epoca_elegida = [], -1.0, 0, 1
     for epoca in range(1, args.epocas + 1):
         inicio = time.perf_counter()
-        perdida_train = una_epoca(red, img_entreno, y_entreno, criterio, optimizador, args,
-                                  dispositivo, epoca)
+        perdida_train, perdida_caja_train = una_epoca(red, img_entreno, y_entreno, cajas_entreno, criterio,
+                                                      optimizador, args, dispositivo, epoca)
         probs = predecir(red, img_valida, dispositivo)
         metricas = uc.evaluar_por_paciente(probs, valida, umbral=0.5, metodo="mean")
         auc = metricas["auc"]
@@ -202,18 +254,32 @@ def main() -> None:
         recientes = [h["auc_val"] for h in historial[-(args.suavizado - 1):]] if args.suavizado > 1 else []
         auc_suave = float(np.mean(recientes + [auc]))
         planificador.step(auc_suave)
+        # Sin la ventaja de reconocer el hospital: solo pares de pacientes de la misma cohorte
+        por_paciente = uc.agregar_por_paciente(valida.patient_id.values, probs).join(
+            valida.groupby("patient_id").pCR.first())
+        auc_hospital = auc_mismo_hospital(por_paciente.prob, por_paciente.pCR,
+                                          por_paciente.index.map(cohorte_paciente))
+        extra = {"auc_val_mismo_hospital": auc_hospital}
+        if args.peso_caja > 0:
+            extra["perdida_caja_train"] = perdida_caja_train
+        if args.pooling == "atencion":
+            extra["masa_caja_val"], extra["fraccion_caja_val"] = atencion_en_caja(
+                red, img_valida, cajas_valida, dispositivo)
 
         historial.append({"epoca": epoca, "perdida_train": perdida_train,
                           "perdida_val": perdida_media(probs, y_valida, criterio_cpu),
                           "auc_train": auc_train, "auc_val": auc, "auc_val_suave": auc_suave,
                           "sensibilidad_05": metricas["sensibilidad"],
                           "especificidad_05": metricas["especificidad"],
+                          **extra,
                           "lr": optimizador.param_groups[0]["lr"],
                           "segundos": time.perf_counter() - inicio})
         mejora = auc_suave > mejor_auc
         print(f"  epoca {epoca:2d}  perdida {perdida_train:.4f}  AUC train {auc_train:.3f}  "
-              f"val {auc:.3f} (suave {auc_suave:.3f})"
-              f"  ({historial[-1]['segundos']:.0f} s){'  *' if mejora else ''}")
+              f"val {auc:.3f} (suave {auc_suave:.3f}, mismo hospital {auc_hospital:.3f})"
+              + (f"  atencion en la caja {extra['masa_caja_val']:.2f} (area {extra['fraccion_caja_val']:.2f})"
+                 if "masa_caja_val" in extra else "")
+              + f"  ({historial[-1]['segundos']:.0f} s){'  *' if mejora else ''}")
         # Cada epoca, no solo al final: si el entrenamiento se corta, queda lo hecho
         pd.DataFrame(historial).to_csv(carpeta / "historial.csv", index=False)
         if mejora:
@@ -235,7 +301,7 @@ def main() -> None:
 
     umbral = umbral_youden(valida, probs)
     agregaciones = {m: uc.evaluar_por_paciente(probs, valida, metodo=m)["auc"] for m in uc.METODOS_AGREGACION}
-    cohorte = valida.patient_id.map(uc.cargar_patients().set_index("pid").dataset)
+    cohorte = valida.patient_id.map(cohorte_paciente)
     por_cohorte = {}
     for c in sorted(cohorte.unique()):
         mascara = (cohorte == c).values
@@ -262,7 +328,7 @@ def main() -> None:
             metodo_agregacion="mean", entrenamiento={k: configuracion[k] for k in (
                 "objetivo", "fold", "ponderada", "aumentado", "normalizar", "reducir", "pooling", "filtros",
                 "dropout", "epocas", "lote",
-                "lr", "wd", "semilla", "pos_weight")})
+                "lr", "wd", "semilla", "pos_weight", "peso_caja")})
 
     y = resultado["umbral_youden"]
     print(f"\nEpoca elegida {resultado['mejor_epoca']} de {len(historial)}: "

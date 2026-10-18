@@ -1,0 +1,9 @@
+# Iteracion 7 (docs/iteraciones.md): atencion supervisada con la caja del tumor, solo al
+# entrenar (la app recibe la misma red y no necesita la caja). Sobre 3 bloques (memoriza
+# poco; mapa final de 16x16). A = atencion libre (--peso-caja 0), B = supervisada (0.2).
+# Cribado en los folds 0 y 1; referencia it5_red128 (AUC medio 0,540), umbral 0,570.
+# Mirar en historial.csv: masa_caja_val frente a fraccion_caja_val y auc_val_mismo_hospital.
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0 --fold 0 --nombre it7_3b_atencion_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --fold 0 --nombre it7_3b_atsup_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0 --fold 1 --nombre it7_3b_atencion_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --fold 1 --nombre it7_3b_atsup_f1
