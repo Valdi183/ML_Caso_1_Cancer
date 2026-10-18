@@ -46,7 +46,7 @@ dentro de la red, en `src/models/cnn.py`). **Entrega el 30-10-2026.**
   `bash experimentos/lanzar.sh itN` (bloquear pantalla, no cerrar sesion): entrena en
   segundo plano cada linea de `experimentos/itN.txt` (opciones de entrenar), con log en
   `logs/itN.log`; `bash experimentos/ver.sh itN` para ver el progreso. Se niega a
-  lanzar si PyTorch no ve la GPU. Se trabaja por iteraciones de 1-2 modelos
+  lanzar si PyTorch no ve la GPU. Se trabaja por rondas de 6-8 modelos
   (`docs/iteraciones.md`). **No se puede instalar nada** fuera de un
   entorno virtual: todo paquete va en `.venv`, y no hay sudo. Claude se usa desde
   el navegador, asi que alli Claude no ejecuta nada: el usuario pega codigo y salidas.
@@ -138,7 +138,8 @@ Expectativas realistas (literatura, ver conversacion 13-10-2026): los autores de
 BreastDCEDL obtienen AUC 0,72 en test con un ViT (Duke 0,54, I-SPY1 0,68, I-SPY2
 0,78); solo imagen en otros trabajos ~0,70-0,75. Con CNN desde cero y estos datos,
 0,60-0,65 seria un buen resultado y ~0,70 excelente. Con clinicas: 0,70-0,75.
-Plan de presentacion del usuario: modelo solo imagen + modelo imagen + clinicas.
+El plan inicial (imagen + modelo imagen+clinicas) quedo sustituido por el correo del
+14-10 (abajo): el modelo es solo imagen y las clinicas son solo comparacion.
 
 ## Indicaciones del profesor (correo 14-10-2026) — MANDAN sobre lo anterior
 
@@ -195,10 +196,17 @@ Claude en claude.ai (tutor, no toca el repo). **La unica fuente de verdad es el 
 - **Antes de nada `git pull`; al acabar, commit y `git push`.** Solo una maquina edita
   CODIGO a la vez (las otras solo entrenan y suben `results/`). Si se cruzan cambios
   sin commitear, guardar copia, `git restore`, `git pull` y volver a aplicarlos.
-- **Estado (17-10-2026):** iteracion 6 (forma de la red, folds 0 y 1) lista para
-  lanzar en el PC. **Catalogo de estructuras SIN empezar** (capa cinetica 1x1,
+- **Estado (18-10-2026):** iteracion 6 (forma de la red) **terminada**: ninguna forma
+  mejora. Analisis 5b hecho (`python -m src.utils.analisis_cv`). **Siguiente paso: it7**,
+  atencion supervisada con la caja (abajo). **Catalogo de estructuras SIN empezar** (capa cinetica 1x1,
   residuales, separables, GroupNorm, Dropout2d, stem 7x7, dilatadas, mixup, aumentado
   de intensidad): quien lo empiece lo anota aqui para que el otro no lo duplique.
+- **Lista para lanzar (18-10-2026): atencion supervisada con la caja** (iteracion 7,
+  `experimentos/it7.txt`). `--peso-caja λ` (exige `--pooling atencion`): perdida = BCE +
+  λ·L_caja, L_caja = −log(masa de atencion en la caja del tumor), solo al entrenar; la red y
+  su `config` no cambian (la app no necesita la caja). La mascara pasa por el mismo aumentado
+  que las fases. historial.csv anade `auc_val_mismo_hospital` (todo modelo) y, con atencion,
+  `masa_caja_val` / `fraccion_caja_val` (atencion que cae en la caja frente a su area).
 - **Analizar una iteracion:** `git pull`; para cada `results/<nombre>/` leer
   `historial.csv` y `metricas.json`. Comparar sobre todo el **AUC de validacion medio de
   todas las epocas** (el pico de una epoca es ruido, ±0,04) y el suavizado de la epoca
@@ -228,12 +236,14 @@ el proyecto puede ir por otro lado. No tratarlo como decision tomada.
 Lo que dejo el EDA (`notebooks/eda.ipynb`, 30-09-2026) y condiciona el diseño:
 - Variables clinicas (subtipo + edad + volumen): AUC 0,69. Solo cohorte: 0,55.
   Medidas globales de realce: ~0,5. Es la referencia que la CNN tiene que superar.
-- Las imagenes son la mama entera con orientacion variable; las columnas
-  sraw/eraw/scol/ecol NO sirven para recortar el tumor.
+- Las imagenes son la mama entera con orientacion variable. En el EDA la caja
+  sraw/eraw/scol/ecol "tal cual" no caia en el tumor; despues se vio que SI lo marca,
+  girada 90 grados y escalada (ver "Caja del tumor" arriba, `src/data/tumor.py`).
 - LATE-EARLY depende del protocolo de cada cohorte.
 - Cortes de una misma paciente muy correlacionados (0,81).
 - Por eso realce y fase LATE van como ablaciones, no como decision.
-- Pregunta abierta al profesor: ¿se pueden usar variables clinicas?
+- Variables clinicas: respondido en el correo del 14-10 (solo comparacion, no modelo
+  principal).
 
 ## Como trabajar con el usuario
 
