@@ -26,6 +26,26 @@ def umbral_youden(filas: pd.DataFrame, probs: np.ndarray) -> float:
     return float(umbrales[np.argmax(tpr - fpr)])
 
 
+def auc_mismo_hospital(prob, pcr, cohorte) -> float:
+    """AUC por paciente contando solo los pares (pCR, no pCR) del mismo hospital.
+
+    El AUC normal compara pacientes de cualquier cohorte, asi que una red que solo
+    reconozca el hospital (cada uno con su tasa de pCR) ya lo sube. Aqui la cohorte
+    no ayuda: es la fraccion de pares de la misma cohorte bien ordenados (empates
+    cuentan 1/2), o sea la media de los AUC por cohorte ponderada por sus pares.
+    Entradas: un valor por paciente. NaN si ninguna cohorte tiene las dos clases.
+    """
+    prob, pcr, cohorte = np.asarray(prob, dtype=float), np.asarray(pcr), np.asarray(cohorte)
+    bien, pares = 0.0, 0
+    for c in np.unique(cohorte):
+        de_c = cohorte == c
+        positivos, negativos = prob[de_c & (pcr == 1)], prob[de_c & (pcr == 0)]
+        diferencia = positivos[:, None] - negativos[None, :]
+        bien += (diferencia > 0).sum() + 0.5 * (diferencia == 0).sum()
+        pares += diferencia.size
+    return float(bien / pares) if pares else float("nan")
+
+
 def dibujar_curvas(historial: pd.DataFrame, ruta: Path, titulo: str,
                    epoca_elegida: int | None = None) -> None:
     """Perdida y AUC por paciente, train y validacion juntas, con la epoca elegida marcada.
