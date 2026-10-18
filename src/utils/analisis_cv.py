@@ -17,6 +17,15 @@ Para la configuracion calcula, por paciente (media de sus cortes):
   4. Referencia «solo cohorte»: cada paciente de validacion recibe la tasa de pCR de
      su cohorte en el train de ese fold.
   5. AUC medio de validacion por epoca en la ventana comun 1-15 y en todas las epocas.
+  6. Si el historial lo trae (desde it7), lo mismo con el AUC entre pares del mismo
+     hospital de cada epoca.
+
+OJO: 1-4 salen de `predicciones_val.csv`, que es la epoca ELEGIDA con la propia
+validacion, y estan inflados (un modelo sin señal da ~0,56-0,58 asi). Juntar folds
+estrecha el IC pero no quita ese sesgo: todos se equivocan hacia arriba. Que «mismo
+hospital» ≈ AUC global solo descarta que el AUC venga de la cohorte; no prueba que
+haya señal. 5 no tiene ese sesgo pero no separa la cohorte; 6 no tiene ninguno de
+los dos problemas, y es la medida que decide.
 
 Intervalos al 95 % por bootstrap de pacientes. Escribe
 results/analisis_<config>/resumen.json y una tabla en consola. Test NO se usa.
@@ -77,8 +86,12 @@ def por_paciente(nombre: str, pacientes: pd.DataFrame, entrenamiento: pd.DataFra
 
 def auc_por_epoca(nombre: str) -> dict:
     h = pd.read_csv(config.RESULTADOS / nombre / "historial.csv")
-    return {"ventana_1_15": float(h.auc_val[h.epoca <= VENTANA].mean()), "todas": float(h.auc_val.mean()),
-            "epocas": int(len(h))}
+    r = {"ventana_1_15": float(h.auc_val[h.epoca <= VENTANA].mean()), "todas": float(h.auc_val.mean()),
+         "epocas": int(len(h))}
+    if "auc_val_mismo_hospital" in h:   # sin elegir epoca y sin la ventaja de la cohorte
+        r["mismo_hospital_1_15"] = float(h.auc_val_mismo_hospital[h.epoca <= VENTANA].mean())
+        r["mismo_hospital_todas"] = float(h.auc_val_mismo_hospital.mean())
+    return r
 
 
 def media_desviacion(valores) -> dict:
@@ -129,6 +142,9 @@ def analizar(nombres: list[str], remuestreos: int, semilla: int) -> dict:
             "auc_medio_epocas_1_15": media_desviacion(
                 [f["por_epoca"]["ventana_1_15"] for f in folds.values()]),
             "auc_medio_todas_epocas": media_desviacion([f["por_epoca"]["todas"] for f in folds.values()]),
+            **{f"{clave}_medio": media_desviacion([f["por_epoca"][clave] for f in folds.values()])
+               for clave in ("mismo_hospital_1_15", "mismo_hospital_todas")
+               if all(clave in f["por_epoca"] for f in folds.values())},
         },
     }
 
@@ -152,6 +168,12 @@ def imprimir(nombre: str, r: dict) -> None:
           f"  medio 1-15 {md(e['auc_medio_epocas_1_15'])}, todas {md(e['auc_medio_todas_epocas'])}")
     print("  por cohorte (global): " + ", ".join(
         f"{c} {con(m)} ({m['pacientes']} pac.)" for c, m in g["por_cohorte"].items()))
+    if "mismo_hospital_todas_medio" in e:
+        por_fold = ", ".join(f"{f['por_epoca']['mismo_hospital_todas']:.3f}" for f in r["folds"].values())
+        print("  mismo hospital MEDIO por epoca (sin elegir epoca): "
+              f"1-15 {md(e['mismo_hospital_1_15_medio'])}, "
+              f"todas {md(e['mismo_hospital_todas_medio'])}  (folds: {por_fold})")
+    print("  (AUC y mismo hospital: epoca elegida con la validacion -> inflados)")
 
 
 def main() -> None:
