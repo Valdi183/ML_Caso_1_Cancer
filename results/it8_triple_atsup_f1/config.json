@@ -1,0 +1,48 @@
+{
+  "nombre": "it8_triple_atsup_f1",
+  "fold": 1,
+  "ponderada": false,
+  "realce": false,
+  "sin_late": false,
+  "aumentado": true,
+  "reducir": 2,
+  "normalizar": false,
+  "pooling": "atencion",
+  "objetivo": "triple",
+  "filtros": [
+    8,
+    16,
+    32
+  ],
+  "dropout": 0.7,
+  "epocas": 40,
+  "paciencia": 8,
+  "min_epocas": 15,
+  "suavizado": 3,
+  "lote": 32,
+  "lr": 0.001,
+  "wd": 0.001,
+  "semilla": 42,
+  "peso_caja": 0.2,
+  "rapido": false,
+  "dispositivo": "cuda",
+  "parametros": 18362,
+  "pos_weight": 2.050699300699301,
+  "arquitectura": {
+    "realce": false,
+    "sin_late": false,
+    "filtros": [
+      8,
+      16,
+      32
+    ],
+    "dropout": 0.7,
+    "normalizar": false,
+    "pooling": "atencion",
+    "reducir": 2
+  },
+  "cortes_train": 8725,
+  "cortes_val": 2190,
+  "pacientes_train": 875,
+  "pacientes_val": 219
+}
