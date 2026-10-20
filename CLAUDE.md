@@ -196,17 +196,18 @@ Claude en claude.ai (tutor, no toca el repo). **La unica fuente de verdad es el 
 - **Antes de nada `git pull`; al acabar, commit y `git push`.** Solo una maquina edita
   CODIGO a la vez (las otras solo entrenan y suben `results/`). Si se cruzan cambios
   sin commitear, guardar copia, `git restore`, `git pull` y volver a aplicarlos.
-- **Estado (18-10-2026):** iteracion 6 (forma de la red) **terminada**: ninguna forma
-  mejora. Analisis 5b hecho (`python -m src.utils.analisis_cv`). **Siguiente paso: it7**,
-  atencion supervisada con la caja (abajo). **Catalogo de estructuras SIN empezar** (capa cinetica 1x1,
-  residuales, separables, GroupNorm, Dropout2d, stem 7x7, dilatadas, mixup, aumentado
-  de intensidad): quien lo empiece lo anota aqui para que el otro no lo duplique.
-- **Lista para lanzar (18-10-2026): atencion supervisada con la caja** (iteracion 7,
-  `experimentos/it7.txt`). `--peso-caja λ` (exige `--pooling atencion`): perdida = BCE +
-  λ·L_caja, L_caja = −log(masa de atencion en la caja del tumor), solo al entrenar; la red y
-  su `config` no cambian (la app no necesita la caja). La mascara pasa por el mismo aumentado
-  que las fases. historial.csv anade `auc_val_mismo_hospital` (todo modelo) y, con atencion,
-  `masa_caja_val` / `fraccion_caja_val` (atencion que cae en la caja frente a su area).
+- **Estado (20-10-2026): MODELO CONGELADO** = configuracion de it6_3bloques (`--aumentado
+  --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32`: 3 bloques, resumen por media,
+  128 px, 18.329 parametros, sin caja). it7 (atencion libre y supervisada con la caja)
+  cerro la busqueda de estructuras: localiza el tumor (93 % de la atencion en val) pero el
+  AUC sigue en ~0,545, igual que todo lo probado. No se abren mas estructuras (el
+  catalogo queda descartado). `--peso-caja` y las columnas de atencion siguen en el
+  codigo, pero el modelo final no los usa.
+- **Iteracion 8** (`experimentos/it8.txt`): completa los folds 2-4 (`it8_3bloques_f2..f4`;
+  f0 y f1 son `it6_3bloques_f0/f1`) y la perdida ponderada en 5 folds
+  (`it8_3bloques_pond_f0..f4`); opcional, subtipo triple con atencion libre y supervisada.
+  **Despues:** umbral con criterio clinico usando las predicciones fuera de fold de los 5
+  folds, test UNA vez, app desplegada, informe y 5 diapositivas.
 - **Analizar una iteracion:** `git pull`; para cada `results/<nombre>/` leer
   `historial.csv` y `metricas.json`. Comparar sobre todo el **AUC de validacion medio de
   todas las epocas** (el pico de una epoca es ruido, ±0,04) y el suavizado de la epoca

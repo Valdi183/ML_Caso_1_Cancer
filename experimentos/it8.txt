@@ -1,0 +1,18 @@
+# Iteracion 8 (docs/iteraciones.md): MODELO CONGELADO = configuracion de it6_3bloques
+# (3 bloques 8-16-32, resumen por media, 128 px; folds 0 y 1 ya entrenados como it6_3bloques).
+# 1) Completar los folds 2-4 con perdida normal: 5 folds media ± desviacion y conjunto de 5 modelos.
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --fold 2 --nombre it8_3bloques_f2
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --fold 3 --nombre it8_3bloques_f3
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --fold 4 --nombre it8_3bloques_f4
+# 2) Perdida ponderada en los 5 folds (rubrica: normal frente a ponderada y su efecto en la sensibilidad).
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --ponderada --fold 0 --nombre it8_3bloques_pond_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --ponderada --fold 1 --nombre it8_3bloques_pond_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --ponderada --fold 2 --nombre it8_3bloques_pond_f2
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --ponderada --fold 3 --nombre it8_3bloques_pond_f3
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --ponderada --fold 4 --nombre it8_3bloques_pond_f4
+# 3) Opcional: subtipo triple negativo con las opciones de it7 (A atencion libre, B supervisada con la caja).
+#    Si B >= A + 0,05, mirando el tumor la red extrae biologia tumoral y lo que falla es pCR.
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0 --objetivo triple --fold 0 --nombre it8_triple_atencion_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --objetivo triple --fold 0 --nombre it8_triple_atsup_f0
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0 --objetivo triple --fold 1 --nombre it8_triple_atencion_f1
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --objetivo triple --fold 1 --nombre it8_triple_atsup_f1
