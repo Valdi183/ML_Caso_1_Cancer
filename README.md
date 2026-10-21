@@ -166,6 +166,46 @@ se suben, a proposito: `git add -f models/<nombre>.pt`.
 
 ---
 
+## Modelo final: como reproducirlo
+
+CNN de 3 bloques (8-16-32), resumen por media, imagen reducida a 128 px dentro de
+la red, 18.329 parametros, perdida normal, semilla 42 (`config.DEFECTO`). Es un
+conjunto de 5 modelos, uno por fold de validacion. Por que esta configuracion:
+[`docs/decisiones.md`](docs/decisiones.md); todo lo probado:
+[`docs/iteraciones.md`](docs/iteraciones.md).
+
+```bash
+O="--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32"
+python -m src.training.entrenar $O --fold 0 --nombre it6_3bloques_f0
+python -m src.training.entrenar $O --fold 1 --nombre it6_3bloques_f1
+python -m src.training.entrenar $O --fold 2 --nombre it8_3bloques_f2
+python -m src.training.entrenar $O --fold 3 --nombre it8_3bloques_f3
+python -m src.training.entrenar $O --fold 4 --nombre it8_3bloques_f4
+```
+
+(Son las lineas de `experimentos/it6.txt` y `experimentos/it8.txt`; con GPU,
+`bash experimentos/lanzar.sh it8`. La comparacion con perdida ponderada son las
+mismas ordenes con `--ponderada` y `--nombre it8_3bloques_pond_f<fold>`.)
+
+Cada ejecucion deja `models/<nombre>.pt` y `results/<nombre>/` (`config.json`,
+`historial.csv`, `metricas.json`, `predicciones_val.csv`, `curvas.png`). Los pesos
+se cargan con `src.models.cnn.cargar`, que reconstruye la red con su preprocesado.
+
+El resumen fuera de fold de una configuracion (sin entrenar, sin tocar test):
+
+```bash
+python -m src.utils.analisis_cv --config 3bloques it6_3bloques_f0 it6_3bloques_f1 \
+    it8_3bloques_f2 it8_3bloques_f3 it8_3bloques_f4
+```
+
+**Umbral, evaluacion en test y app: pendientes.** Criterio fijado: umbral por
+paciente (media de sus cortes) con especificidad >= 0,90 sobre las predicciones
+fuera de fold; test una sola vez con el conjunto de los 5 modelos. La app (`app/`)
+usara los mismos pesos y `cargar`, sin preprocesado propio. Sus ordenes se
+añadiran aqui cuando existan.
+
+---
+
 ## Tests y CI
 
 ```bash
