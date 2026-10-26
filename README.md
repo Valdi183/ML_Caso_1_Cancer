@@ -134,6 +134,8 @@ ML_Caso_1_Cancer/
 ├── requirements.txt, ruff.toml, pytest.ini
 ```
 
+`notebooks/comparativa_modelos.ipynb` reune las curvas de todas las iteraciones y las figuras del modelo final (calculos en `src/utils/figuras.py`; guarda `docs/figuras/comparativa_*.png` y `results/comparacion/inventario.csv`): se abre con Jupyter desde la raiz (`.venv` necesita `pip install jupyter`) y se ejecuta entero, ~2,5 min en CPU; no usa test.
+
 El dataset aporta ademas `utils_caso.py`, que ya resuelve la particion por
 paciente, el `Dataset` de PyTorch y la agregacion de cortes a paciente.
 
@@ -198,11 +200,22 @@ python -m src.utils.analisis_cv --config 3bloques it6_3bloques_f0 it6_3bloques_f
     it8_3bloques_f2 it8_3bloques_f3 it8_3bloques_f4
 ```
 
-**Umbral, evaluacion en test y app: pendientes.** Criterio fijado: umbral por
-paciente (media de sus cortes) con especificidad >= 0,90 sobre las predicciones
-fuera de fold; test una sola vez con el conjunto de los 5 modelos. La app (`app/`)
-usara los mismos pesos y `cargar`, sin preprocesado propio. Sus ordenes se
-añadiran aqui cuando existan.
+**Umbral: 0,3635** (`python -m src.utils.umbral`, campo `umbral_final` de
+`results/umbral/resumen.json`). Criterio: especificidad >= 0,90 por paciente (media
+de sus cortes); regla: percentil 90 de la probabilidad de todas las pacientes pCR=0
+fuera de fold juntas. Detalle y justificacion en `docs/decisiones.md`.
+
+**Test (hecho una vez):** `python -m src.utils.evaluar_test` evalua el conjunto de los 5
+modelos con el umbral fijado y se niega a repetirse si ya existe
+`results/test/resumen.json` (el plan, con el SHA-256 de cada peso, esta en
+`results/test/plan.json`). Por paciente: AUC 0,544 [0,457-0,629], sensibilidad 0,038,
+especificidad 0,935, F1 macro 0,430. La meta realista es la referencia del profesor,
+0,64 en test; Fridman et al. 2025 (0,72 en el mismo test) usa un modelo preentrenado,
+así que es una cota superior y no es comparable con una CNN desde cero.
+Detalle en `docs/decisiones.md`; figuras en `docs/figuras/test_*.png`.
+
+**App: pendiente.** La app (`app/`) usara los mismos pesos y `cargar`, sin
+preprocesado propio. Sus ordenes se añadiran aqui cuando existan.
 
 ---
 
