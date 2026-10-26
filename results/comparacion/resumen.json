@@ -1,0 +1,586 @@
+{
+  "congelado": {
+    "ejecuciones": [
+      "it6_3bloques_f0",
+      "it6_3bloques_f1",
+      "it8_3bloques_f2",
+      "it8_3bloques_f3",
+      "it8_3bloques_f4"
+    ],
+    "por_fold": [
+      {
+        "fold": 0,
+        "ejecucion": "it6_3bloques_f0",
+        "ponderada": false,
+        "auc_medio": 0.55059811827957,
+        "auc_medio_1_15": 0.55059811827957,
+        "mismo_hospital_medio": NaN,
+        "auc_elegido": 0.5793346774193548,
+        "epoca_elegida": 6,
+        "diferencia_train_val": 0.05406742310577639,
+        "perdida_val_min": 0.5991599559783936,
+        "perdida_constante": 0.6046152272322711,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 1,
+        "ejecucion": "it6_3bloques_f1",
+        "ponderada": false,
+        "auc_medio": 0.5481767393622747,
+        "auc_medio_1_15": 0.5518663105266763,
+        "mismo_hospital_medio": NaN,
+        "auc_elegido": 0.5818779535648244,
+        "epoca_elegida": 13,
+        "diferencia_train_val": 0.05527663941501115,
+        "perdida_val_min": 0.5965098738670349,
+        "perdida_constante": 0.5958620343257244,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 2,
+        "ejecucion": "it8_3bloques_f2",
+        "ponderada": false,
+        "auc_medio": 0.5501210653753026,
+        "auc_medio_1_15": 0.5501210653753026,
+        "mismo_hospital_medio": 0.5486195658857529,
+        "auc_elegido": 0.6044846825981682,
+        "epoca_elegida": 6,
+        "diferencia_train_val": 0.005056938139746836,
+        "perdida_val_min": 0.56519615650177,
+        "perdida_constante": 0.580590889276893,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 3,
+        "ejecucion": "it8_3bloques_f3",
+        "ponderada": false,
+        "auc_medio": 0.5381014198782961,
+        "auc_medio_1_15": 0.5072306513409962,
+        "mismo_hospital_medio": 0.5286944045911046,
+        "auc_elegido": 0.5655172413793104,
+        "epoca_elegida": 26,
+        "diferencia_train_val": 0.15620372771007973,
+        "perdida_val_min": 0.6583097577095032,
+        "perdida_constante": 0.6424534184921284,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 4,
+        "ejecucion": "it8_3bloques_f4",
+        "ponderada": false,
+        "auc_medio": 0.5681362333303981,
+        "auc_medio_1_15": 0.5683994246969386,
+        "mismo_hospital_medio": 0.5596905901924523,
+        "auc_elegido": 0.6132114238750771,
+        "epoca_elegida": 13,
+        "diferencia_train_val": 0.031878195243668195,
+        "perdida_val_min": 0.5902540683746338,
+        "perdida_constante": 0.5964629141480099,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      }
+    ],
+    "auc_medio": {
+      "media": 0.5510267152451683,
+      "desviacion": 0.010827339574065238
+    },
+    "auc_medio_1_15": {
+      "media": 0.5456431140438968,
+      "desviacion": 0.022785407912766946
+    },
+    "mismo_hospital_medio": {
+      "media": 0.5456681868897699,
+      "desviacion": 0.015707445971313887
+    },
+    "auc_elegido": {
+      "media": 0.588885195767347,
+      "desviacion": 0.019503105519479404
+    },
+    "epoca_elegida": {
+      "media": 12.8,
+      "desviacion": 8.167006795638168
+    },
+    "diferencia_train_val": {
+      "media": 0.06049658472285646,
+      "desviacion": 0.05727347945719477
+    },
+    "perdida_val_min": {
+      "media": 0.6018859624862671,
+      "desviacion": 0.0342834542145361
+    },
+    "perdida_constante": {
+      "media": 0.6039968966950053,
+      "desviacion": 0.02318439379964585
+    },
+    "folds_con_mismo_hospital": [
+      2,
+      3,
+      4
+    ],
+    "auc_global": {
+      "auc": 0.5879863754758566,
+      "ic95": [
+        0.5495159766923864,
+        0.6253537229950178
+      ],
+      "pacientes": 1097
+    },
+    "mismo_hospital_global": {
+      "auc": 0.584411099949774,
+      "ic95": [
+        0.5418489007523226,
+        0.6248617516020296
+      ],
+      "pacientes": 1097
+    },
+    "por_cohorte": {
+      "spy1": {
+        "auc": 0.6180966469428009,
+        "ic95": [
+          0.47771598290981787,
+          0.7613178056699398
+        ],
+        "pacientes": 104
+      },
+      "spy2": {
+        "auc": 0.5857799260054899,
+        "ic95": [
+          0.5411680032161572,
+          0.6311445403797608
+        ],
+        "pacientes": 784
+      },
+      "duke": {
+        "auc": 0.5497245179063361,
+        "ic95": [
+          0.458476359509321,
+          0.6394547209127552
+        ],
+        "pacientes": 209
+      }
+    },
+    "brier": 0.20541792782499024,
+    "brier_constante": 0.20736923190702414
+  },
+  "congelado_ponderada": {
+    "ejecuciones": [
+      "it8_3bloques_pond_f0",
+      "it8_3bloques_pond_f1",
+      "it8_3bloques_pond_f2",
+      "it8_3bloques_pond_f3",
+      "it8_3bloques_pond_f4"
+    ],
+    "por_fold": [
+      {
+        "fold": 0,
+        "ejecucion": "it8_3bloques_pond_f0",
+        "ponderada": true,
+        "auc_medio": 0.5595564516129031,
+        "auc_medio_1_15": 0.5595564516129031,
+        "mismo_hospital_medio": 0.5585161594715735,
+        "auc_elegido": 0.6021169354838709,
+        "epoca_elegida": 2,
+        "diferencia_train_val": -0.018095930232557955,
+        "perdida_val_min": 0.9649217128753662,
+        "perdida_constante": 0.9772951483739479,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 1,
+        "ejecucion": "it8_3bloques_pond_f1",
+        "ponderada": true,
+        "auc_medio": 0.5412232038901444,
+        "auc_medio_1_15": 0.5412232038901444,
+        "mismo_hospital_medio": 0.5473877176901925,
+        "auc_elegido": 0.5838298746661188,
+        "epoca_elegida": 2,
+        "diferencia_train_val": -0.000969531126163603,
+        "perdida_val_min": 0.9456037878990172,
+        "perdida_constante": 0.9617400765587669,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 2,
+        "ejecucion": "it8_3bloques_pond_f2",
+        "ponderada": true,
+        "auc_medio": 0.5562199529775064,
+        "auc_medio_1_15": 0.5562199529775064,
+        "mismo_hospital_medio": 0.5507470946319868,
+        "auc_elegido": 0.6097483945678492,
+        "epoca_elegida": 6,
+        "diferencia_train_val": -0.005284739175916986,
+        "perdida_val_min": 0.9116824865341188,
+        "perdida_constante": 0.93476331292592,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 3,
+        "ejecucion": "it8_3bloques_pond_f3",
+        "ponderada": true,
+        "auc_medio": 0.5506022988505748,
+        "auc_medio_1_15": 0.5001808429118774,
+        "mismo_hospital_medio": 0.5411326319145544,
+        "auc_elegido": 0.6121379310344828,
+        "epoca_elegida": 39,
+        "diferencia_train_val": 0.1483466136605882,
+        "perdida_val_min": 1.0592800378799438,
+        "perdida_constante": 1.0455451554112412,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      },
+      {
+        "fold": 4,
+        "ejecucion": "it8_3bloques_pond_f4",
+        "ponderada": true,
+        "auc_medio": 0.5566947469351415,
+        "auc_medio_1_15": 0.5566947469351415,
+        "mismo_hospital_medio": 0.5488443577466453,
+        "auc_elegido": 0.5813642901171153,
+        "epoca_elegida": 1,
+        "diferencia_train_val": 0.0049065587750928286,
+        "perdida_val_min": 0.9477781653404236,
+        "perdida_constante": 0.9628221922375955,
+        "masa_caja_15": NaN,
+        "fraccion_caja_15": NaN
+      }
+    ],
+    "auc_medio": {
+      "media": 0.5528593308532541,
+      "desviacion": 0.007268928191543489
+    },
+    "auc_medio_1_15": {
+      "media": 0.5427750396655145,
+      "desviacion": 0.02486369603834229
+    },
+    "mismo_hospital_medio": {
+      "media": 0.5493255922909904,
+      "desviacion": 0.006276916806665688
+    },
+    "auc_elegido": {
+      "media": 0.5978394851738874,
+      "desviacion": 0.014424506030315344
+    },
+    "epoca_elegida": {
+      "media": 10.0,
+      "desviacion": 16.32482771731451
+    },
+    "diferencia_train_val": {
+      "media": 0.0257805943802085,
+      "desviacion": 0.06903609204672717
+    },
+    "perdida_val_min": {
+      "media": 0.965853238105774,
+      "desviacion": 0.05567911069306947
+    },
+    "perdida_constante": {
+      "media": 0.9764331771014942,
+      "desviacion": 0.04157743448463435
+    },
+    "folds_con_mismo_hospital": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "auc_global": {
+      "auc": 0.597844119414947,
+      "ic95": [
+        0.5610985378719672,
+        0.6331661004025232
+      ],
+      "pacientes": 1097
+    },
+    "mismo_hospital_global": {
+      "auc": 0.6017739550198113,
+      "ic95": [
+        0.5626318520379185,
+        0.6406887837535826
+      ],
+      "pacientes": 1097
+    },
+    "por_cohorte": {
+      "spy1": {
+        "auc": 0.591715976331361,
+        "ic95": [
+          0.4498313498937547,
+          0.7262765419615772
+        ],
+        "pacientes": 104
+      },
+      "spy2": {
+        "auc": 0.6057517305167681,
+        "ic95": [
+          0.5624539984896478,
+          0.6503473459045994
+        ],
+        "pacientes": 784
+      },
+      "duke": {
+        "auc": 0.531129476584022,
+        "ic95": [
+          0.44768880197333966,
+          0.614534947698203
+        ],
+        "pacientes": 209
+      }
+    },
+    "frente_al_congelado": {
+      "dif_auc_medio_por_fold": {
+        "0": 0.009,
+        "1": -0.007,
+        "2": 0.0061,
+        "3": 0.0125,
+        "4": -0.0114
+      },
+      "dif_auc_medio": {
+        "media": 0.0018326156080857637,
+        "desviacion": 0.010442545281623156
+      },
+      "dif_mismo_hospital_medio": {
+        "folds": [
+          2,
+          3,
+          4
+        ],
+        "media": 0.00123984120795891,
+        "desviacion": 0.011667583664184309
+      },
+      "dif_auc_global": {
+        "diferencia": 0.009857743939090335,
+        "ic95": [
+          -0.023271596244675015,
+          0.04139416718169933
+        ],
+        "pacientes": 1097
+      }
+    }
+  },
+  "atencion_supervisada": {
+    "ejecuciones": [
+      "it7_3b_atsup_f0",
+      "it7_3b_atsup_f1",
+      "it9_3b_atsup_f2",
+      "it9_3b_atsup_f3",
+      "it9_3b_atsup_f4"
+    ],
+    "por_fold": [
+      {
+        "fold": 0,
+        "ejecucion": "it7_3b_atsup_f0",
+        "ponderada": false,
+        "auc_medio": 0.5553780241935484,
+        "auc_medio_1_15": 0.5287298387096774,
+        "mismo_hospital_medio": 0.554361288039632,
+        "auc_elegido": 0.5863911290322581,
+        "epoca_elegida": 33,
+        "diferencia_train_val": 0.17489919354838712,
+        "perdida_val_min": 0.6041780710220337,
+        "perdida_constante": 0.6046152272322711,
+        "masa_caja_15": 0.9503592252731324,
+        "fraccion_caja_15": 0.1588866263628006
+      },
+      {
+        "fold": 1,
+        "ejecucion": "it7_3b_atsup_f1",
+        "ponderada": false,
+        "auc_medio": 0.5342647763851791,
+        "auc_medio_1_15": 0.5342647763851791,
+        "mismo_hospital_medio": 0.5315001527650475,
+        "auc_elegido": 0.5412985411958084,
+        "epoca_elegida": 7,
+        "diferencia_train_val": 0.07927029126622787,
+        "perdida_val_min": 0.5916805267333984,
+        "perdida_constante": 0.5958620343257244,
+        "masa_caja_15": 0.9237922430038452,
+        "fraccion_caja_15": 0.1502746045589447
+      },
+      {
+        "fold": 2,
+        "ejecucion": "it9_3b_atsup_f2",
+        "ponderada": false,
+        "auc_medio": 0.5626118538793557,
+        "auc_medio_1_15": 0.5570270554795242,
+        "mismo_hospital_medio": 0.5766371518170079,
+        "auc_elegido": 0.5900621118012422,
+        "epoca_elegida": 12,
+        "diferencia_train_val": 0.038881052142726635,
+        "perdida_val_min": 0.57433021068573,
+        "perdida_constante": 0.580590889276893,
+        "masa_caja_15": 0.9347892999649048,
+        "fraccion_caja_15": 0.1554532200098037
+      },
+      {
+        "fold": 3,
+        "ejecucion": "it9_3b_atsup_f3",
+        "ponderada": false,
+        "auc_medio": 0.5309920424403184,
+        "auc_medio_1_15": 0.5079478927203065,
+        "mismo_hospital_medio": 0.508878097830752,
+        "auc_elegido": 0.5723218390804597,
+        "epoca_elegida": 18,
+        "diferencia_train_val": 0.09410062734200664,
+        "perdida_val_min": 0.6456433534622192,
+        "perdida_constante": 0.6424534184921284,
+        "masa_caja_15": 0.924698770046234,
+        "fraccion_caja_15": 0.1449638605117797
+      },
+      {
+        "fold": 4,
+        "ejecucion": "it9_3b_atsup_f4",
+        "ponderada": false,
+        "auc_medio": 0.5141086226970756,
+        "auc_medio_1_15": 0.5141086226970756,
+        "mismo_hospital_medio": 0.49245138026836904,
+        "auc_elegido": 0.568419971234847,
+        "epoca_elegida": 2,
+        "diferencia_train_val": -0.039853877134772286,
+        "perdida_val_min": 0.5933343768119812,
+        "perdida_constante": 0.5964629141480099,
+        "masa_caja_15": 0.937861979007721,
+        "fraccion_caja_15": 0.1492534279823303
+      }
+    ],
+    "auc_medio": {
+      "media": 0.5394710639190954,
+      "desviacion": 0.019562593162856103
+    },
+    "auc_medio_1_15": {
+      "media": 0.5284156371983526,
+      "desviacion": 0.019212909955516166
+    },
+    "mismo_hospital_medio": {
+      "media": 0.5327656141441617,
+      "desviacion": 0.03386937122939034
+    },
+    "auc_elegido": {
+      "media": 0.5716987184689231,
+      "desviacion": 0.019289831413191127
+    },
+    "epoca_elegida": {
+      "media": 14.4,
+      "desviacion": 11.970797801316335
+    },
+    "diferencia_train_val": {
+      "media": 0.06945945743291519,
+      "desviacion": 0.07858979203988924
+    },
+    "perdida_val_min": {
+      "media": 0.6018333077430725,
+      "desviacion": 0.02672334727207444
+    },
+    "perdida_constante": {
+      "media": 0.6039968966950053,
+      "desviacion": 0.02318439379964585
+    },
+    "folds_con_mismo_hospital": [
+      0,
+      1,
+      2,
+      3,
+      4
+    ],
+    "auc_global": {
+      "auc": 0.5714646363454218,
+      "ic95": [
+        0.5329263357122368,
+        0.6108702404465381
+      ],
+      "pacientes": 1097
+    },
+    "mismo_hospital_global": {
+      "auc": 0.5662809029521737,
+      "ic95": [
+        0.5232115087720605,
+        0.6071937089368225
+      ],
+      "pacientes": 1097
+    },
+    "por_cohorte": {
+      "spy1": {
+        "auc": 0.5216962524654833,
+        "ic95": [
+          0.3859453020069883,
+          0.6580794270833334
+        ],
+        "pacientes": 104
+      },
+      "spy2": {
+        "auc": 0.567531179138322,
+        "ic95": [
+          0.5213267040477916,
+          0.6120377801841447
+        ],
+        "pacientes": 784
+      },
+      "duke": {
+        "auc": 0.5556473829201102,
+        "ic95": [
+          0.4561958117290527,
+          0.6561117886178861
+        ],
+        "pacientes": 209
+      }
+    },
+    "brier": 0.20675935699786951,
+    "brier_constante": 0.20736923190702414,
+    "masa_caja_15": {
+      "media": 0.9343003034591675,
+      "desviacion": 0.010879135978275247
+    },
+    "fraccion_caja_15": {
+      "media": 0.1517663478851318,
+      "desviacion": 0.005456768519851527
+    },
+    "frente_al_congelado": {
+      "dif_auc_medio_por_fold": {
+        "0": 0.0048,
+        "1": -0.0139,
+        "2": 0.0125,
+        "3": -0.0071,
+        "4": -0.054
+      },
+      "dif_auc_medio": {
+        "media": -0.011555651326072836,
+        "desviacion": 0.025856675068191955
+      },
+      "dif_mismo_hospital_medio": {
+        "folds": [
+          2,
+          3,
+          4
+        ],
+        "media": -0.019679310251060272,
+        "desviacion": 0.04762854569676745
+      },
+      "dif_auc_global": {
+        "diferencia": -0.016521739130434865,
+        "ic95": [
+          -0.056598532089360984,
+          0.02363492118369034
+        ],
+        "pacientes": 1097
+      }
+    }
+  },
+  "regla": {
+    "texto": "la atencion supervisada sustituye al congelado solo si su AUC medio de validacion en 5 folds es >= 0,581 y su AUC del mismo hospital por epoca no es menor (fila 9, fijada antes)",
+    "auc_medio": 0.5394710639190954,
+    "cumple_auc": false,
+    "dif_mismo_hospital": -0.019679310251060272,
+    "folds_mismo_hospital": [
+      2,
+      3,
+      4
+    ],
+    "cumple_mismo_hospital": false,
+    "queda": "congelado"
+  }
+}

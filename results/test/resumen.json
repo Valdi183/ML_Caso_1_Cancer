@@ -1,0 +1,450 @@
+{
+  "plan": {
+    "fecha": "2026-10-25T16:09:42",
+    "aviso": "Plan fijado ANTES de evaluar test. Test se evalua una sola vez; despues no se cambia ni el modelo, ni el umbral, ni la agregacion.",
+    "modelo": "conjunto de 5 modelos (configuracion congelada de it6_3bloques, perdida normal)",
+    "pesos": [
+      {
+        "fichero": "models/it6_3bloques_f0.pt",
+        "sha256": "f1eb794abdee19ae3c8308727741a1d3db2b53c27e8112b1d241d6728e671862"
+      },
+      {
+        "fichero": "models/it6_3bloques_f1.pt",
+        "sha256": "0c62d2e98b46ae493758c1670dbd56fcfd683d7e6f75074de00e02ff52e3a563"
+      },
+      {
+        "fichero": "models/it8_3bloques_f2.pt",
+        "sha256": "b58239fd676a4d9050524933589dd80fb3f56d178e5f6dec5e3b56df4f5e29c8"
+      },
+      {
+        "fichero": "models/it8_3bloques_f3.pt",
+        "sha256": "3c3826e3f1d07d3254b7ddf6a068c94e1ee24e791f04d981d38c9242afd47145"
+      },
+      {
+        "fichero": "models/it8_3bloques_f4.pt",
+        "sha256": "e2d184a2ea3275a958630c1481be64dd3c9d751ed8c20e8e0e1d97d4db7ff1f3"
+      }
+    ],
+    "prediccion_corte": "media de las probabilidades (sigmoide) de los 5 modelos",
+    "agregacion": "probabilidad de la paciente = media de sus cortes (mean)",
+    "umbral": 0.363489137,
+    "umbral_origen": "results/umbral/resumen.json, normal.umbral_final (percentil 90 de las pCR=0 fuera de fold; criterio especificidad >= 0,90 por paciente en validacion)",
+    "regla_decision": "pCR si probabilidad > umbral",
+    "metricas": {
+      "por_paciente": [
+        "matriz de confusion",
+        "AUC",
+        "sensibilidad",
+        "especificidad",
+        "VPP",
+        "VPN",
+        "precision, recall y F1 de cada clase",
+        "F1 macro",
+        "exactitud",
+        "lo mismo para 'siempre no pCR'",
+        "AUC, sensibilidad y especificidad por cohorte (spy1, spy2, duke)",
+        "AUC entre pares del mismo hospital",
+        "Brier frente a un modelo constante (tasa de pCR de train)"
+      ],
+      "intervalos": "IC 95 % por bootstrap de pacientes (2.000 remuestreos, semilla 42)",
+      "por_corte_suelto": [
+        "AUC",
+        "sensibilidad",
+        "especificidad",
+        "VPP",
+        "VPN",
+        "F1 macro"
+      ],
+      "descriptivo": "AUC en test de cada uno de los 5 modelos por separado",
+      "figuras": [
+        "curva ROC con el punto del umbral",
+        "calibracion",
+        "matriz de confusion",
+        "3 falsos positivos de mayor probabilidad y 3 falsos negativos de menor probabilidad (PRE, EARLY, LATE, EARLY-PRE)"
+      ],
+      "referencia": "Fridman et al. 2025, mismo test: AUC 0,72, sensibilidad 0,27, especificidad 0,95"
+    }
+  },
+  "dispositivo": "cuda",
+  "pacientes": {
+    "n": 176,
+    "pcr": 53,
+    "cortes": 1758
+  },
+  "umbral": 0.363489137,
+  "por_paciente": {
+    "auc": {
+      "auc": 0.5444086516336861,
+      "ic95": [
+        0.45688883131294095,
+        0.6287516276041667
+      ],
+      "pacientes": 176
+    },
+    "VP": 2,
+    "FP": 8,
+    "FN": 51,
+    "VN": 115,
+    "sensibilidad": 0.03773584905660377,
+    "especificidad": 0.9349593495934959,
+    "VPP": 0.2,
+    "VPN": 0.6927710843373494,
+    "pcr1": {
+      "precision": 0.2,
+      "recall": 0.03773584905660377,
+      "f1": 0.06349206349206349
+    },
+    "pcr0": {
+      "precision": 0.6927710843373494,
+      "recall": 0.9349593495934959,
+      "f1": 0.7958477508650519
+    },
+    "f1_macro": 0.4296699071785577,
+    "exactitud": 0.6647727272727273,
+    "ic95": {
+      "sensibilidad": [
+        0.0,
+        0.09438497822931761
+      ],
+      "especificidad": [
+        0.8870932678821879,
+        0.975609756097561
+      ],
+      "VPP": [
+        0.0,
+        0.5
+      ],
+      "VPN": [
+        0.6227344092303199,
+        0.7619047619047619
+      ],
+      "f1_macro": [
+        0.3824561403508772,
+        0.4839425910450387
+      ],
+      "exactitud": [
+        0.5965909090909091,
+        0.7329545454545454
+      ],
+      "pcr1_precision": [
+        0.0,
+        0.5
+      ],
+      "pcr1_recall": [
+        0.0,
+        0.09438497822931761
+      ],
+      "pcr1_f1": [
+        0.0,
+        0.15384615384615385
+      ],
+      "pcr0_precision": [
+        0.6227344092303199,
+        0.7619047619047619
+      ],
+      "pcr0_recall": [
+        0.8870932678821879,
+        0.975609756097561
+      ],
+      "pcr0_f1": [
+        0.7418181818181818,
+        0.8438723399479212
+      ]
+    }
+  },
+  "siempre_no_pcr": {
+    "VP": 0,
+    "FP": 0,
+    "FN": 53,
+    "VN": 123,
+    "sensibilidad": 0.0,
+    "especificidad": 1.0,
+    "VPP": NaN,
+    "VPN": 0.6988636363636364,
+    "pcr1": {
+      "precision": NaN,
+      "recall": 0.0,
+      "f1": 0.0
+    },
+    "pcr0": {
+      "precision": 0.6988636363636364,
+      "recall": 1.0,
+      "f1": 0.822742474916388
+    },
+    "f1_macro": 0.411371237458194,
+    "exactitud": 0.6988636363636364,
+    "ic95": {
+      "sensibilidad": [
+        0.0,
+        0.0
+      ],
+      "especificidad": [
+        1.0,
+        1.0
+      ],
+      "VPP": [
+        NaN,
+        NaN
+      ],
+      "VPN": [
+        0.6306818181818182,
+        0.7670454545454546
+      ],
+      "f1_macro": [
+        0.3867595818815331,
+        0.4340836012861736
+      ],
+      "exactitud": [
+        0.6306818181818182,
+        0.7670454545454546
+      ],
+      "pcr1_precision": [
+        NaN,
+        NaN
+      ],
+      "pcr1_recall": [
+        0.0,
+        0.0
+      ],
+      "pcr1_f1": [
+        0.0,
+        0.0
+      ],
+      "pcr0_precision": [
+        0.6306818181818182,
+        0.7670454545454546
+      ],
+      "pcr0_recall": [
+        1.0,
+        1.0
+      ],
+      "pcr0_f1": [
+        0.7735191637630662,
+        0.8681672025723473
+      ]
+    }
+  },
+  "por_cohorte": {
+    "spy1": {
+      "pacientes": 35,
+      "pcr": 12,
+      "auc": 0.35144927536231885,
+      "ic95": [
+        0.18180171277997365,
+        0.5279720279720279
+      ],
+      "sensibilidad": 0.0,
+      "especificidad": 1.0,
+      "VP": 0,
+      "FP": 0,
+      "FN": 12,
+      "VN": 23
+    },
+    "spy2": {
+      "pacientes": 99,
+      "pcr": 32,
+      "auc": 0.5648320895522388,
+      "ic95": [
+        0.44715454944703953,
+        0.6753905153718586
+      ],
+      "sensibilidad": 0.03125,
+      "especificidad": 0.8805970149253731,
+      "VP": 1,
+      "FP": 8,
+      "FN": 31,
+      "VN": 59
+    },
+    "duke": {
+      "pacientes": 42,
+      "pcr": 9,
+      "auc": 0.6498316498316498,
+      "ic95": [
+        0.43013412309368193,
+        0.8657031249999997
+      ],
+      "sensibilidad": 0.1111111111111111,
+      "especificidad": 1.0,
+      "VP": 1,
+      "FP": 0,
+      "FN": 8,
+      "VN": 33
+    }
+  },
+  "mismo_hospital": {
+    "auc": 0.5524475524475524,
+    "ic95": [
+      0.4574185420110932,
+      0.6476851457440453
+    ],
+    "pacientes": 176
+  },
+  "brier": 0.21042507685267164,
+  "brier_constante": 0.21051114432567666,
+  "tasa_pcr_train": 0.2935278030993619,
+  "fiabilidad": [
+    {
+      "grupo": 0,
+      "prob_media": 0.15351215874155363,
+      "observada": 0.05555555555555555,
+      "pacientes": 18
+    },
+    {
+      "grupo": 1,
+      "prob_media": 0.20877189603116778,
+      "observada": 0.2777777777777778,
+      "pacientes": 18
+    },
+    {
+      "grupo": 2,
+      "prob_media": 0.23298138643012328,
+      "observada": 0.23529411764705882,
+      "pacientes": 17
+    },
+    {
+      "grupo": 3,
+      "prob_media": 0.24876179214980867,
+      "observada": 0.3333333333333333,
+      "pacientes": 18
+    },
+    {
+      "grupo": 4,
+      "prob_media": 0.2664414819549112,
+      "observada": 0.35294117647058826,
+      "pacientes": 17
+    },
+    {
+      "grupo": 5,
+      "prob_media": 0.28205067416032154,
+      "observada": 0.5,
+      "pacientes": 18
+    },
+    {
+      "grupo": 6,
+      "prob_media": 0.29691211966907277,
+      "observada": 0.5294117647058824,
+      "pacientes": 17
+    },
+    {
+      "grupo": 7,
+      "prob_media": 0.31783876650863224,
+      "observada": 0.3333333333333333,
+      "pacientes": 18
+    },
+    {
+      "grupo": 8,
+      "prob_media": 0.33689723645939545,
+      "observada": 0.11764705882352941,
+      "pacientes": 17
+    },
+    {
+      "grupo": 9,
+      "prob_media": 0.3741649455494351,
+      "observada": 0.2777777777777778,
+      "pacientes": 18
+    }
+  ],
+  "corte_suelto": {
+    "auc": {
+      "auc": 0.5451247618462295,
+      "ic95": [
+        0.4642825116109689,
+        0.6244101188425147
+      ]
+    },
+    "VP": 26,
+    "FP": 92,
+    "FN": 504,
+    "VN": 1136,
+    "sensibilidad": 0.04905660377358491,
+    "especificidad": 0.9250814332247557,
+    "VPP": 0.22033898305084745,
+    "VPN": 0.6926829268292682,
+    "pcr1": {
+      "precision": 0.22033898305084745,
+      "recall": 0.04905660377358491,
+      "f1": 0.08024691358024691
+    },
+    "pcr0": {
+      "precision": 0.6926829268292682,
+      "recall": 0.9250814332247557,
+      "f1": 0.7921896792189679
+    },
+    "f1_macro": 0.4362182963996074,
+    "exactitud": 0.6609783845278726,
+    "ic95": {
+      "sensibilidad": [
+        0.01131551362683438,
+        0.09804278074866309
+      ],
+      "especificidad": [
+        0.8831908545408684,
+        0.9600329116811632
+      ],
+      "VPP": [
+        0.052069909793814435,
+        0.42376059322033877
+      ],
+      "VPN": [
+        0.621338177532498,
+        0.7630277638434189
+      ],
+      "f1_macro": [
+        0.39539281049114966,
+        0.4833389869756164
+      ],
+      "exactitud": [
+        0.5960227272727273,
+        0.7269112336113263
+      ],
+      "pcr1_precision": [
+        0.052069909793814435,
+        0.42376059322033877
+      ],
+      "pcr1_recall": [
+        0.01131551362683438,
+        0.09804278074866309
+      ],
+      "pcr1_f1": [
+        0.018346946648105596,
+        0.15291888594288924
+      ],
+      "pcr0_precision": [
+        0.621338177532498,
+        0.7630277638434189
+      ],
+      "pcr0_recall": [
+        0.8831908545408684,
+        0.9600329116811632
+      ],
+      "pcr0_f1": [
+        0.7420058139534884,
+        0.8399625782362519
+      ]
+    }
+  },
+  "modelos_por_separado": {
+    "auc_por_paciente": {
+      "it6_3bloques_f0": 0.5557600859027458,
+      "it6_3bloques_f1": 0.5773891701181162,
+      "it8_3bloques_f2": 0.5448688449148642,
+      "it8_3bloques_f3": 0.5066728025770824,
+      "it8_3bloques_f4": 0.5279950912716674
+    },
+    "media": 0.5425371989568951,
+    "desviacion": 0.026891769323975936,
+    "min": 0.5066728025770824,
+    "max": 0.5773891701181162
+  },
+  "referencia_fridman_2025": {
+    "auc": 0.72,
+    "sensibilidad": 0.27,
+    "especificidad": 0.95
+  },
+  "figuras": [
+    "docs\\figuras\\test_roc.png",
+    "docs\\figuras\\test_calibracion.png",
+    "docs\\figuras\\test_matriz_confusion.png",
+    "docs\\figuras\\test_casos_fallados.png"
+  ]
+}

@@ -1,0 +1,7 @@
+# Iteracion 9 (docs/iteraciones.md): comparacion de candidatos. La atencion supervisada con la
+# caja (it7_3b_atsup, folds 0 y 1) se completa con los folds 2-4: mismas opciones, solo cambia el fold.
+# Regla fijada antes: sustituye al congelado solo si su AUC medio en 5 folds es >= 0,581 y su AUC
+# del mismo hospital por epoca no es menor.
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --fold 2 --nombre it9_3b_atsup_f2
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --fold 3 --nombre it9_3b_atsup_f3
+--aumentado --dropout 0.7 --wd 1e-3 --reducir 2 --filtros 8,16,32 --pooling atencion --peso-caja 0.2 --fold 4 --nombre it9_3b_atsup_f4

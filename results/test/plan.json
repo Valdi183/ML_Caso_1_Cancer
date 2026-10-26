@@ -1,0 +1,66 @@
+{
+  "fecha": "2026-10-25T16:09:42",
+  "aviso": "Plan fijado ANTES de evaluar test. Test se evalua una sola vez; despues no se cambia ni el modelo, ni el umbral, ni la agregacion.",
+  "modelo": "conjunto de 5 modelos (configuracion congelada de it6_3bloques, perdida normal)",
+  "pesos": [
+    {
+      "fichero": "models/it6_3bloques_f0.pt",
+      "sha256": "f1eb794abdee19ae3c8308727741a1d3db2b53c27e8112b1d241d6728e671862"
+    },
+    {
+      "fichero": "models/it6_3bloques_f1.pt",
+      "sha256": "0c62d2e98b46ae493758c1670dbd56fcfd683d7e6f75074de00e02ff52e3a563"
+    },
+    {
+      "fichero": "models/it8_3bloques_f2.pt",
+      "sha256": "b58239fd676a4d9050524933589dd80fb3f56d178e5f6dec5e3b56df4f5e29c8"
+    },
+    {
+      "fichero": "models/it8_3bloques_f3.pt",
+      "sha256": "3c3826e3f1d07d3254b7ddf6a068c94e1ee24e791f04d981d38c9242afd47145"
+    },
+    {
+      "fichero": "models/it8_3bloques_f4.pt",
+      "sha256": "e2d184a2ea3275a958630c1481be64dd3c9d751ed8c20e8e0e1d97d4db7ff1f3"
+    }
+  ],
+  "prediccion_corte": "media de las probabilidades (sigmoide) de los 5 modelos",
+  "agregacion": "probabilidad de la paciente = media de sus cortes (mean)",
+  "umbral": 0.363489137,
+  "umbral_origen": "results/umbral/resumen.json, normal.umbral_final (percentil 90 de las pCR=0 fuera de fold; criterio especificidad >= 0,90 por paciente en validacion)",
+  "regla_decision": "pCR si probabilidad > umbral",
+  "metricas": {
+    "por_paciente": [
+      "matriz de confusion",
+      "AUC",
+      "sensibilidad",
+      "especificidad",
+      "VPP",
+      "VPN",
+      "precision, recall y F1 de cada clase",
+      "F1 macro",
+      "exactitud",
+      "lo mismo para 'siempre no pCR'",
+      "AUC, sensibilidad y especificidad por cohorte (spy1, spy2, duke)",
+      "AUC entre pares del mismo hospital",
+      "Brier frente a un modelo constante (tasa de pCR de train)"
+    ],
+    "intervalos": "IC 95 % por bootstrap de pacientes (2.000 remuestreos, semilla 42)",
+    "por_corte_suelto": [
+      "AUC",
+      "sensibilidad",
+      "especificidad",
+      "VPP",
+      "VPN",
+      "F1 macro"
+    ],
+    "descriptivo": "AUC en test de cada uno de los 5 modelos por separado",
+    "figuras": [
+      "curva ROC con el punto del umbral",
+      "calibracion",
+      "matriz de confusion",
+      "3 falsos positivos de mayor probabilidad y 3 falsos negativos de menor probabilidad (PRE, EARLY, LATE, EARLY-PRE)"
+    ],
+    "referencia": "Fridman et al. 2025, mismo test: AUC 0,72, sensibilidad 0,27, especificidad 0,95"
+  }
+}
