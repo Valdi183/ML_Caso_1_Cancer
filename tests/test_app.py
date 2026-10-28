@@ -172,6 +172,7 @@ def texto_en_la_app(at, i: int) -> str:
 def test_orden_de_la_defensa_igual_que_la_app(conjunto, capsys):
     """`python -m src.inferencia --pre --early --late` escribe exactamente lo que muestra la app:
     el mismo valor y el mismo texto (coma decimal), comparado con lo que pinta la interfaz."""
+    pytest.importorskip("streamlit")
     from streamlit.testing.v1 import AppTest
     at = AppTest.from_file(str(REPO / "app" / "app.py"), default_timeout=120).run()
     at.sidebar.radio[0].set_value("Un ejemplo").run()
