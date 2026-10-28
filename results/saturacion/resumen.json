@@ -1,0 +1,106 @@
+{
+  "aviso": "Solo train (sin test). Descriptivo: no cambia nada del modelo.",
+  "criterio": "corte saturado si mas de la mitad de la zona que mas realza (el 2 % de la mama con mayor EARLY - PRE, la de src.visualizacion.curva_captacion) esta a 255 (o >= 250, el criterio de la app)",
+  "todas": {
+    "cortes": 10945,
+    "pacientes": 1097,
+    "early_255": {
+      "fraccion_cortes": 0.6322521699406122,
+      "mediana_fraccion_de_la_zona": 0.5957746478873239,
+      "fraccion_pacientes_mayoria_de_cortes": 0.6335460346399271
+    },
+    "late_255": {
+      "fraccion_cortes": 0.2797624486066697,
+      "mediana_fraccion_de_la_zona": 0.25526315789473686,
+      "fraccion_pacientes_mayoria_de_cortes": 0.2670920692798541
+    },
+    "early_250": {
+      "fraccion_cortes": 0.6907263590680676,
+      "mediana_fraccion_de_la_zona": 0.6519916142557652,
+      "fraccion_pacientes_mayoria_de_cortes": 0.690975387420237
+    },
+    "late_250": {
+      "fraccion_cortes": 0.31100959342165374,
+      "mediana_fraccion_de_la_zona": 0.2839160839160839,
+      "fraccion_pacientes_mayoria_de_cortes": 0.3017319963536919
+    },
+    "early_y_late_255_fraccion_cortes": 0.24723618090452262
+  },
+  "por_cohorte": {
+    "spy1": {
+      "cortes": 1040,
+      "pacientes": 104,
+      "early_255": {
+        "fraccion_cortes": 0.6057692307692307,
+        "mediana_fraccion_de_la_zona": 0.6040404838693405,
+        "fraccion_pacientes_mayoria_de_cortes": 0.6057692307692307
+      },
+      "late_255": {
+        "fraccion_cortes": 0.5423076923076923,
+        "mediana_fraccion_de_la_zona": 0.5361853220102268,
+        "fraccion_pacientes_mayoria_de_cortes": 0.5288461538461539
+      },
+      "early_250": {
+        "fraccion_cortes": 0.6490384615384616,
+        "mediana_fraccion_de_la_zona": 0.6454901960784314,
+        "fraccion_pacientes_mayoria_de_cortes": 0.6442307692307693
+      },
+      "late_250": {
+        "fraccion_cortes": 0.5769230769230769,
+        "mediana_fraccion_de_la_zona": 0.5655568527864976,
+        "fraccion_pacientes_mayoria_de_cortes": 0.5769230769230769
+      },
+      "early_y_late_255_fraccion_cortes": 0.44519230769230766
+    },
+    "spy2": {
+      "cortes": 7835,
+      "pacientes": 784,
+      "early_255": {
+        "fraccion_cortes": 0.6583280153158902,
+        "mediana_fraccion_de_la_zona": 0.6122177954847278,
+        "fraccion_pacientes_mayoria_de_cortes": 0.6581632653061225
+      },
+      "late_255": {
+        "fraccion_cortes": 0.24671346522016593,
+        "mediana_fraccion_de_la_zona": 0.22994652406417113,
+        "fraccion_pacientes_mayoria_de_cortes": 0.2308673469387755
+      },
+      "early_250": {
+        "fraccion_cortes": 0.7198468410976387,
+        "mediana_fraccion_de_la_zona": 0.6712141882673943,
+        "fraccion_pacientes_mayoria_de_cortes": 0.7232142857142857
+      },
+      "late_250": {
+        "fraccion_cortes": 0.2814294830887045,
+        "mediana_fraccion_de_la_zona": 0.2610497237569061,
+        "fraccion_pacientes_mayoria_de_cortes": 0.27040816326530615
+      },
+      "early_y_late_255_fraccion_cortes": 0.22552648372686662
+    },
+    "duke": {
+      "cortes": 2070,
+      "pacientes": 209,
+      "early_255": {
+        "fraccion_cortes": 0.5468599033816425,
+        "mediana_fraccion_de_la_zona": 0.5362138820769805,
+        "fraccion_pacientes_mayoria_de_cortes": 0.5550239234449761
+      },
+      "late_255": {
+        "fraccion_cortes": 0.27294685990338163,
+        "mediana_fraccion_de_la_zona": 0.22234985575662208,
+        "fraccion_pacientes_mayoria_de_cortes": 0.2727272727272727
+      },
+      "early_250": {
+        "fraccion_cortes": 0.6014492753623188,
+        "mediana_fraccion_de_la_zona": 0.5779895623465978,
+        "fraccion_pacientes_mayoria_de_cortes": 0.5933014354066986
+      },
+      "late_250": {
+        "fraccion_cortes": 0.2893719806763285,
+        "mediana_fraccion_de_la_zona": 0.24798643950681265,
+        "fraccion_pacientes_mayoria_de_cortes": 0.2822966507177033
+      },
+      "early_y_late_255_fraccion_cortes": 0.22995169082125605
+    }
+  }
+}
