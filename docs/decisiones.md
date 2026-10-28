@@ -126,6 +126,33 @@ concluyente, pero en test el modelo no se distingue del azar. Fridman et al. 202
 comparable con una CNN desde cero. El 0,544 coincide con la estimación sin sesgo de
 validación (AUC medio de todas las épocas, 0,551 ± 0,011).
 
+## Métricas descriptivas (después de test; no cambian nada)
+
+`python -m src.utils.metricas_extra` (`results/metricas_extra/resumen.json`, figuras
+`docs/figuras/metricas_*.png`; fila 12 de `iteraciones.md`). Lo de test sale de las
+predicciones guardadas; no se vuelve a pasar ninguna imagen por la red.
+
+- **En test el modelo no se distingue del azar**: AUC frente a 0,5 por permutación,
+  p = 0,35 por paciente y 0,31 por corte (permutando entre pacientes); AP 0,309 frente a
+  0,301 de un modelo sin señal; Brier skill score 0,000. En validación fuera de fold hay
+  algo de señal: AP 0,365 [0,322-0,419] frente a 0,294.
+- **Potencia baja**: con 53 pCR y 123 no pCR, si el AUC real fuera 0,55 el IC excluiría
+  0,5 solo el 18 % de las veces (fórmula y simulación coinciden). Test no puede separar
+  0,55 de 0,5.
+- **Calibración**: pendiente 0,45 fuera de fold y 0,72 en test, con IC muy anchos; las
+  probabilidades apenas ordenan, así que la pendiente queda lejos de 1.
+- **Sensibilidad en test**: los 5 modelos discrepan mucho en escala (sobre el umbral,
+  de 2 a 56 pacientes) y su media comprime algo la dispersión, así que el conjunto solo
+  supera el umbral en 10 pacientes. Es el riesgo anotado en la fila 10.
+- **Un corte frente a la paciente**: ICC 0,92 entre los cortes de una paciente; la app,
+  con un corte, verá casi la probabilidad media de la paciente (15,5 % de pacientes tienen
+  cortes a los dos lados del umbral).
+- **Modelo clínico** (subtipo + edad + volumen, solo validación): 0,692 ± 0,032 por fold,
+  sin cambios frente al EDA; global fuera de fold 0,686 [0,652-0,719]; entre pares del
+  mismo hospital 0,679, así que no viene de la cohorte; +0,141 ± 0,041 sobre la CNN en
+  cada fold. En esta versión del dataset, `tum_vol` de Duke es continuo (no 5 categorías)
+  pero más pequeño (mediana 6,1 frente a 14,4-14,7); quitar el volumen baja el AUC a 0,669.
+
 ## Diagnósticos anteriores a la iteración 1
 
 - **EDA** (`notebooks/eda.ipynb`): variables clínicas (subtipo + edad + volumen) dan
