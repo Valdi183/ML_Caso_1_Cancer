@@ -127,9 +127,11 @@ ML_Caso_1_Cancer/
 │   ├── data/imagen.py         ← lectura de un PNG (la misma en entrenamiento y app)
 │   ├── models/cnn.py          ← la CNN y su preprocesado (unica definicion)
 │   ├── inferencia.py          ← logica de la app: modelo, validacion de la entrada, prediccion
+│   ├── visualizacion.py       ← lo que la app enseña alrededor: mapa, curva, escala, cifras
 │   ├── training/entrenar.py   ← entrena y valida por paciente (--rapido para probar)
-│   └── utils/                 ← semilla, metricas y curvas, verificar_entorno
+│   └── utils/                 ← semilla, metricas, curvas, umbral, test, combinado, saturacion
 ├── tests/                     ← tests de la red (no necesitan el dataset)
+│   └── test_visualizacion.py  ← tests de src/visualizacion.py
 ├── experimentos/              ← una lista de entrenamientos por iteracion + lanzar.sh / ver.sh
 ├── configurar.ps1             ← prepara el portatil Windows de cero
 ├── CLAUDE.md                  ← contexto del proyecto para el asistente
@@ -224,10 +226,39 @@ Detalle en `docs/decisiones.md`; figuras en `docs/figuras/test_*.png`.
 
 Recibe **un corte**: tres PNG en escala de grises de 256×256 (PRE, EARLY y LATE, máximo
 2 MB cada uno), o uno de los ejemplos de `app/ejemplos/` (pacientes de train, nunca de
-test). Muestra las tres fases y el mapa EARLY−PRE, la probabilidad de pCR y la clase con
-el umbral, el umbral, el SHA-256 de los 5 pesos, el dispositivo y el tiempo de respuesta,
-los parámetros de entrenamiento y las métricas internas (leídas de `results/`). Uso
-educativo: **sin validez clínica**.
+test). Muestra:
+
+- **Visor:** las tres fases y un mapa de captación sobre EARLY, con la curva de captación
+  de la zona que más realza (descriptivos: el modelo no los usa).
+- **Resultado:** la probabilidad de pCR y la clase con el umbral, en una escala con el
+  umbral, la tasa base y la probabilidad de cada uno de los 5 modelos; el SHA-256 de los
+  pesos, el dispositivo y el tiempo de respuesta, y la descarga del resultado en JSON.
+- **«¿Cuánto fiarse?»:** el AUC de test, cuántas de las marcadas como pCR lo son
+  (validación y test) y cuántas pCR detecta en test, leído de `results/`.
+- **Imagen frente a variables clínicas:** el AUC de validación de la clínica sola, la
+  imagen sola y las dos combinadas, solo como comparación (no pide datos clínicos).
+- Desplegables con cómo funciona, cómo se validó y los detalles técnicos.
+
+Uso educativo: **sin validez clínica**.
+
+La interfaz está en `app/app.py`. Lo que se enseña alrededor de la predicción está en
+`src/visualizacion.py` (testeado en `tests/test_visualizacion.py`): el mapa y la curva de
+captación, la escala del resultado, las cifras de «¿Cuánto fiarse?» (leídas de
+`results/umbral/` y `results/test/`), los mensajes de error y el JSON descargable.
+
+El mapa y la curva son descriptivos: el modelo no los usa. El tipo de curva sale del
+cambio de EARLY a LATE: más de +10 %, persistente; ±10 %, meseta; menos de −10 %, lavado.
+Donde EARLY o LATE saturan, solo se afirma el tipo que la cota permite. El momento de LATE
+varía según el hospital.
+
+Si existe `results/combinado/resumen.json` (`python -m src.utils.combinado`), la app
+muestra el AUC de validación de la clínica sola, la imagen sola y las dos combinadas, solo
+como comparación: no pide datos clínicos. Si existe `docs/figuras/arquitectura.png`
+(`python -m src.utils.arquitectura`), muestra el esquema de la red.
+
+El tema (gris de visor y Atkinson Hyperlegible desde Google Fonts) está en
+`.streamlit/config.toml`. La app escribe la probabilidad con coma decimal;
+`python -m src.inferencia` la imprime con punto, con los mismos dígitos.
 
 - **Modelo:** el conjunto de los 5 pesos de `results/test/plan.json` (comprueba su
   SHA-256 al arrancar), en CPU, en modo evaluación y sin gradientes. Probabilidad = media

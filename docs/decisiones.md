@@ -158,6 +158,25 @@ predicciones guardadas; no se vuelve a pasar ninguna imagen por la red.
   mismo hospital 0,679, así que no viene de la cohorte; +0,141 ± 0,041 sobre la CNN en
   cada fold. En esta versión del dataset, `tum_vol` de Duke es continuo (no 5 categorías)
   pero más pequeño (mediana 6,1 frente a 14,4-14,7); quitar el volumen baja el AUC a 0,669.
+- **Clínico + CNN** (solo validación, `python -m src.utils.combinado`, fila 13 de
+  `iteraciones.md`): con el logit de la CNN fuera de fold como variable más en la logística
+  clínica, ajustada en 4 folds y evaluada en el quinto, el AUC por fold pasa de 0,692 a
+  0,704 (+0,012 ± 0,006, gana en los 5); global +0,013 [−0,001 a +0,028]. Es lo que se
+  predijo (+0,005 a +0,015): por AUC el combinado no se distingue del clínico solo. La
+  razón de verosimilitudes sí detecta que la CNN aporta algo independiente de la clínica y
+  de la cohorte (p = 0,004; con la cohorte, p = 0,012; OR 1,24 por desviación del logit),
+  pero sale algo inflado: la época de cada CNN se eligió con esos mismos folds. Ni el
+  clínico ni el combinado se evalúan en test; el modelo entregado sigue siendo la CNN sola,
+  porque la app solo recibe imágenes.
+- **Saturación de los PNG** (solo train, `python -m src.utils.saturacion`,
+  `results/saturacion/resumen.json`). En la zona que más realza (el 2 % de la mama con
+  mayor EARLY−PRE, la de la curva de la app), más de la mitad de los píxeles están a 255 en
+  EARLY en el **63 % de los cortes** (spy1 61 %, spy2 66 %, Duke 55 %), y en LATE en el
+  28 % (spy1 54 %, spy2 25 %, Duke 27 %); las dos a la vez, 25 %. Por paciente sale lo
+  mismo (63 % con la mayoría de sus cortes saturados en EARLY). Con el tumor a 255, ni la
+  magnitud del realce ni el cambio de EARLY a LATE están en la imagen. Es una limitación de
+  los PNG de 8 bits del dataset, no del modelo: afecta igual a cualquier modelo sobre estos
+  PNG (también al de referencia del profesor), así que no explica la diferencia con 0,64.
 
 ## Nota numérica: TF32 en las cifras oficiales, FP32 en la app
 
