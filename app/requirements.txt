@@ -1,0 +1,10 @@
+# Dependencias de la app (Streamlit Community Cloud las busca primero en la carpeta del
+# fichero principal, app/; el requirements.txt de la raiz es el del entrenamiento).
+# PyTorch de CPU: el servidor no tiene GPU y la rueda con CUDA pesa varios GB.
+# Versiones fijadas: las mismas con las que se probo la app.
+--extra-index-url https://download.pytorch.org/whl/cpu
+torch==2.14.1+cpu
+streamlit==1.66.1
+numpy==2.5.4
+pandas==3.0.6
+pillow==13.0.0

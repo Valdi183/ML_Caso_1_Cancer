@@ -1,0 +1,7 @@
+# Configuracion de la app (Streamlit la lee desde la raiz del repo, en local y en
+# Streamlit Community Cloud). La app vuelve a comprobar el limite por fichero.
+[server]
+maxUploadSize = 2          # MB por fichero subido
+
+[browser]
+gatherUsageStats = false
