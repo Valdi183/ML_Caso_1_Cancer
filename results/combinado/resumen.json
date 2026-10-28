@@ -1,0 +1,337 @@
+{
+  "aviso": "Solo validacion: ni el clinico ni el combinado se evaluan en test. La epoca de cada CNN se eligio con estos mismos folds de validacion, asi que su probabilidad fuera de fold (y con ella la aportacion de la CNN al combinado) sale algo inflada: la CNN sola da 0,589 de AUC por fold en la epoca elegida frente a 0,551 de media de todas las epocas. Ademas, en el combinado el coeficiente del fold k se ajusta con predicciones de los modelos de los otros folds, que se entrenaron con las pacientes del fold k (fuga pequeña, en el mismo sentido).",
+  "prediccion_previa": "Aunque fueran independientes, la combinacion optima daria ~0,70 (+0,005 a +0,015 sobre 0,692 por fold), indistinguible del clinico solo.",
+  "clinicas": {
+    "numericas": [
+      "age",
+      "tum_vol"
+    ],
+    "categoricas": [
+      "HR_HER2_STATUS"
+    ],
+    "tum_vol": "tal cual, como en el punto g de metricas_extra: imputado con la mediana y estandarizado, ajustados en los 4 folds de entrenamiento de cada fold"
+  },
+  "cnn": {
+    "ejecuciones": [
+      "it6_3bloques_f0",
+      "it6_3bloques_f1",
+      "it8_3bloques_f2",
+      "it8_3bloques_f3",
+      "it8_3bloques_f4"
+    ],
+    "entrada": "logit de la probabilidad fuera de fold por paciente (media de cortes), del modelo del congelado que no vio ese fold, en su epoca elegida"
+  },
+  "pacientes": 1097,
+  "pcr": 322,
+  "remuestreos": 2000,
+  "semilla": 42,
+  "por_fold": {
+    "clinico": {
+      "auc_por_fold": {
+        "0": 0.7360887096774194,
+        "1": 0.7154304499691801,
+        "2": 0.6456469102010738,
+        "3": 0.6955402298850575,
+        "4": 0.6687898089171974
+      },
+      "media": 0.6922992217299856,
+      "desviacion_ddof0": 0.03222485925556891,
+      "desviacion_ddof1": 0.03602848793040767
+    },
+    "clinico + cnn": {
+      "auc_por_fold": {
+        "0": 0.7429435483870966,
+        "1": 0.728682966920074,
+        "2": 0.6667017580797979,
+        "3": 0.702712643678161,
+        "4": 0.6784466817341278
+      },
+      "media": 0.7038975197598515,
+      "desviacion_ddof0": 0.02888454436888958,
+      "desviacion_ddof1": 0.032293902353972934
+    },
+    "clinico + cnn (logit estandarizado por fold)": {
+      "auc_por_fold": {
+        "0": 0.7483870967741936,
+        "1": 0.725395520854736,
+        "2": 0.6718601958100853,
+        "3": 0.7071264367816092,
+        "4": 0.6841997123484692
+      },
+      "media": 0.7073937925138186,
+      "desviacion_ddof0": 0.02758690466852573,
+      "desviacion_ddof1": 0.030843097063814915
+    },
+    "cnn": {
+      "auc_por_fold": {
+        "0": 0.5793346774193548,
+        "1": 0.5818779535648244,
+        "2": 0.6044846825981682,
+        "3": 0.5655172413793104,
+        "4": 0.6132114238750771
+      },
+      "media": 0.588885195767347,
+      "desviacion_ddof0": 0.01744410788556292,
+      "desviacion_ddof1": 0.019503105519479404
+    }
+  },
+  "cnn_auc_medio_epocas_por_fold": {
+    "0": 0.55059811827957,
+    "1": 0.5481767393622747,
+    "2": 0.5501210653753026,
+    "3": 0.5381014198782961,
+    "4": 0.5681362333303981
+  },
+  "diferencias_por_fold": {
+    "clinico + cnn - clinico": {
+      "por_fold": {
+        "0": 0.006854838709677291,
+        "1": 0.0132525169508938,
+        "2": 0.021054847878724137,
+        "3": 0.007172413793103516,
+        "4": 0.009656872816930395
+      },
+      "media": 0.011598298029865829,
+      "desviacion_ddof1": 0.00587411194861732,
+      "folds_a_favor": 5
+    },
+    "clinico + cnn - cnn": {
+      "por_fold": {
+        "0": 0.1636088709677418,
+        "1": 0.14680501335524954,
+        "2": 0.06221707548162969,
+        "3": 0.13719540229885063,
+        "4": 0.06523525785905071
+      },
+      "media": 0.11501232399250447,
+      "desviacion_ddof1": 0.04777442573217702,
+      "folds_a_favor": 5
+    },
+    "clinico + cnn (logit estandarizado por fold) - clinico": {
+      "por_fold": {
+        "0": 0.012298387096774221,
+        "1": 0.009965070885555871,
+        "2": 0.026213285609011483,
+        "3": 0.011586206896551765,
+        "4": 0.015409903431271799
+      },
+      "media": 0.015094570783833028,
+      "desviacion_ddof1": 0.006522351639285526,
+      "folds_a_favor": 5
+    }
+  },
+  "global": {
+    "clinico": {
+      "global": {
+        "auc": 0.6859346824283711,
+        "ic95": [
+          0.6523156564857605,
+          0.7191897927489034
+        ]
+      },
+      "mismo_hospital": {
+        "auc": 0.6791743400859422,
+        "ic95": [
+          0.6396285068029623,
+          0.7173227874963487
+        ]
+      }
+    },
+    "clinico + cnn": {
+      "global": {
+        "auc": 0.6988819875776398,
+        "ic95": [
+          0.6643090580562363,
+          0.7330036549656705
+        ],
+        "diferencia_con_clinico": {
+          "valor": 0.012947305149268673,
+          "ic95": [
+            -0.0011435829462792895,
+            0.02779276548951165
+          ]
+        }
+      },
+      "mismo_hospital": {
+        "auc": 0.6914936659411798,
+        "ic95": [
+          0.6533087094849533,
+          0.7288047635538853
+        ],
+        "diferencia_con_clinico": {
+          "valor": 0.01231932585523754,
+          "ic95": [
+            -0.0035525810818805123,
+            0.028595287329441957
+          ]
+        }
+      }
+    },
+    "clinico + cnn (logit estandarizado por fold)": {
+      "global": {
+        "auc": 0.7024844720496894,
+        "ic95": [
+          0.6672412512728271,
+          0.7365686673607724
+        ],
+        "diferencia_con_clinico": {
+          "valor": 0.016549789621318367,
+          "ic95": [
+            0.0024121538558912557,
+            0.030774082267779508
+          ]
+        }
+      },
+      "mismo_hospital": {
+        "auc": 0.694060773480663,
+        "ic95": [
+          0.6551096888965159,
+          0.7315912851444413
+        ],
+        "diferencia_con_clinico": {
+          "valor": 0.014886433394720733,
+          "ic95": [
+            -0.0004682898662274197,
+            0.03001021329919361
+          ]
+        }
+      }
+    },
+    "cnn": {
+      "global": {
+        "auc": 0.5755680224403926,
+        "ic95": [
+          0.538494986285612,
+          0.6120128337560011
+        ],
+        "diferencia_con_clinico": {
+          "valor": -0.11036665998797845,
+          "ic95": [
+            -0.159747461309534,
+            -0.06029300759686231
+          ]
+        }
+      },
+      "mismo_hospital": {
+        "auc": 0.5719976003125175,
+        "ic95": [
+          0.5305317453519922,
+          0.6121449034657629
+        ],
+        "diferencia_con_clinico": {
+          "valor": -0.10717673977342479,
+          "ic95": [
+            -0.16250646783446454,
+            -0.05084555390461597
+          ]
+        }
+      }
+    }
+  },
+  "razon_verosimilitudes": {
+    "nota": "logisticas sin penalizar ajustadas con las 1.097 pacientes (en la muestra, no fuera de fold); IC de Wald",
+    "clinico": {
+      "variable": "logit_cnn",
+      "covariables_base": [
+        "age",
+        "tum_vol",
+        "HR_HER2_STATUS_HER2pos",
+        "HR_HER2_STATUS_TripleNeg"
+      ],
+      "pacientes": 1097,
+      "logverosimilitud_base": -608.7288318340604,
+      "logverosimilitud_con_cnn": -604.5602720165857,
+      "estadistico_lr": 8.337119634949431,
+      "grados_libertad": 1,
+      "p_valor": 0.00388431320138782,
+      "coeficiente": 0.4164280398504697,
+      "error_tipico": 0.15016378404081043,
+      "ic95_wald": [
+        0.12211243134823074,
+        0.7107436483527088
+      ],
+      "razon_odds_por_unidad_de_logit": 1.5165348673199,
+      "razon_odds_por_unidad_ic95": [
+        1.1298811286979211,
+        2.0355043954467797
+      ],
+      "desviacion_del_logit": 0.5228250705997012,
+      "razon_odds_por_desviacion": 1.2432376927833018,
+      "razon_odds_por_desviacion_ic95": [
+        1.065925504976775,
+        1.4500450111575338
+      ]
+    },
+    "clinico_y_cohorte": {
+      "variable": "logit_cnn",
+      "covariables_base": [
+        "age",
+        "tum_vol",
+        "HR_HER2_STATUS_HER2pos",
+        "HR_HER2_STATUS_TripleNeg",
+        "dataset_duke",
+        "dataset_spy1"
+      ],
+      "pacientes": 1097,
+      "logverosimilitud_base": -603.9471184258782,
+      "logverosimilitud_con_cnn": -600.7680402990225,
+      "estadistico_lr": 6.358156253711513,
+      "grados_libertad": 1,
+      "p_valor": 0.011684289865289462,
+      "coeficiente": 0.37212150963861684,
+      "error_tipico": 0.15246586163132414,
+      "ic95_wald": [
+        0.07329391196935425,
+        0.6709491073078795
+      ],
+      "razon_odds_por_unidad_de_logit": 1.4508092578919174,
+      "razon_odds_por_unidad_ic95": [
+        1.0760467534629405,
+        1.9560929820298818
+      ],
+      "desviacion_del_logit": 0.5228250705997012,
+      "razon_odds_por_desviacion": 1.2147696308157492,
+      "razon_odds_por_desviacion_ic95": [
+        1.0390635706482338,
+        1.4201876551514725
+      ]
+    },
+    "clinico_logit_estandarizado_por_fold": {
+      "variable": "logit_cnn_fold",
+      "covariables_base": [
+        "age",
+        "tum_vol",
+        "HR_HER2_STATUS_HER2pos",
+        "HR_HER2_STATUS_TripleNeg"
+      ],
+      "pacientes": 1097,
+      "logverosimilitud_base": -608.7288318340604,
+      "logverosimilitud_con_cnn": -603.2365207684945,
+      "estadistico_lr": 10.9846221311318,
+      "grados_libertad": 1,
+      "p_valor": 0.0009187101217608888,
+      "coeficiente": 0.24648863614678668,
+      "error_tipico": 0.07739236642048238,
+      "ic95_wald": [
+        0.09480238528431417,
+        0.3981748870092592
+      ],
+      "razon_odds_por_unidad_de_logit": 1.2795246428047617,
+      "razon_odds_por_unidad_ic95": [
+        1.0994415678243872,
+        1.489104432156743
+      ],
+      "desviacion_del_logit": 0.9981735144570325,
+      "razon_odds_por_desviacion": 1.278948720315557,
+      "razon_odds_por_desviacion_ic95": [
+        1.09925121029621,
+        1.4880218587669634
+      ]
+    }
+  },
+  "correlacion_logit_cnn_con_clinico": {
+    "spearman_con_prob_clinica_fuera_de_fold": 0.03879811781214096
+  },
+  "nota_sensibilidad": "'clinico + cnn (logit estandarizado por fold)': el logit de la CNN centrado y escalado dentro de cada fold (sin etiquetas), porque cada fold lo predice un modelo con otra escala; no sustituye al analisis principal",
+  "figura": "docs\\figuras\\combinado_validacion.png"
+}
