@@ -129,6 +129,50 @@ def test_app_igual_que_el_pipeline_de_entrenamiento_en_cortes_de_train(conjunto)
         assert inferencia.predecir(conjunto, x)["prob"] == pytest.approx(float(referencia[i]), abs=TOLERANCIA)
 
 
+class Espia(torch.nn.Module):
+    """Red de mentira que apunta como estan los interruptores de TF32 al predecir."""
+    def __init__(self, fallar=False):
+        super().__init__()
+        self.vistos, self.fallar = [], fallar
+
+    def forward(self, x):
+        self.vistos.append((torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32))
+        if self.fallar:
+            raise RuntimeError("fallo a proposito")
+        return x.mean(dim=(1, 2, 3))
+
+
+def test_probabilidades_sin_tf32_y_restaura_los_valores():
+    antes = torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32
+    imagenes = torch.zeros((2, 3, 8, 8), dtype=torch.uint8)
+    try:
+        for valores in ((True, True), (False, True)):
+            torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32 = valores
+            espia = Espia()
+            inferencia.probabilidades(espia, imagenes, "cpu")
+            assert espia.vistos == [(False, False)]
+            assert (torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32) == valores
+        torch.backends.cudnn.allow_tf32 = torch.backends.cuda.matmul.allow_tf32 = True
+        with pytest.raises(RuntimeError):
+            inferencia.probabilidades(Espia(fallar=True), imagenes, "cpu")
+        assert torch.backends.cudnn.allow_tf32 and torch.backends.cuda.matmul.allow_tf32
+    finally:
+        torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32 = antes
+
+
+def test_orden_de_la_defensa_igual_que_la_app(conjunto, capsys):
+    """`python -m src.inferencia --pre --early --late` escribe exactamente lo que muestra la app."""
+    for base in pd.read_csv(EJEMPLOS / "ejemplos.csv").corte:
+        x, _ = corte_ejemplo(base)
+        app = inferencia.predecir(conjunto, x)
+        rutas = [EJEMPLOS / f"{base}_{f}.png" for f in FASES]
+        assert inferencia.pipeline(conjunto, rutas)["prob"] == app["prob"]          # exacto
+        inferencia.main(["--pre", str(rutas[0]), "--early", str(rutas[1]), "--late", str(rutas[2])])
+        salida = capsys.readouterr().out
+        assert f"Probabilidad de pCR: {inferencia.texto_probabilidad(app['prob'])} " in salida
+        assert f"Clase: {app['clase']} " in salida
+
+
 def test_prediccion_reproducible(conjunto):
     x, _ = corte_ejemplo(pd.read_csv(EJEMPLOS / "ejemplos.csv").corte[0])
     assert inferencia.predecir(conjunto, x)["prob"] == inferencia.predecir(conjunto, x)["prob"]

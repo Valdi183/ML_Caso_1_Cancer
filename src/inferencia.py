@@ -19,11 +19,13 @@ el resto va dentro de la red. No hace falta la carpeta del dataset.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import io
 import json
 import re
 import time
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from pathlib import Path
 
@@ -32,7 +34,7 @@ import torch
 from PIL import Image, UnidentifiedImageError
 
 from src.data.carga import lotes
-from src.data.imagen import FASES, a_entrada, leer_fase
+from src.data.imagen import FASES, a_entrada, leer_corte, leer_fase
 from src.models.cnn import cargar, parametros
 
 REPO = Path(__file__).resolve().parents[1]
@@ -58,13 +60,27 @@ class ErrorModelo(RuntimeError):
 # Prediccion por lotes (la misma que usa entrenar.py en validacion)
 # --------------------------------------------------------------------------- #
 
+@contextmanager
+def sin_tf32():
+    """FP32 completo en GPU mientras dura el bloque. PyTorch activa TF32 por defecto en las
+    convoluciones de cuDNN, y con lotes grandes cambia la probabilidad hasta ~5e-4 frente a
+    la CPU. Restaura los valores anteriores al salir, tambien si hay una excepcion."""
+    antes = torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32
+    torch.backends.cudnn.allow_tf32 = torch.backends.cuda.matmul.allow_tf32 = False
+    try:
+        yield
+    finally:
+        torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32 = antes
+
+
 @torch.no_grad()
 def probabilidades(red, imagenes: torch.Tensor, dispositivo) -> np.ndarray:
-    """Probabilidad por corte, en el mismo orden que las filas (sin desordenar).
-    `imagenes`: (N, 3, 256, 256) uint8."""
+    """Probabilidad por corte, en el mismo orden que las filas (sin desordenar), en FP32
+    (sin TF32) para que GPU y CPU den lo mismo. `imagenes`: (N, 3, 256, 256) uint8."""
     red.eval()
-    salidas = [torch.sigmoid(red(a_entrada(imagenes[i].to(dispositivo)))).cpu()
-               for i in lotes(len(imagenes), 128, desordenar=False)]
+    with sin_tf32():
+        salidas = [torch.sigmoid(red(a_entrada(imagenes[i].to(dispositivo)))).cpu()
+                   for i in lotes(len(imagenes), 128, desordenar=False)]
     return torch.cat(salidas).numpy()
 
 
@@ -269,6 +285,41 @@ def metricas_internas(resultados: Path = RESULTADOS) -> dict:
     return r
 
 
+def texto_probabilidad(p: float) -> str:
+    """Como se escribe la probabilidad en la app y en la linea de ordenes (los mismos decimales)."""
+    return f"{p:.4f}"
+
+
+def pipeline(conjunto: Conjunto, rutas, dispositivo: str = "cpu") -> dict:
+    """Un corte por el pipeline: la lectura de `cargar_en_memoria` (`leer_corte`, sin las
+    comprobaciones de la app) y `probabilidades` de cada modelo; media de las 5."""
+    imagenes = torch.from_numpy(leer_corte(rutas)[None])
+    por_modelo = np.array([probabilidades(red.to(dispositivo), imagenes, dispositivo)[0]
+                           for red in conjunto.redes])
+    prob = float(por_modelo.mean())
+    return {"prob": prob, "clase": "pCR" if prob > conjunto.umbral else "no pCR",
+            "por_modelo": dict(zip(conjunto.nombres, por_modelo.tolist()))}
+
+
+def main(argv=None) -> None:
+    """python -m src.inferencia --pre X_PRE.png --early X_EARLY.png --late X_LATE.png"""
+    p = argparse.ArgumentParser(description="Probabilidad de pCR de un corte con el pipeline (para "
+                                            "comparar con la app en la defensa).")
+    for fase in FASES:
+        p.add_argument(f"--{fase.lower()}", type=Path, required=True, help=f"PNG de la fase {fase}")
+    p.add_argument("--dispositivo", default="cpu", help="cpu o cuda (en FP32 dan lo mismo)")
+    a = p.parse_args(argv)
+    rutas = [getattr(a, f.lower()) for f in FASES]
+    for ruta in rutas:
+        if not ruta.is_file():
+            raise SystemExit(f"No existe {ruta}")
+    conjunto = cargar_conjunto()
+    r = pipeline(conjunto, rutas, a.dispositivo)
+    print(f"Probabilidad de pCR: {texto_probabilidad(r['prob'])}  (sin redondear {r['prob']!r})")
+    print(f"Clase: {r['clase']}  (umbral {conjunto.umbral:.4f}; pCR si probabilidad > umbral)")
+    print("Por modelo: " + ", ".join(f"{n} {v:.6f}" for n, v in r["por_modelo"].items()))
+
+
 def corte_de_ejemplo(carpeta: Path, base: str) -> tuple[dict[str, bytes], dict[str, str]]:
     """Bytes y nombres de las tres fases de un ejemplo de app/ejemplos (solo esa carpeta)."""
     datos, nombres = {}, {}
@@ -278,3 +329,7 @@ def corte_de_ejemplo(carpeta: Path, base: str) -> tuple[dict[str, bytes], dict[s
             raise ErrorEntrada("Ejemplo no valido.")
         datos[fase], nombres[fase] = ruta.read_bytes(), ruta.name
     return datos, nombres
+
+
+if __name__ == "__main__":
+    main()

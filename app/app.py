@@ -117,7 +117,7 @@ else:
 
     st.subheader("Resultado")
     a, b, c, d = st.columns(4)
-    a.metric("Probabilidad de pCR", f"{r['prob']:.4f}")
+    a.metric("Probabilidad de pCR", inferencia.texto_probabilidad(r["prob"]))
     b.metric("Clase", r["clase"])
     c.metric("Umbral", f"{r['umbral']:.4f}")
     d.metric("Tiempo de respuesta", f"{r['segundos'] * 1000:.0f} ms", help=f"Dispositivo: {r['dispositivo']}")
