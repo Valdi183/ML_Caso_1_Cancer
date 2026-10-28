@@ -5,3 +5,27 @@ maxUploadSize = 2          # MB por fichero subido
 
 [browser]
 gatherUsageStats = false
+
+[client]
+toolbarMode = "minimal"    # sin el boton "Deploy" ni opciones de desarrollador
+
+# Tema de visor radiologico: gris neutro medio-oscuro (no negro), porque las imagenes en
+# grises se juzgan mejor sobre gris neutro. El color se reserva para significado (tipos
+# de captacion); los controles y el foco usan el texto claro, no un color de marca.
+# Atkinson Hyperlegible (Google Fonts), disenada para legibilidad; sans del sistema de reserva.
+[theme]
+base = "dark"
+primaryColor = "#E3E5E8"
+backgroundColor = "#2B2D30"
+secondaryBackgroundColor = "#34373B"
+textColor = "#E3E5E8"
+linkColor = "#E3E5E8"
+borderColor = "#4A4D52"
+font = "Atkinson Hyperlegible:https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&display=swap, sans-serif"
+yellowColor = "#C8A24A"
+orangeColor = "#C8A24A"
+baseRadius = "6px"
+
+[theme.sidebar]
+backgroundColor = "#34373B"
+secondaryBackgroundColor = "#2B2D30"

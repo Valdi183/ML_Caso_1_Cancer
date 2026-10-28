@@ -6,6 +6,7 @@ cortes de train elegidos al azar."""
 
 import io
 import json
+import re
 from pathlib import Path
 
 import numpy as np
@@ -160,16 +161,30 @@ def test_probabilidades_sin_tf32_y_restaura_los_valores():
         torch.backends.cudnn.allow_tf32, torch.backends.cuda.matmul.allow_tf32 = antes
 
 
+def texto_en_la_app(at, i: int) -> str:
+    """La probabilidad tal como la pinta la app (Streamlit sin navegador) para el ejemplo i."""
+    at.sidebar.button(key=f"ej{i}").click().run()
+    assert not at.exception and not at.error
+    textos = " ".join(str(h.proto.body) for h in at.get("html"))
+    return re.search(r'class="prob">([^<]+)<', textos)[1]
+
+
 def test_orden_de_la_defensa_igual_que_la_app(conjunto, capsys):
-    """`python -m src.inferencia --pre --early --late` escribe exactamente lo que muestra la app."""
-    for base in pd.read_csv(EJEMPLOS / "ejemplos.csv").corte:
+    """`python -m src.inferencia --pre --early --late` escribe exactamente lo que muestra la app:
+    el mismo valor y el mismo texto (coma decimal), comparado con lo que pinta la interfaz."""
+    from streamlit.testing.v1 import AppTest
+    at = AppTest.from_file(str(REPO / "app" / "app.py"), default_timeout=120).run()
+    at.sidebar.radio[0].set_value("Un ejemplo").run()
+    for i, base in enumerate(pd.read_csv(EJEMPLOS / "ejemplos.csv").corte):
         x, _ = corte_ejemplo(base)
         app = inferencia.predecir(conjunto, x)
         rutas = [EJEMPLOS / f"{base}_{f}.png" for f in FASES]
         assert inferencia.pipeline(conjunto, rutas)["prob"] == app["prob"]          # exacto
         inferencia.main(["--pre", str(rutas[0]), "--early", str(rutas[1]), "--late", str(rutas[2])])
         salida = capsys.readouterr().out
-        assert f"Probabilidad de pCR: {inferencia.texto_probabilidad(app['prob'])} " in salida
+        mostrado = texto_en_la_app(at, i)
+        assert mostrado == inferencia.texto_probabilidad(app["prob"]) and "," in mostrado
+        assert f"Probabilidad de pCR: {mostrado}  (sin redondear {app['prob']!r})" in salida
         assert f"Clase: {app['clase']} " in salida
 
 

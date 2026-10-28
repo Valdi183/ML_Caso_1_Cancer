@@ -286,8 +286,9 @@ def metricas_internas(resultados: Path = RESULTADOS) -> dict:
 
 
 def texto_probabilidad(p: float) -> str:
-    """Como se escribe la probabilidad en la app y en la linea de ordenes (los mismos decimales)."""
-    return f"{p:.4f}"
+    """Como se escribe la probabilidad en la app y en la linea de ordenes: 4 decimales con coma
+    decimal, el mismo texto en las dos (la orden añade el valor sin redondear)."""
+    return f"{p:.4f}".replace(".", ",")
 
 
 def pipeline(conjunto: Conjunto, rutas, dispositivo: str = "cpu") -> dict:
