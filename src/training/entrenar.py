@@ -38,7 +38,9 @@ from tqdm import tqdm
 
 from src import config
 from src.data.carga import OBJETIVOS, aplicar_objetivo, aumentar, cargar_en_memoria, lotes, submuestra
+from src.data.imagen import a_entrada
 from src.data.tumor import cajas_por_corte, en_rejilla, masa_en_caja, mascaras, perdida_caja
+from src.inferencia import probabilidades
 from src.models.cnn import POOLINGS, CNNpCR, guardar, parametros
 from src.utils.evaluacion import auc_mismo_hospital, dibujar_curvas, perdida_media, umbral_youden
 from src.utils.semilla import fijar_semilla
@@ -125,7 +127,7 @@ def una_epoca(red, imagenes, etiquetas, cajas, criterio, optimizador, args, disp
     barra = tqdm(lotes(len(imagenes), args.lote, desordenar=True), total=-(-len(imagenes) // args.lote),
                  desc=f"  epoca {epoca:2d}", leave=False, ncols=90)
     for indices in barra:
-        x = imagenes[indices].to(dispositivo).float() / 255
+        x = a_entrada(imagenes[indices].to(dispositivo))
         y = etiquetas[indices].to(dispositivo)
         optimizador.zero_grad()
         if args.peso_caja > 0:
@@ -151,13 +153,10 @@ def una_epoca(red, imagenes, etiquetas, cajas, criterio, optimizador, args, disp
     return total / vistos, (total_caja / vistos if args.peso_caja > 0 else float("nan"))
 
 
-@torch.no_grad()
 def predecir(red, imagenes, dispositivo) -> np.ndarray:
-    """Probabilidad por corte, en el mismo orden que las filas (sin desordenar)."""
-    red.eval()
-    salidas = [torch.sigmoid(red(imagenes[i].to(dispositivo).float() / 255)).cpu()
-               for i in lotes(len(imagenes), 128, desordenar=False)]
-    return torch.cat(salidas).numpy()
+    """Probabilidad por corte, en el mismo orden que las filas (sin desordenar). Es la
+    funcion de la app (`src.inferencia.probabilidades`): misma entrada en los dos sitios."""
+    return probabilidades(red, imagenes, dispositivo)
 
 
 @torch.no_grad()
@@ -168,7 +167,7 @@ def atencion_en_caja(red, imagenes, cajas, dispositivo) -> tuple[float, float]:
     red.eval()
     masas, fracciones = [], []
     for i in lotes(len(imagenes), 128, desordenar=False):
-        _, pesos = red.con_atencion(imagenes[i].to(dispositivo).float() / 255)
+        _, pesos = red.con_atencion(a_entrada(imagenes[i].to(dispositivo)))
         rejilla = en_rejilla(mascaras(cajas[i].to(dispositivo)), *pesos.shape[1:])
         con_caja = rejilla.flatten(1).sum(1) > 0
         masas.append(masa_en_caja(pesos, rejilla)[con_caja].cpu())

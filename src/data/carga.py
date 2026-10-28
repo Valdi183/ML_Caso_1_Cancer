@@ -1,14 +1,15 @@
 """Carga de cortes en memoria, submuestreo para pruebas, lotes y aumentado de datos.
 
-La particion por paciente, la lectura de cada imagen y el `Dataset` de PyTorch los
-da `utils_caso.py` (en la carpeta del dataset); aqui solo lo que el entrenamiento
-necesita encima de eso.
+La particion por paciente y el `Dataset` de PyTorch los da `utils_caso.py` (en la
+carpeta del dataset). La lectura de cada imagen es `src.data.imagen`, la misma que
+usa la app; aqui solo lo que el entrenamiento necesita encima de eso.
 """
 
 from __future__ import annotations
 
 import time
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -16,6 +17,7 @@ import torch
 import torch.nn.functional as F
 
 from src import config
+from src.data.imagen import leer_corte
 
 #: Etiquetas de diagnostico: que es capaz de ver la red en la imagen.
 #: Nunca son ENTRADA de la red: solo sustituyen a pCR como respuesta a aprender.
@@ -62,17 +64,21 @@ def submuestra(filas: pd.DataFrame, pacientes: int, semilla: int) -> pd.DataFram
     return filas[filas.patient_id.isin(elegidas.index)]
 
 
+def rutas_corte(fila, raiz: Path) -> list[Path]:
+    """Las rutas de las tres fases de una fila de samples.csv, en orden PRE, EARLY, LATE."""
+    return [raiz / fila.path_pre, raiz / fila.path_early, raiz / fila.path_late]
+
+
 def cargar_en_memoria(filas: pd.DataFrame, etiqueta: str) -> torch.Tensor:
     """(N, 3, 256, 256) uint8. Leer los PNG en cada epoca haria esperar a la GPU.
 
-    Se usa `uc.cargar_imagen` (la misma funcion que la app) y se vuelve a 0-255:
-    es exacto, porque las imagenes son PNG de 8 bits divididos entre 255.
+    Se usa `src.data.imagen.leer_corte`, la misma funcion que la app. Da exactamente
+    lo que daba `np.rint(uc.cargar_imagen(f) * 255)` (tests/test_imagen.py).
     """
-    uc = config.utils()
+    raiz = config.raiz_datos()
     inicio = time.perf_counter()
     with ThreadPoolExecutor(max_workers=8) as hilos:
-        imagenes = list(hilos.map(lambda f: np.rint(uc.cargar_imagen(f) * 255).astype(np.uint8),
-                                  filas.itertuples()))
+        imagenes = list(hilos.map(lambda f: leer_corte(rutas_corte(f, raiz)), filas.itertuples()))
     tensor = torch.from_numpy(np.stack(imagenes))
     print(f"  {etiqueta}: {len(filas)} cortes, {filas.patient_id.nunique()} pacientes, "
           f"{tensor.numel() / 1024**3:.2f} GB, {time.perf_counter() - inicio:.0f} s")
