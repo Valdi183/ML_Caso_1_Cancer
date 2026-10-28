@@ -153,6 +153,18 @@ predicciones guardadas; no se vuelve a pasar ninguna imagen por la red.
   cada fold. En esta versión del dataset, `tum_vol` de Duke es continuo (no 5 categorías)
   pero más pequeño (mediana 6,1 frente a 14,4-14,7); quitar el volumen baja el AUC a 0,669.
 
+## Nota numérica: GPU con TF32 frente a la app en CPU
+
+Las probabilidades guardadas (`predicciones_val.csv` de cada ejecución y
+`results/test/predicciones_test*.csv`) se calcularon en la RTX 3060 Ti con lotes de 128.
+Con ese tamaño de lote cuDNN usa TF32 en las convoluciones, que PyTorch activa por defecto
+(`torch.backends.cudnn.allow_tf32`). La app calcula en FP32 en CPU, como la referencia de
+sus tests. Comprobado en el fold 3 de validación: GPU con lotes de 128 reproduce lo guardado
+(diferencia < 3e-8); CPU frente a lo guardado, hasta 4,2e-4; GPU sin TF32 frente a CPU,
+< 3e-7. El modelo y sus pesos no cambian; solo el redondeo al predecir. En test, una
+paciente está a 1,9e-4 del umbral (y 3 cortes a menos de 5e-4), así que su clase podría
+salir distinta en FP32. No se recalcula nada de test.
+
 ## Diagnósticos anteriores a la iteración 1
 
 - **EDA** (`notebooks/eda.ipynb`): variables clínicas (subtipo + edad + volumen) dan

@@ -113,7 +113,7 @@ ejecuta **desde la raiz del repositorio** como modulo: `python -m src.<...>`.
 ```
 ML_Caso_1_Cancer/
 ├── .github/workflows/ci.yml   ← CI: ruff + pytest en cada push
-├── app/                       ← demo web (pendiente)
+├── app/                       ← app web (Streamlit): app.py, ejemplos/, requirements.txt
 ├── data/                      ← sitio opcional para el dataset (no se versiona)
 ├── docs/figuras/              ← figuras del informe
 ├── models/                    ← pesos .pt (solo se versionan los que se entregan)
@@ -124,7 +124,9 @@ ML_Caso_1_Cancer/
 │   ├── config.py              ← carpetas, semilla e hiperparametros, dataset
 │   ├── data/descargar.py      ← baja las 38.109 imagenes (reanudable)
 │   ├── data/carga.py          ← cortes en memoria, lotes, aumentado
+│   ├── data/imagen.py         ← lectura de un PNG (la misma en entrenamiento y app)
 │   ├── models/cnn.py          ← la CNN y su preprocesado (unica definicion)
+│   ├── inferencia.py          ← logica de la app: modelo, validacion de la entrada, prediccion
 │   ├── training/entrenar.py   ← entrena y valida por paciente (--rapido para probar)
 │   └── utils/                 ← semilla, metricas y curvas, verificar_entorno
 ├── tests/                     ← tests de la red (no necesitan el dataset)
@@ -214,8 +216,51 @@ especificidad 0,935, F1 macro 0,430. La meta realista es la referencia del profe
 así que es una cota superior y no es comparable con una CNN desde cero.
 Detalle en `docs/decisiones.md`; figuras en `docs/figuras/test_*.png`.
 
-**App: pendiente.** La app (`app/`) usara los mismos pesos y `cargar`, sin
-preprocesado propio. Sus ordenes se añadiran aqui cuando existan.
+---
+
+## App
+
+**URL:** _(pendiente de desplegar)_
+
+Recibe **un corte**: tres PNG en escala de grises de 256×256 (PRE, EARLY y LATE, máximo
+2 MB cada uno), o uno de los ejemplos de `app/ejemplos/` (pacientes de train, nunca de
+test). Muestra las tres fases y el mapa EARLY−PRE, la probabilidad de pCR y la clase con
+el umbral, el umbral, el SHA-256 de los 5 pesos, el dispositivo y el tiempo de respuesta,
+los parámetros de entrenamiento y las métricas internas (leídas de `results/`). Uso
+educativo: **sin validez clínica**.
+
+- **Modelo:** el conjunto de los 5 pesos de `results/test/plan.json` (comprueba su
+  SHA-256 al arrancar), en CPU, en modo evaluación y sin gradientes. Probabilidad = media
+  de las 5 sigmoides, como en la evaluación de test.
+- **Umbral:** 0,3635, leído de `results/umbral/resumen.json` (`umbral_final`). Si falta, la
+  app no arranca. No usa el `umbral` guardado en los `.pt` (es el de Youden de cada fold).
+- **Mismo preprocesado que el entrenamiento:** el PNG se lee con `src/data/imagen.py`, la
+  función que usa `cargar_en_memoria`, y la red recibe `uint8 / 255`; el resto va dentro
+  de la red. `tests/test_imagen.py` comprueba que la lectura da exactamente lo mismo que la
+  de `utils_caso.py`, y `tests/test_app.py`, que la predicción de la app coincide (1e-6)
+  con la del pipeline. La app no necesita la carpeta del dataset.
+- **Entrada:** rechaza, con un mensaje claro, lo que no sea PNG, otro tamaño (no
+  redimensiona), más de 2 MB, ficheros corruptos, color, 16 bits y valores no finitos.
+  Avisa, sin bloquear, si EARLY no es más brillante que PRE (fases intercambiadas) o si el
+  sufijo `_PRE`/`_EARLY`/`_LATE` del nombre no cuadra con la casilla. Solo trabaja con los
+  bytes subidos: ni rutas ni ejecución de nada.
+
+En local, desde la raíz y con el `.venv`:
+
+```bash
+pip install streamlit          # una vez; el resto ya está en el entorno
+streamlit run app/app.py       # http://localhost:8501
+```
+
+**Despliegue (Streamlit Community Cloud):** desde el repositorio de GitHub, fichero
+principal `app/app.py`, Python 3.12. Las dependencias del servidor están en
+`app/requirements.txt` (PyTorch de CPU, versiones fijadas); `.streamlit/config.toml` limita
+la subida a 2 MB por fichero. Los 5 pesos y los JSON de `results/` que usa ya están en el
+repositorio.
+
+**Nota numérica:** las probabilidades guardadas al entrenar y en test se calcularon en GPU
+con lotes de 128, donde cuDNN usa TF32 por defecto; la app calcula en FP32 en CPU. Difieren
+hasta ~5e-4 (sin TF32, GPU y CPU coinciden en < 1e-6). Detalle en `docs/decisiones.md`.
 
 ---
 
