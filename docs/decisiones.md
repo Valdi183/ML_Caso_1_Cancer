@@ -126,6 +126,12 @@ concluyente, pero en test el modelo no se distingue del azar. Fridman et al. 202
 comparable con una CNN desde cero. El 0,544 coincide con la estimación sin sesgo de
 validación (AUC medio de todas las épocas, 0,551 ± 0,011).
 
+**Precisión numérica:** estas cifras se calcularon una vez, en GPU con TF32 (el valor por
+defecto de PyTorch). En FP32, como calcula la app, las probabilidades cambian hasta ~7e-4.
+Una paciente de test está a 1,9e-4 del umbral y su clase podría cambiar; no se recalcula
+para no volver a usar el test. En validación, FP32 no cambia ninguna clase (ver «Nota
+numérica»).
+
 ## Métricas descriptivas (después de test; no cambian nada)
 
 `python -m src.utils.metricas_extra` (`results/metricas_extra/resumen.json`, figuras
@@ -153,17 +159,38 @@ predicciones guardadas; no se vuelve a pasar ninguna imagen por la red.
   cada fold. En esta versión del dataset, `tum_vol` de Duke es continuo (no 5 categorías)
   pero más pequeño (mediana 6,1 frente a 14,4-14,7); quitar el volumen baja el AUC a 0,669.
 
-## Nota numérica: GPU con TF32 frente a la app en CPU
+## Nota numérica: TF32 en las cifras oficiales, FP32 en la app
 
-Las probabilidades guardadas (`predicciones_val.csv` de cada ejecución y
-`results/test/predicciones_test*.csv`) se calcularon en la RTX 3060 Ti con lotes de 128.
-Con ese tamaño de lote cuDNN usa TF32 en las convoluciones, que PyTorch activa por defecto
-(`torch.backends.cudnn.allow_tf32`). La app calcula en FP32 en CPU, como la referencia de
-sus tests. Comprobado en el fold 3 de validación: GPU con lotes de 128 reproduce lo guardado
-(diferencia < 3e-8); CPU frente a lo guardado, hasta 4,2e-4; GPU sin TF32 frente a CPU,
-< 3e-7. El modelo y sus pesos no cambian; solo el redondeo al predecir. En test, una
-paciente está a 1,9e-4 del umbral (y 3 cortes a menos de 5e-4), así que su clase podría
-salir distinta en FP32. No se recalcula nada de test.
+**Las cifras oficiales se calcularon con TF32.** Las probabilidades guardadas
+(`predicciones_val.csv` de cada ejecución, y con ellas el umbral 0,3635, y
+`results/test/predicciones_test*.csv`) salieron de la RTX 3060 Ti con lotes de 128. Con
+ese tamaño de lote cuDNN usa TF32 en las convoluciones, que PyTorch activa por defecto
+(`torch.backends.cudnn.allow_tf32`). Los pesos no cambian; solo el redondeo al predecir.
+
+**Desde el 28-10, la predicción es FP32.** `src.inferencia.probabilidades` (la usan la
+app, `python -m src.inferencia` y la validación de `entrenar.py`) desactiva TF32 mientras
+predice y restaura los valores al salir; el bucle de entrenamiento no cambia. En FP32, GPU
+y CPU coinciden (< 3e-7), y las probabilidades cambian frente a las oficiales hasta
+~7e-4.
+
+**Comprobación en validación** (`python -m src.utils.fp32_val`, `results/fp32_val/`; las
+oficiales no se sobrescriben). Las 10.945 predicciones fuera de fold recalculadas en FP32
+frente a las oficiales (TF32):
+
+| | Oficial (TF32) | FP32 |
+|---|---|---|
+| Diferencia máxima de probabilidad | — | 6,5e-4 por corte; 6,2e-4 por paciente |
+| AUC por paciente, media de los 5 folds | 0,58889 | 0,58892 |
+| AUC global fuera de fold (percentiles por fold) | 0,58799 | 0,58803 |
+| Percentil 90 de las pCR=0 | 0,36349 | 0,36328 |
+| Matriz con 0,3635 (VP / FP / FN / VN) | 57 / 77 / 265 / 698 | 57 / 77 / 265 / 698 |
+
+Ninguna paciente de validación cambia de clase. Es descriptivo: el umbral oficial sigue
+siendo 0,3635.
+
+**En test no se recalcula.** Una paciente está a 1,9e-4 del umbral (y 3 cortes a menos de
+5e-4), así que en FP32 su clase podría cambiar. No se vuelve a pasar test por la red para
+no usarlo dos veces: las cifras de test se quedan como se calcularon.
 
 ## Diagnósticos anteriores a la iteración 1
 

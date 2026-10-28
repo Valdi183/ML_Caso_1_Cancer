@@ -258,9 +258,21 @@ principal `app/app.py`, Python 3.12. Las dependencias del servidor están en
 la subida a 2 MB por fichero. Los 5 pesos y los JSON de `results/` que usa ya están en el
 repositorio.
 
-**Nota numérica:** las probabilidades guardadas al entrenar y en test se calcularon en GPU
-con lotes de 128, donde cuDNN usa TF32 por defecto; la app calcula en FP32 en CPU. Difieren
-hasta ~5e-4 (sin TF32, GPU y CPU coinciden en < 1e-6). Detalle en `docs/decisiones.md`.
+**Comprobar la app con el pipeline** (en la defensa): la misma probabilidad, con los mismos
+decimales que muestra la app:
+
+```bash
+python -m src.inferencia --pre X_PRE.png --early X_EARLY.png --late X_LATE.png
+```
+
+**Nota numérica:** las cifras oficiales (validación, umbral y test) se calcularon en GPU
+con TF32, que PyTorch activa por defecto en cuDNN. La predicción (`src.inferencia`: app,
+orden anterior y validación al entrenar) va en FP32, con lo que GPU y CPU dan lo mismo; las
+probabilidades cambian hasta ~7e-4 frente a las oficiales. En validación
+(`python -m src.utils.fp32_val`, `results/fp32_val/`) el AUC cambia en la cuarta decimal y
+ninguna paciente cambia de clase con 0,3635. En test hay una paciente a 1,9e-4 del umbral
+cuya clase podría cambiar; no se recalcula para no volver a usar el test. Detalle en
+`docs/decisiones.md`.
 
 ---
 
