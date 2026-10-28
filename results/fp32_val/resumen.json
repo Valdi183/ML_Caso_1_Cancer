@@ -1,0 +1,89 @@
+{
+  "aviso": "Descriptivo, solo validacion fuera de fold. El umbral oficial no cambia (0,3635) y las predicciones oficiales no se sobrescriben. Test no se usa.",
+  "dispositivo": "cuda",
+  "umbral_oficial": 0.363489137,
+  "por_ejecucion": {
+    "it6_3bloques_f0": {
+      "fold": 0,
+      "cortes": 2186,
+      "diferencia_maxima": 9.244378326417335e-05,
+      "diferencia_media": 1.6078090572553666e-05
+    },
+    "it6_3bloques_f1": {
+      "fold": 1,
+      "cortes": 2190,
+      "diferencia_maxima": 0.0001492838425445342,
+      "diferencia_media": 4.252052888950312e-05
+    },
+    "it8_3bloques_f2": {
+      "fold": 2,
+      "cortes": 2192,
+      "diferencia_maxima": 0.00011764025573729464,
+      "diferencia_media": 3.904208060578152e-05
+    },
+    "it8_3bloques_f3": {
+      "fold": 3,
+      "cortes": 2192,
+      "diferencia_maxima": 0.00042346392662045984,
+      "diferencia_media": 7.841021614930453e-05
+    },
+    "it8_3bloques_f4": {
+      "fold": 4,
+      "cortes": 2185,
+      "diferencia_maxima": 0.0006542118247985784,
+      "diferencia_media": 0.00027938461870505955
+    }
+  },
+  "diferencia_maxima_corte": 0.0006542118247985784,
+  "diferencia_maxima_paciente": 0.0006168724719314567,
+  "pacientes": 1097,
+  "cortes": 10945,
+  "oficial_tf32": {
+    "auc_por_fold": [
+      0.5793346774193548,
+      0.5818779535648244,
+      0.6044846825981682,
+      0.5655172413793104,
+      0.6132114238750771
+    ],
+    "auc_media_folds": 0.588885195767347,
+    "auc_global_percentiles_por_fold": 0.5879863754758566,
+    "auc_global_crudo": 0.5755680224403926,
+    "percentil_90_pcr0": 0.363489137,
+    "con_umbral_oficial": {
+      "VP": 57,
+      "FP": 77,
+      "FN": 265,
+      "VN": 698,
+      "sensibilidad": 0.17701863354037267,
+      "especificidad": 0.9006451612903226,
+      "VPP": 0.4253731343283582,
+      "f1_macro": 0.5266110471806674
+    }
+  },
+  "fp32": {
+    "auc_por_fold": [
+      0.5794354838709678,
+      0.5816724881857407,
+      0.6044846825981682,
+      0.5656091954022988,
+      0.6134168892541606
+    ],
+    "auc_media_folds": 0.5889237478622672,
+    "auc_global_percentiles_por_fold": 0.5880264476056902,
+    "auc_global_crudo": 0.5756882388298937,
+    "percentil_90_pcr0": 0.3632834255695343,
+    "con_umbral_oficial": {
+      "VP": 57,
+      "FP": 77,
+      "FN": 265,
+      "VN": 698,
+      "sensibilidad": 0.17701863354037267,
+      "especificidad": 0.9006451612903226,
+      "VPP": 0.4253731343283582,
+      "f1_macro": 0.5266110471806674
+    }
+  },
+  "pacientes_que_cambian_de_clase": 0,
+  "pacientes_a_menos_de_5e-4_del_umbral_oficial": 2
+}
