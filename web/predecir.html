@@ -1,0 +1,183 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Probar el modelo · Predicción de pCR</title>
+<meta name="description" content="Sube un corte de resonancia (PRE, EARLY y LATE) y el modelo calcula en tu navegador la probabilidad de pCR. Las imágenes no salen de tu ordenador. Uso educativo.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/estilo.css">
+<link rel="stylesheet" href="css/predecir.css">
+</head>
+<body class="pagina-visor">
+<a class="saltar" href="#visor">Saltar al visor</a>
+<div class="aviso" role="note">Uso educativo. Sin validez clínica. <span>No es un dispositivo médico: no sirve para diagnosticar ni para decidir tratamientos.</span></div>
+
+<header class="cabecera">
+  <div>
+    <p class="suave migas"><a href="index.html">El caso</a> · Probar el modelo</p>
+    <h1>Predicción de pCR desde una RM DCE previa al tratamiento</h1>
+    <p class="entradilla">La <strong>pCR</strong> (respuesta patológica completa) es que, tras la quimioterapia, no quede tumor invasivo. Este modelo estima su probabilidad con una resonancia tomada <strong>antes</strong> de empezar.</p>
+  </div>
+  <p class="privacidad"><strong>Las imágenes no salen de tu ordenador.</strong> La predicción se calcula aquí, en el navegador (WebAssembly); no se sube nada a ningún servidor.</p>
+</header>
+
+<main class="app">
+  <!-- Entrada -->
+  <section class="entrada" aria-labelledby="t-entrada">
+    <h2 id="t-entrada">Entrada</h2>
+    <p class="suave">Elige uno de los ejemplos o sube las tres fases de un mismo corte.</p>
+
+    <h3>Un ejemplo</h3>
+    <div class="ejemplos" id="ejemplos"></div>
+    <p class="suave pequeno">Pacientes de <strong>train</strong>: 4 de los 5 modelos las vieron al entrenar, así que su resultado es optimista. Sirven para probar la web, no para medirla.</p>
+
+    <h3>Tus imágenes</h3>
+    <p class="suave pequeno">Tres PNG en escala de grises de 8 bits, de 256 × 256 px y hasta 2 MB cada uno. No se redimensiona ni se convierte nada.</p>
+    <div class="ficheros">
+      <label for="fichero-PRE"><b>PRE</b> <span class="suave">antes del contraste</span></label>
+      <input type="file" id="fichero-PRE" accept="image/png">
+      <span class="nombre-fichero suave" id="nf-PRE" aria-live="polite">ningún archivo</span>
+      <label for="fichero-EARLY"><b>EARLY</b> <span class="suave">fase temprana</span></label>
+      <input type="file" id="fichero-EARLY" accept="image/png">
+      <span class="nombre-fichero suave" id="nf-EARLY" aria-live="polite">ningún archivo</span>
+      <label for="fichero-LATE"><b>LATE</b> <span class="suave">fase tardía</span></label>
+      <input type="file" id="fichero-LATE" accept="image/png">
+      <span class="nombre-fichero suave" id="nf-LATE" aria-live="polite">ningún archivo</span>
+    </div>
+    <p><button class="boton" id="predecir" type="button" disabled>Predecir</button></p>
+    <p id="estado" class="suave" aria-live="polite">Cargando el modelo…</p>
+    <div id="error" role="alert" hidden></div>
+    <div id="avisos"></div>
+  </section>
+
+  <!-- Visor y resultado -->
+  <section class="salida" id="visor" aria-labelledby="t-visor">
+    <h2 id="t-visor">Visor</h2>
+    <div class="paneles" role="group" aria-label="Visor del corte" id="paneles">
+      <figure><div class="rotulo"><b>PRE</b> <span>antes del contraste</span></div><canvas width="256" height="256" id="v-pre" role="img" aria-label="Fase PRE"></canvas><figcaption class="pie-panel" id="n-pre">pendiente</figcaption></figure>
+      <figure><div class="rotulo"><b>EARLY</b> <span>fase temprana</span></div><canvas width="256" height="256" id="v-early" role="img" aria-label="Fase EARLY"></canvas><figcaption class="pie-panel" id="n-early">pendiente</figcaption></figure>
+      <figure><div class="rotulo"><b>LATE</b> <span>fase tardía</span></div><canvas width="256" height="256" id="v-late" role="img" aria-label="Fase LATE"></canvas><figcaption class="pie-panel" id="n-late">pendiente</figcaption></figure>
+      <figure><div class="rotulo"><b>Captación</b> <span>sobre EARLY</span></div><canvas width="256" height="256" id="v-mapa" role="img" aria-label="Mapa de captación sobre EARLY"></canvas><figcaption class="pie-panel">descriptivo: el modelo no lo usa</figcaption></figure>
+    </div>
+    <div class="leyenda" id="leyenda" hidden></div>
+    <p class="suave nota-visor" id="nota-visor" hidden></p>
+    <p class="suave vacio" id="vacio">Elige un ejemplo o sube tus tres imágenes para verlas aquí y obtener la predicción.</p>
+
+    <div class="dos" id="bloque-resultado" hidden>
+      <div class="curva">
+        <h3>Curva de captación</h3>
+        <div class="grafico" id="curva"></div>
+        <p class="suave" id="nota-curva"></p>
+      </div>
+
+      <div id="resultado">
+        <h3>Resultado</h3>
+        <p class="suave" id="de-donde"></p>
+        <p class="suave etiqueta-prob">Probabilidad de pCR de este corte</p>
+        <p class="prob" id="probabilidad"></p>
+        <p class="frase"><strong id="frase"></strong> <span id="cerca"></span></p>
+        <p class="suave">Clase: <strong id="clase"></strong>. Umbral <span id="umbral"></span>: se predice pCR si la probabilidad lo supera.</p>
+        <div class="grafico" id="escala"></div>
+        <p class="suave pequeno" id="leyenda-escala"></p>
+        <p id="real" hidden></p>
+        <p class="suave pequeno">Dispositivo: <span id="dispositivo">navegador, WebAssembly</span> · tiempo de predicción: <span id="tiempo"></span> · modelo <code id="huella"></code> (SHA-256 de los 5 pesos)</p>
+        <p><button class="boton secundario" id="descargar" type="button">Descargar el resultado (JSON)</button></p>
+        <table class="datos" id="por-modelo"><caption>Probabilidad de cada modelo</caption><thead><tr><th>Modelo</th><th class="num">Probabilidad</th></tr></thead><tbody></tbody></table>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="debajo">
+  <section class="bloque" aria-labelledby="t-fiarse">
+    <h2 id="t-fiarse">¿Cuánto fiarse?</h2>
+    <div class="fiarse">
+      <div><b class="cifra"><span data-v="test.auc.auc" data-f="pct0"></span></b>Si se toma una paciente con pCR y otra sin pCR, el modelo da más probabilidad a la primera el <span data-v="test.auc.auc" data-f="pct0"></span> de las veces (test, <span data-v="test.pacientes.n"></span> pacientes; margen del <span data-v="test.auc.ic95.0" data-f="pct0"></span> al <span data-v="test.auc.ic95.1" data-f="pct0"></span>). <strong>Al azar sería el 50 %.</strong></div>
+      <div><b class="cifra"><span data-v="fiarse.validacion.VPP" data-f="de10"></span> de cada 10</b>De las pacientes que marca como pCR, unas <span data-v="fiarse.validacion.VPP" data-f="de10"></span> de cada 10 lo son en validación (<span data-v="fiarse.validacion.VP"></span> de <span data-v="fiarse.validacion.marcadas"></span>) y <span data-v="fiarse.test.VPP" data-f="de10"></span> de cada 10 en test (<span data-v="fiarse.test.VP"></span> de <span data-v="fiarse.test.marcadas"></span>). Sin modelo, <span data-v="fiarse.tasa_base" data-f="de10"></span> de cada 10 alcanzan pCR.</div>
+      <div><b class="cifra"><span data-v="fiarse.test.VP"></span> de <span data-v="fiarse.test.pcr"></span></b>Casi nunca avisa: en test marcó <span data-v="fiarse.test.VP"></span> de las <span data-v="fiarse.test.pcr"></span> pacientes que sí alcanzaron pCR. El umbral es exigente a propósito: predecir pCR en quien no la alcanzará es el error más grave.</div>
+    </div>
+    <p><strong>No sirve para ninguna decisión clínica.</strong> En test no se distingue del azar (p = <span data-v="test.permutacion.p_dos_colas" data-f="d2"></span>). Además, el umbral se fijó por paciente (media de sus ~10 cortes) y aquí se mira un solo corte, así que el resultado es algo más ruidoso. <a href="index.html#test">Los resultados completos están en la página del caso.</a></p>
+  </section>
+
+  <section class="bloque" aria-labelledby="t-clinica">
+    <h2 id="t-clinica">Imagen frente a variables clínicas</h2>
+    <div id="barras-clinica" class="barras-clinica"></div>
+    <p class="suave">AUC por paciente en validación, media ± desviación de los 5 folds (<span data-v="comparacion.clinica_e_imagen.pacientes"></span> pacientes; la barra empieza en 0,5, el azar). Solo el modelo de imagen se evaluó en test (AUC <span data-v="comparacion.clinica_e_imagen.imagen_test" data-f="d3"></span>).</p>
+    <p><strong>Lectura:</strong> las variables clínicas ordenan a las pacientes bastante mejor que la imagen. Añadir la imagen sube el AUC en <span data-v="comparacion.clinica_e_imagen.mejora" data-f="d3"></span> (mejora en <span data-v="comparacion.clinica_e_imagen.folds_a_favor"></span> de 5 folds), pero el margen de esa mejora (<span data-v="comparacion.clinica_e_imagen.mejora_global_ic95" data-f="rangoSigno3"></span>) incluye el cero. Es solo una comparación: esta web no pide datos clínicos ni los usa.</p>
+  </section>
+
+  <section class="bloque detalles" aria-labelledby="t-detalles">
+    <h2 id="t-detalles">Más detalles</h2>
+    <details>
+      <summary>Cómo funciona</summary>
+      <div class="cuerpo-detalle">
+        <p><strong>Las fases.</strong> Una resonancia con contraste toma la misma imagen varias veces: <b>PRE</b> antes de inyectar el contraste, <b>EARLY</b> poco después y <b>LATE</b> unos minutos más tarde. El tumor suele captar el contraste antes y con más fuerza que el tejido sano. Son el mismo corte en tres momentos, no los colores de una foto.</p>
+        <p><strong>La red.</strong> Una red convolucional propia, entrenada desde cero, con <span data-v="modelo.n_bloques"></span> bloques de <span data-v="modelo.config.filtros" data-f="listaY"></span> filtros y <span data-v="modelo.parametros"></span> parámetros. Recibe las tres fases juntas, reduce la imagen a <span data-v="modelo.resolucion_interna"></span> px y resume el corte con la media de lo que detecta.</p>
+        <p><strong>El conjunto.</strong> Se entrenaron <span data-v="modelo.n_modelos"></span> redes iguales, cada una sin ver una quinta parte de las pacientes. La probabilidad es la media de las cinco.</p>
+        <p><strong>El umbral (<span data-v="umbral" data-f="d4"></span>).</strong> Se fijó en validación para que, de las pacientes sin pCR, como mucho 1 de cada 10 se marque como pCR. El error grave es predecir pCR en quien no la alcanzará: podría llevar a quitarle un tratamiento que sí necesita.</p>
+        <p><strong>El mapa y la curva de captación</strong> son descriptivos: el modelo no los usa. Colorean el <span id="pct-realce"></span> de la mama que más realza de PRE a EARLY según cómo cambia de EARLY a LATE: más de +10 %, persistente; entre −10 % y +10 %, meseta; menos de −10 %, lavado. Donde EARLY o LATE están saturados (255), el cambio medido es solo una cota y no se afirma ningún tipo. El momento en que se toma LATE cambia según el hospital, así que el tipo no es comparable entre cohortes.</p>
+      </div>
+    </details>
+    <details>
+      <summary>Cómo se validó</summary>
+      <div class="cuerpo-detalle">
+        <p><strong>Separación por paciente.</strong> Las <span data-v="datos.train.pacientes"></span> pacientes de train se repartieron en 5 folds con la columna <code>fold</code> del dataset: todos los cortes de una paciente van al mismo fold.</p>
+        <p><strong>Validación (5 folds).</strong> AUC por paciente <span data-v="seleccion.validacion.auc_medio.media" data-f="d3"></span> ± <span data-v="seleccion.validacion.auc_medio.desviacion" data-f="d3"></span> (media de todas las épocas, la estimación sin sesgo); en la época elegida <span data-v="seleccion.validacion.auc_elegido.media" data-f="d3"></span>, algo inflado porque esa época se eligió con la propia validación.</p>
+        <p><strong>Test, una sola vez.</strong> Con todo decidido antes (modelo, umbral y SHA-256 de cada peso en <code>results/test/plan.json</code>), <span data-v="test.pacientes.n"></span> pacientes nunca vistas: AUC <span data-v="test.auc.auc" data-f="d3"></span> [<span data-v="test.auc.ic95" data-f="rango3"></span>]. Coincide con la validación y queda por debajo del modelo de referencia del profesor (<span data-v="comparacion.referencias.profesor.auc_test" data-f="d2"></span>). <a href="index.html#test">Más en la página del caso.</a></p>
+      </div>
+    </details>
+    <details>
+      <summary>Detalles técnicos</summary>
+      <div class="cuerpo-detalle">
+        <p>Conjunto de <span data-v="modelo.n_modelos"></span> modelos (uno por fold), de <span data-v="modelo.parametros"></span> parámetros cada uno, exportado a ONNX (opset <span id="opset"></span>) y ejecutado en el navegador con ONNX Runtime Web (WebAssembly, 1 hilo). El SHA-256 del modelo descargado se comprueba contra <code>modelo.json</code> antes de usarlo, y el de cada peso es el de <code>results/test/plan.json</code>.</p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-pesos">
+            <caption>Pesos del conjunto</caption>
+            <thead><tr><th>Peso</th><th class="num">Fold</th><th class="num">Época elegida</th><th>SHA-256</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p>ONNX (<code>modelo/conjunto.onnx</code>): <code class="hash" id="i-onnx"></code></p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-metricas">
+            <caption>Métricas internas con el umbral <span data-v="umbral" data-f="d4"></span>, por paciente salvo donde dice «corte»</caption>
+            <thead><tr><th></th><th class="num">AUC</th><th class="num">Sensibilidad</th><th class="num">Especificidad</th><th class="num">VPP</th><th class="num">F1 macro</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <dl class="entrenamiento" id="entrenamiento"></dl>
+      </div>
+    </details>
+    <details>
+      <summary>Comprobar con el pipeline</summary>
+      <div class="cuerpo-detalle">
+        <p>Pasa los ejemplos por el navegador y compara cada probabilidad con la de PyTorch (CPU, FP32) guardada en <code>modelo.json</code>. La misma cuenta se puede hacer en local con <code>python -m src.inferencia</code>.</p>
+        <p><button class="boton secundario" id="comprobar" type="button" disabled>Comprobar con el pipeline</button></p>
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-comprobacion" hidden>
+            <thead><tr><th>Ejemplo</th><th class="num">Navegador</th><th class="num">PyTorch</th><th class="num">Diferencia</th><th>Resultado</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+        <p id="resumen-comprobacion"></p>
+      </div>
+    </details>
+  </section>
+</div>
+
+<footer class="pie">
+  <p>Imágenes derivadas de <span data-v="creditos.nombre" data-f="texto"></span> (<span data-v="creditos.cita" data-f="texto"></span>), licencia <a id="enlace-licencia" href="https://creativecommons.org/licenses/by-nc/4.0/"><span data-v="creditos.licencia" data-f="texto"></span></a>: uso docente y de investigación, sin fines comerciales y conservando la atribución. CNN propia entrenada desde cero; el código está en <a id="enlace-repo" href="https://github.com/Valdi183/ML_Caso_1_Cancer">el repositorio</a>. <a href="index.html">Volver al caso</a>.</p>
+</footer>
+
+<script src="js/vendor/pako_inflate.min.js"></script>
+<script src="js/vendor/UPNG.js"></script>
+<script src="js/vendor/ort/ort.wasm.min.js"></script>
+<script src="js/png.js"></script>
+<script src="js/visualizacion.js"></script>
+<script src="js/comun.js"></script>
+<script src="js/graficos.js"></script>
+<script src="js/modelo.js"></script>
+<script src="js/predecir.js"></script>
+</body>
+</html>
