@@ -4,7 +4,7 @@ Complementa a [`iteraciones.md`](iteraciones.md) (hipótesis, resultado y decisi
 cada iteración). Aquí está lo que condiciona el trabajo entero: qué pide el caso, qué
 modelo se entrega y por qué, y los diagnósticos anteriores a la iteración 1.
 
-## Qué pide el caso (indicaciones del profesor, correo del 14-10-2026)
+## Qué pide el caso (indicaciones de la asignatura, 14-10-2026)
 
 - **CNN propia desde cero que predice pCR con las 3 fases** (PRE, EARLY, LATE: tres
   instantes del contraste, no RGB). Evaluación por paciente (media de sus cortes),
@@ -14,8 +14,9 @@ modelo se entrega y por qué, y los diagnósticos anteriores a la iteración 1.
 - La app recibe **una muestra (un corte) por paciente** (guía del caso, C7): nada de
   2,5D ni de predicción que necesite varios cortes de la misma paciente.
 - Referencia: imagen pretratamiento con test independiente publica AUC 0,70-0,80; con
-  cortes 2D y 3 cohortes, **0,60-0,70 en test es buen trabajo**, y su modelo de
-  referencia da **0,64 en test**: es la meta realista. El IC del AUC en test es de ±0,08.
+  cortes 2D y 3 cohortes, **0,60-0,70 en test es buen trabajo**. El material de la
+  asignatura incluye un modelo de referencia con **AUC ≈ 0,64 en test**: es la meta
+  realista (no se conoce su intervalo). El IC del AUC en test es de unos ±0,08.
 - Rúbrica: EDA; partición por paciente con **5 folds, media ± desviación**;
   arquitectura justificada (fases no como RGB); reproducible (semilla, parada, época
   elegida); **curvas de AUC de train y de validación** y su diferencia en la época
@@ -118,14 +119,12 @@ Matriz por paciente: VP 2, FP 8, FN 51, VN 115. Por cohorte (AUC): spy1 0,351
 de un modelo constante con la tasa de pCR de train (0,2105). Los 5 modelos por separado
 dan 0,507-0,577 (0,543 ± 0,027); el conjunto, 0,544.
 
-**Frente a las referencias:** el AUC de test queda unos **0,10 por debajo de la meta
-del profesor (0,64 en test)**, justo por encima del límite superior de su IC
-[0,457-0,629]; esa meta tiene su propia incertidumbre (±0,08), así que la diferencia no es
-concluyente, pero en test el modelo no se distingue del azar. Según el profesor
-(comunicación personal, en persona), su modelo de referencia cumple las mismas
-restricciones que este: un corte 2D, CNN desde cero, sin la caja del tumor ni variables
-clínicas. Es, por tanto, la comparación directa: lo alcanzable con este planteamiento
-ronda 0,64 y este modelo queda unos 0,10 por debajo. Fridman et al. 2025
+**Frente a las referencias:** el material de la asignatura incluye un modelo de
+referencia con AUC ≈ 0,64 en test (meta realista; no se conoce su intervalo). Este modelo
+(0,544; IC 0,457-0,629) queda unos **0,10 por debajo**. No sé qué explica la diferencia.
+Los experimentos descartan la arquitectura (17 configuraciones, las 6 confirmadas en 4-5
+folds entre 0,539 y 0,553): lo más probable es que esté en el entrenamiento y el
+preprocesado. En test el modelo no se distingue del azar. Fridman et al. 2025
 (0,72 en el mismo test) usa un modelo **preentrenado**: es una cota superior, no
 comparable con una CNN desde cero. El 0,544 coincide con la estimación sin sesgo de
 validación (AUC medio de todas las épocas, 0,551 ± 0,011).
@@ -180,7 +179,7 @@ predicciones guardadas; no se vuelve a pasar ninguna imagen por la red.
   mismo (63 % con la mayoría de sus cortes saturados en EARLY). Con el tumor a 255, ni la
   magnitud del realce ni el cambio de EARLY a LATE están en la imagen. Es una limitación de
   los PNG de 8 bits del dataset, no del modelo: afecta igual a cualquier modelo sobre estos
-  PNG (también al de referencia del profesor), así que no explica la diferencia con 0,64.
+  PNG (también al modelo de referencia de la asignatura), así que no explica la diferencia con 0,64.
 
 ## Nota numérica: TF32 en las cifras oficiales, FP32 en la app
 
@@ -247,7 +246,7 @@ no usarlo dos veces: las cifras de test se quedan como se calcularon.
 
 ## Referencias para el informe
 
-AUC publicados para predecir pCR desde la RM previa (lista del correo del profesor):
+AUC publicados para predecir pCR desde la RM previa (lista de las indicaciones de la asignatura):
 
 - **Fridman et al. 2025** (autores de BreastDCEDL), mismo test: AUC 0,72 con un ViT
   (Duke 0,54, I-SPY1 0,68, I-SPY2 0,78). Usa un modelo **preentrenado**: cota superior,
@@ -260,5 +259,5 @@ AUC publicados para predecir pCR desde la RM previa (lista del correo del profes
 - **Cain:** 0,71 [0,58-0,83].
 - **Liu:** 0,79; con clínica, 0,86.
 - **Joo:** 0,89; solo clínica, 0,83.
-- **Referencia del profesor:** 0,64 en test. Es la meta realista para este trabajo
-  (cortes 2D, 3 cohortes, CNN desde cero).
+- **Modelo de referencia de la asignatura:** AUC ≈ 0,64 en test, sin intervalo conocido.
+  Es la meta realista para este trabajo (cortes 2D, 3 cohortes, CNN desde cero).

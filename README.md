@@ -116,7 +116,7 @@ ML_Caso_1_Cancer/
 ├── app/                       ← app web (Streamlit): app.py, ejemplos/, requirements.txt
 ├── data/                      ← sitio opcional para el dataset (no se versiona)
 ├── docs/figuras/              ← figuras del informe
-├── docs/data/referencias.json ← referencias externas de la web (profesor, Fridman, licencia)
+├── docs/data/referencias.json ← referencias externas de la web (asignatura, Fridman, licencia)
 ├── models/                    ← pesos .pt (solo se versionan los que se entregan)
 ├── notebooks/eda.ipynb        ← analisis exploratorio
 ├── presentations/             ← diapositivas
@@ -214,8 +214,8 @@ fuera de fold juntas. Detalle y justificacion en `docs/decisiones.md`.
 modelos con el umbral fijado y se niega a repetirse si ya existe
 `results/test/resumen.json` (el plan, con el SHA-256 de cada peso, esta en
 `results/test/plan.json`). Por paciente: AUC 0,544 [0,457-0,629], sensibilidad 0,038,
-especificidad 0,935, F1 macro 0,430. La meta realista es la referencia del profesor,
-0,64 en test; Fridman et al. 2025 (0,72 en el mismo test) usa un modelo preentrenado,
+especificidad 0,935, F1 macro 0,430. La meta realista es el modelo de referencia de la
+asignatura, con AUC ≈ 0,64 en test; Fridman et al. 2025 (0,72 en el mismo test) usa un modelo preentrenado,
 así que es una cota superior y no es comparable con una CNN desde cero.
 Detalle en `docs/decisiones.md`; figuras en `docs/figuras/test_*.png`.
 
@@ -323,8 +323,8 @@ tiempo de ejecución (`web/js/vendor/LEEME.md`; tipografía Atkinson Hyperlegibl
   comparación con las clínicas, detalles técnicos, descarga en JSON y «Comprobar con el pipeline».
 - **Ninguna cifra está escrita en el HTML ni en el JS.** Salen de `web/datos.json` (todas las cifras de las
   dos páginas) y de `web/modelo.json` (modelo, SHA-256, referencias de PyTorch), que genera
-  `python -m src.web.exportar` desde `results/`, la red y `docs/data/referencias.json` (la referencia del
-  profesor, Fridman et al. y la licencia: lo que no sale de `results/`). `--solo-datos` regenera solo
+  `python -m src.web.exportar` desde `results/`, la red y `docs/data/referencias.json` (la referencia de la
+  asignatura, Fridman et al. y la licencia: lo que no sale de `results/`). `--solo-datos` regenera solo
   `datos.json`, sin volver a exportar el ONNX. Un test comprueba que está al día y que cada `data-v` del
   HTML apunta a un dato que existe.
 - `web/js/png.js` lee el PNG sin `canvas` (gestión de color), con las mismas reglas y mensajes que
