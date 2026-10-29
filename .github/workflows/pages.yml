@@ -1,0 +1,47 @@
+# Publica la carpeta web/ en GitHub Pages (pagina estatica: la prediccion corre en el navegador).
+# Se lanza en cada push a main que toque web/ y a mano desde la pestaña Actions.
+# Antes, una sola vez en GitHub: Settings > Pages > Build and deployment > Source: GitHub Actions.
+name: Pages
+
+on:
+  push:
+    branches: [main]
+    paths: ["web/**", ".github/workflows/pages.yml"]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+jobs:
+  desplegar:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.despliegue.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+
+      # Sin esto la pagina se rompe en silencio: el ONNX tiene que estar en el repo (git add -f)
+      - name: Comprobar que estan los ficheros del modelo
+        run: |
+          test -s web/modelo/conjunto.onnx
+          test -s web/modelo.json
+          test -s web/js/vendor/ort/ort-wasm-simd-threaded.wasm
+          test -s web/datos.json
+          test -s web/index.html
+          test -s web/fonts/atkinson-hyperlegible-latin-400-normal.woff2
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: web
+
+      - id: despliegue
+        uses: actions/deploy-pages@v4

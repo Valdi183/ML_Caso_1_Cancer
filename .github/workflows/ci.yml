@@ -24,7 +24,7 @@ jobs:
           python -m pip install --upgrade pip
           # PyTorch de CPU: la CI no tiene GPU y la rueda es mucho mas ligera
           pip install torch --index-url https://download.pytorch.org/whl/cpu
-          pip install -r requirements.txt ruff pytest
+          pip install -r requirements.txt -r requirements-web.txt ruff pytest
 
       - name: Lint (ruff)
         run: ruff check .
