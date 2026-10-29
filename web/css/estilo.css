@@ -1,0 +1,150 @@
+/* Estilo de las dos paginas. Dos superficies: «papel» claro para explicar (como un informe clinico)
+ * y «visor» gris oscuro neutro para todo lo que muestra imagenes (como una sala de lectura de
+ * radiologia). El color solo significa algo: los tres tipos de captacion, nunca decora.
+ * Tipografia: Atkinson Hyperlegible (SIL OFL 1.1, en ../fonts/). Escala de proporcion 1,25. */
+
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("../fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2");
+  font-weight: 400; font-style: normal; font-display: swap;
+}
+@font-face {
+  font-family: "Atkinson Hyperlegible";
+  src: url("../fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2");
+  font-weight: 700; font-style: normal; font-display: swap;
+}
+
+:root {
+  --papel: #F3F4F5;
+  --tinta: #1E2226;
+  --tinta-2: #5A626B;
+  --linea: #D5D9DD;
+  --visor: #2B2D30;
+  --visor-sup: #34373B;
+  --visor-texto: #E3E5E8;
+  --visor-texto-2: #A9AFB6;      /* texto secundario sobre el visor: 5,3:1 sobre #34373B */
+  --visor-linea: #4A4E54;
+  --persistente: #4E86CF;
+  --meseta: #D4AE3C;
+  --lavado: #CC4F50;
+  --ambar: #B8862B;
+
+  /* escala 1,25 sobre 18 px */
+  --t0: 1.125rem;
+  --t1: 1.40625rem;
+  --t2: 1.7578rem;
+  --t3: 2.1973rem;
+  --t4: 2.7466rem;
+  --t5: 3.4332rem;
+
+  --medida: 38rem;              /* ~70 caracteres por linea */
+  --ancho-figura: 58rem;
+  --margen: clamp(1rem, 4vw, 3rem);
+
+  /* colores de los graficos: se redefinen dentro del visor */
+  --g-tx: var(--tinta);
+  --g-tx2: var(--tinta-2);
+  --g-ln: var(--linea);
+  --g-fondo: var(--papel);
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+html { font-size: 100%; scroll-behavior: smooth; scroll-padding-top: 1rem; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+body {
+  margin: 0; background: var(--papel); color: var(--tinta);
+  font: 400 var(--t0)/1.6 "Atkinson Hyperlegible", system-ui, -apple-system, "Segoe UI", sans-serif;
+  -webkit-text-size-adjust: 100%;
+}
+h1, h2, h3, h4 { line-height: 1.2; margin: 0; font-weight: 700; }
+h1 { font-size: var(--t4); }
+h2 { font-size: var(--t3); }
+h3 { font-size: var(--t1); margin: 2.25rem 0 .5rem; }
+p { margin: 0 0 1em; }
+a { color: var(--tinta); text-underline-offset: .2em; text-decoration-thickness: 1px; }
+a:hover { text-decoration-thickness: 3px; }
+code { font-family: ui-monospace, "Cascadia Mono", Consolas, monospace; font-size: 1em; }
+small, .pequeno { font-size: var(--t0); }
+[data-v], .num, td.num, th.num { font-variant-numeric: tabular-nums; }
+.dato-falta { background: #fff3cd; color: #7a1f1f; }
+strong, b { font-weight: 700; }
+
+:focus-visible { outline: 3px solid var(--tinta); outline-offset: 3px; border-radius: 2px; }
+.visor :focus-visible, .en-visor :focus-visible { outline-color: var(--visor-texto); }
+
+.saltar { position: absolute; left: -999px; top: 0; background: var(--tinta); color: var(--papel); padding: .6rem 1rem; z-index: 10; }
+.saltar:focus { left: 0; }
+
+/* ---------- aviso educativo: franja ambar, visible y sin rojo de alarma ---------- */
+.aviso {
+  background: var(--ambar); color: var(--tinta); padding: .6rem var(--margen);
+  font-weight: 700; text-align: left;
+}
+.aviso span { font-weight: 400; }
+.aviso-caja { background: var(--ambar); color: var(--tinta); padding: .75rem 1rem; border-radius: 4px; margin: 1.25rem 0; }
+.aviso-caja span { font-weight: 400; }
+
+/* ---------- botones ---------- */
+.boton {
+  display: inline-flex; align-items: center; justify-content: center; min-height: 2.75rem;
+  padding: .55rem 1.2rem; font: inherit; font-weight: 700; cursor: pointer; text-decoration: none;
+  border: 2px solid var(--tinta); background: var(--tinta); color: var(--papel); border-radius: 4px;
+}
+.boton:hover { background: #000; border-color: #000; text-decoration: none; }
+.boton.secundario { background: transparent; color: var(--tinta); }
+.boton.secundario:hover { background: var(--tinta); color: var(--papel); }
+.boton:disabled { opacity: .5; cursor: default; }
+.visor .boton { background: var(--visor-texto); color: var(--visor); border-color: var(--visor-texto); }
+.visor .boton:hover { background: #fff; border-color: #fff; }
+.visor .boton.secundario { background: transparent; color: var(--visor-texto); border-color: var(--visor-texto-2); }
+.visor .boton.secundario:hover { background: var(--visor-sup); border-color: var(--visor-texto); color: var(--visor-texto); }
+.acciones { display: flex; flex-wrap: wrap; gap: .75rem; margin: 1.5rem 0; }
+
+/* ---------- visor ---------- */
+.visor {
+  --g-tx: var(--visor-texto); --g-tx2: var(--visor-texto-2); --g-ln: var(--visor-linea); --g-fondo: var(--visor);
+  background: var(--visor); color: var(--visor-texto); border-radius: 8px;
+}
+.visor a { color: var(--visor-texto); }
+.visor .suave { color: var(--visor-texto-2); }
+.visor-sup { background: var(--visor-sup); }
+.suave { color: var(--tinta-2); }
+
+/* control segmentado de fases */
+.fases { display: inline-flex; border: 2px solid var(--visor-texto-2); border-radius: 6px; overflow: hidden; margin: 0; padding: 0; }
+.fases button {
+  font: inherit; font-weight: 700; color: var(--visor-texto); background: transparent; border: 0;
+  padding: .45rem 1.1rem; min-height: 2.75rem; cursor: pointer;
+}
+.fases button + button { border-left: 2px solid var(--visor-texto-2); }
+.fases button[aria-pressed="true"] { background: var(--visor-texto); color: var(--visor); }
+.fases button:focus-visible { outline-offset: -4px; }
+
+/* ---------- graficos SVG (los dibuja js/graficos.js con la anchura real) ---------- */
+.grafico { width: 100%; }
+.grafico svg { display: block; width: 100%; height: auto; overflow: visible; font-family: inherit; }
+svg .g-t { fill: var(--g-tx); font-size: var(--t0); }
+svg .g-t2 { fill: var(--g-tx2); font-size: var(--t0); }
+svg .g-b { font-weight: 700; }
+svg .g-halo { paint-order: stroke; stroke: var(--g-fondo); stroke-width: 6px; stroke-linejoin: round; }
+svg .g-eje { stroke: var(--g-tx2); stroke-width: 1; fill: none; }
+svg .g-rej { stroke: var(--g-ln); stroke-width: 1; }
+svg .g-trazo { stroke: var(--g-tx); fill: none; stroke-width: 2.5; }
+svg .g-trazo2 { stroke: var(--g-tx2); fill: none; stroke-width: 2.5; }
+svg .g-relleno { fill: var(--g-tx); }
+svg .g-relleno2 { fill: var(--g-tx2); }
+svg .g-fondo { fill: var(--g-fondo); }
+svg .g-banda { fill: var(--g-ln); opacity: .55; }
+svg .g-caja { fill: none; stroke: var(--g-tx2); stroke-width: 1.5; }
+svg .g-caja-s { fill: var(--visor-sup); stroke: var(--visor-linea); stroke-width: 1; }
+
+/* ---------- tablas ---------- */
+table.datos { border-collapse: collapse; width: 100%; font-size: var(--t0); font-variant-numeric: tabular-nums; }
+table.datos th, table.datos td { text-align: left; padding: .4rem .6rem; border-bottom: 1px solid var(--linea); vertical-align: top; }
+table.datos th { font-weight: 700; }
+table.datos td.num, table.datos th.num { text-align: right; }
+table.datos caption { text-align: left; color: var(--tinta-2); padding: 0 0 .5rem; }
+.visor table.datos th, .visor table.datos td { border-bottom-color: var(--visor-linea); }
+.tabla-scroll { overflow-x: auto; max-width: 100%; }
+
+.sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }

@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>¿Desaparecerá este tumor? Predicción de pCR · BreastDCEDL</title>
+<meta name="description" content="Una CNN propia que intenta anticipar la respuesta a la quimioterapia desde una resonancia previa al tratamiento: cómo se construyó, qué resultados dio en test y cuánto fiarse. Uso educativo.">
+<link rel="icon" href="data:,">
+<link rel="stylesheet" href="css/estilo.css">
+<link rel="stylesheet" href="css/index.css">
+</head>
+<body>
+<a class="saltar" href="#contenido">Saltar al contenido</a>
+<div class="aviso" role="note">Uso educativo. Sin validez clínica. <span>No es un dispositivo médico: no sirve para diagnosticar ni para decidir tratamientos.</span></div>
+
+<!-- 1. Portada -->
+<header class="portada" id="inicio">
+  <div class="portada-texto">
+    <p class="suave">Caso BreastDCEDL · trabajo académico individual</p>
+    <h1>¿Desaparecerá este tumor con la quimioterapia?</h1>
+    <p class="entradilla">Una red neuronal propia intenta anticipar la respuesta de un tumor de mama a la quimioterapia a partir de una resonancia hecha <em>antes</em> de empezar. Esta página cuenta cómo se construyó, qué dio en test y hasta dónde se puede fiar de ella.</p>
+    <div class="acciones">
+      <a class="boton" href="predecir.html">Probar el modelo</a>
+      <a class="boton secundario" href="#problema">Leer el caso</a>
+    </div>
+  </div>
+  <div class="portada-visor visor" role="group" aria-label="Un corte real, fase a fase">
+    <div class="marco" id="marco-portada">
+      <img id="img-pre" alt="" width="256" height="256">
+      <img id="img-early" alt="" width="256" height="256">
+      <img id="img-late" alt="" width="256" height="256">
+    </div>
+    <div class="control">
+      <div class="fases" role="group" aria-label="Fase del contraste">
+        <button type="button" data-fase="PRE" aria-pressed="true">PRE</button>
+        <button type="button" data-fase="EARLY" aria-pressed="false">EARLY</button>
+        <button type="button" data-fase="LATE" aria-pressed="false">LATE</button>
+      </div>
+      <p class="pie suave" id="pie-portada" aria-live="polite">Cargando el corte…</p>
+    </div>
+  </div>
+</header>
+
+<div class="cuerpo">
+  <nav class="indice" aria-label="Secciones de la página">
+    <p class="indice-titulo">En esta página</p>
+    <ol>
+      <li><a href="#problema"><span class="n">1</span> El problema</a></li>
+      <li><a href="#datos"><span class="n">2</span> Los datos</a></li>
+      <li><a href="#modelo"><span class="n">3</span> El modelo</a></li>
+      <li><a href="#eleccion"><span class="n">4</span> Cómo se eligió</a></li>
+      <li><a href="#test"><span class="n">5</span> Resultados en test</a></li>
+      <li><a href="#comparacion"><span class="n">6</span> Comparación y límites</a></li>
+      <li><a href="#creditos"><span class="n">7</span> Créditos</a></li>
+    </ol>
+    <p class="indice-enlace"><a href="predecir.html">Probar el modelo</a></p>
+  </nav>
+
+  <main id="contenido">
+
+    <!-- 2. El problema -->
+    <section class="seccion" id="problema" aria-labelledby="t-problema">
+      <h2 id="t-problema"><span class="n">1</span> El problema</h2>
+      <div class="texto">
+        <p>Antes de operar, muchas pacientes con cáncer de mama reciben quimioterapia para reducir el tumor. En algunas, al analizar después el tejido extirpado, <strong>no queda tumor invasivo</strong>. Es la <strong>respuesta patológica completa</strong>, o <strong>pCR</strong>. En este dataset la alcanzan el <span data-v="datos.tasa_pcr" data-f="pct1"></span> de las pacientes.</p>
+        <p>Importa porque la pCR se asocia, en general, con mejor evolución, y porque saberlo antes podría permitir <strong>reducir tratamientos</strong> a quienes van a responder o replantearlos a quienes no. Hoy solo se sabe al final.</p>
+      </div>
+      <figure class="fig">
+        <ol class="linea-tiempo" aria-label="De la resonancia a la pCR">
+          <li class="entrada"><b>Resonancia con contraste</b><span>antes de empezar</span></li>
+          <li><b>Quimioterapia</b><span>meses de tratamiento</span></li>
+          <li><b>Cirugía y análisis del tejido</b><span>se mira si queda tumor</span></li>
+          <li class="salida"><b>¿pCR?</b><span>sí o no</span></li>
+        </ol>
+        <p class="salto-modelo"><span>Lo que se predice: del primer paso al último, sin ver los dos de en medio</span></p>
+      </figure>
+      <div class="texto">
+        <h3>Pronóstico, no detección</h3>
+        <p>Detectar un tumor es ver algo que ya está en la imagen. Aquí se pide anticipar qué ocurrirá meses después, con un tratamiento que todavía no ha empezado. La imagen previa tendría que contener señales de esa respuesta, y la respuesta depende también del tipo de tumor y del propio tratamiento. Por eso es un problema difícil, y por eso las cifras que verás más abajo son modestas.</p>
+      </div>
+    </section>
+
+    <!-- 3. Los datos -->
+    <section class="seccion" id="datos" aria-labelledby="t-datos">
+      <h2 id="t-datos"><span class="n">2</span> Los datos</h2>
+      <div class="texto">
+        <p><strong>BreastDCEDL</strong> reúne <span data-v="datos.pacientes" data-f="entero"></span> pacientes de tres colecciones públicas y <span data-v="datos.cortes" data-f="entero"></span> cortes de resonancia. Cada corte son tres imágenes de 256 × 256 píxeles en gris.</p>
+      </div>
+
+      <h3 class="h3-ancho">Tres hospitales, tres formas de procesar</h3>
+      <div class="texto">
+        <p>Cada colección procesa sus imágenes a su manera y toma la fase tardía en un momento distinto. Es una trampa: la misma red, con las mismas imágenes, aprende a reconocer el hospital casi sin error (AUC <span data-v="seleccion.control_cohorte.auc_val_max" data-f="d3"></span> para distinguir Duke del resto), así que podría usarlo como atajo para predecir pCR.</p>
+      </div>
+      <figure class="fig">
+        <div id="barras-cohortes" class="barras"></div>
+        <figcaption>Pacientes por cohorte, con su reparto entre train y test.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">Tres fases que no son colores</h3>
+      <div class="texto">
+        <p>Una resonancia con contraste toma el mismo corte varias veces: <strong>PRE</strong> antes de inyectar el contraste, <strong>EARLY</strong> poco después y <strong>LATE</strong> unos minutos más tarde. El tumor suele captar el contraste antes y con más fuerza que el tejido sano. Son tres instantes, no los canales rojo, verde y azul de una foto: por eso la red los recibe como tres canales de entrada, pero no se trata como una imagen en color.</p>
+      </div>
+      <figure class="fig">
+        <div class="visor tres-fases" id="tres-fases"></div>
+        <figcaption>El mismo corte de una paciente de train en sus tres instantes.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">Pocas pacientes responden</h3>
+      <div class="texto">
+        <p>Solo el <span data-v="datos.tasa_pcr" data-f="pct1"></span> alcanza pCR. Un modelo que dijera siempre «no pCR» acertaría la mayoría de las veces sin haber aprendido nada, así que la exactitud engaña y hay que mirar el AUC, la sensibilidad y la especificidad.</p>
+      </div>
+
+      <h3 class="h3-ancho">Cómo se separaron</h3>
+      <div class="texto">
+        <p>Todos los cortes de una paciente van siempre al mismo grupo: la partición es <strong>por paciente</strong>. Los <span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de train se reparten en <span data-v="datos.folds"></span> folds con la columna <code>fold</code> del dataset, para validar sin pacientes vistas. Las <span data-v="datos.test.pacientes" data-f="entero"></span> de test se usaron <strong>una sola vez</strong>, al final, con todo decidido antes.</p>
+      </div>
+      <figure class="fig">
+        <div id="particion" class="particion"></div>
+      </figure>
+    </section>
+
+    <!-- 4. El modelo -->
+    <section class="seccion" id="modelo" aria-labelledby="t-modelo">
+      <h2 id="t-modelo"><span class="n">3</span> El modelo</h2>
+      <div class="texto">
+        <p>Una red convolucional pequeña (CNN), <strong>propia y entrenada desde cero</strong>: nada preentrenado. Tiene <span data-v="modelo.parametros" data-f="entero"></span> parámetros, que es poco: con ~<span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de entrenamiento, una red grande memoriza en vez de aprender.</p>
+      </div>
+      <figure class="fig">
+        <ol id="arquitectura" class="arq" aria-label="Capas de la red"></ol>
+        <figcaption>Tamaño del tensor tras cada etapa (canales × alto × ancho) y parámetros de cada una.</figcaption>
+      </figure>
+      <div class="texto">
+        <p><strong>El preprocesado va dentro de la red.</strong> El PNG entra tal cual, dividido entre 255, y la reducción de 256 a <span data-v="modelo.resolucion_interna"></span> píxeles (media de bloques de <span data-v="modelo.config.reducir"></span> × <span data-v="modelo.config.reducir"></span>) es la primera etapa. Así el entrenamiento y esta web no pueden preparar la imagen de forma distinta.</p>
+        <h3>Lo que ve cada valor del mapa final</h3>
+        <p>Tras los <span data-v="modelo.n_bloques"></span> bloques, cada valor del mapa final depende de un cuadrado de <span data-v="modelo.campo_receptivo.px"></span> × <span data-v="modelo.campo_receptivo.px"></span> píxeles del corte original (campo receptivo): el <span data-v="modelo.campo_receptivo.fraccion_area" data-f="pct1"></span> de su superficie. La red resume todo el corte con la media de esos valores.</p>
+      </div>
+      <figure class="fig">
+        <div class="visor campo" id="campo-receptivo"></div>
+        <figcaption>Un cuadrado de <span data-v="modelo.campo_receptivo.px"></span> × <span data-v="modelo.campo_receptivo.px"></span> píxeles sobre un corte de 256 × 256.</figcaption>
+      </figure>
+      <div class="texto">
+        <h3>Cinco modelos, no uno</h3>
+        <p>Se entrenaron <span data-v="modelo.n_modelos"></span> redes iguales, cada una sin ver uno de los folds. La probabilidad que da la web es la <strong>media de las cinco</strong>. Todas usan el mismo entrenamiento:</p>
+      </div>
+      <figure class="fig">
+        <div id="conjunto" class="conjunto"></div>
+      </figure>
+      <div class="texto">
+        <dl class="entrenamiento" id="entrenamiento"></dl>
+      </div>
+    </section>
+
+    <!-- 5. Como se eligio -->
+    <section class="seccion" id="eleccion" aria-labelledby="t-eleccion">
+      <h2 id="t-eleccion"><span class="n">4</span> Cómo se eligió</h2>
+      <div class="texto">
+        <p>Se probaron <span data-v="seleccion.resumen.n_configuraciones"></span> configuraciones: más o menos bloques, más o menos filtros, otras resoluciones, otras formas de resumir el mapa, atención libre y atención guiada por la caja del tumor. Cada una se evaluó con la validación por paciente de los 5 folds.</p>
+      </div>
+      <figure class="fig ancha">
+        <div class="grafico" data-grafico="configuraciones"></div>
+        <figcaption>AUC medio de validación de cada configuración (punto grande) y de cada fold (puntos pequeños). Relleno: probada en 4 o 5 folds; aro: en 1 o 2.</figcaption>
+      </figure>
+      <div class="texto">
+        <p>Las <span data-v="seleccion.resumen.n_con_4_o_5_folds"></span> probadas en 4 o 5 folds quedan entre <span data-v="seleccion.resumen.rango_4_o_5_folds.min" data-f="d3"></span> y <span data-v="seleccion.resumen.rango_4_o_5_folds.max" data-f="d3"></span>. Las probadas en 1 o 2 folds se mueven más, pero un mismo modelo cambia de un fold a otro más que eso (el elegido va de <span data-v="seleccion.resumen.congelado_por_fold.min" data-f="d3"></span> a <span data-v="seleccion.resumen.congelado_por_fold.max" data-f="d3"></span>), así que esas diferencias no distinguen una configuración de otra. Se eligió la más pequeña, que memoriza menos.</p>
+      </div>
+
+      <h3 class="h3-ancho">Curvas de train y de validación</h3>
+      <div class="texto">
+        <p>En ningún fold ni época la validación pasa de <span data-v="seleccion.resumen.auc_val_max" data-f="d3"></span>, mientras que train llega a <span data-v="seleccion.resumen.auc_train_max" data-f="d3"></span>: la red memoriza antes de generalizar. La época con mejor AUC de validación sale inflada, porque se eligió mirando esa misma validación: <span data-v="seleccion.validacion.auc_elegido.media" data-f="d3"></span> en la época elegida frente a <span data-v="seleccion.validacion.auc_medio.media" data-f="d3"></span> ± <span data-v="seleccion.validacion.auc_medio.desviacion" data-f="d3"></span> de la media de todas las épocas. Por eso la cifra de referencia es la segunda. La diferencia entre train y validación en la época elegida es de <span data-v="seleccion.validacion.diferencia_train_val.media" data-f="d3"></span>.</p>
+      </div>
+      <figure class="fig ancha">
+        <div class="grafico" data-grafico="curvas"></div>
+        <figcaption>AUC por paciente en cada época de los 5 folds, con la época elegida.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">Pérdida normal frente a ponderada</h3>
+      <div class="texto">
+        <p>La pérdida ponderada da <span data-v="seleccion.perdida.pos_weight" data-f="d1"></span> veces más peso a las pacientes con pCR. Eso desplaza las probabilidades hacia arriba sin cambiar el orden entre pacientes: el AUC es el mismo (<span data-v="seleccion.perdida.normal.auc_medio.media" data-f="d3"></span> frente a <span data-v="seleccion.perdida.ponderada.auc_medio.media" data-f="d3"></span>), pero con el corte en 0,5 la sensibilidad pasa de <span data-v="seleccion.perdida.normal.sensibilidad_05.media" data-f="d2"></span> a <span data-v="seleccion.perdida.ponderada.sensibilidad_05.media" data-f="d2"></span> ± <span data-v="seleccion.perdida.ponderada.sensibilidad_05.desviacion" data-f="d2"></span>. Se conservó la normal, con probabilidades sin desplazar, y el punto de corte lo fija el umbral.</p>
+      </div>
+      <figure class="fig">
+        <div class="grafico" data-grafico="perdida"></div>
+        <figcaption>Media ± desviación de los 5 folds, con el valor de cada fold.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">El umbral y su criterio clínico</h3>
+      <div class="texto">
+        <p>El error más grave es el <strong>falso positivo</strong>: decir «responderá» a quien no va a responder podría llevar a recortarle un tratamiento que necesita. Por eso el umbral se fijó para que, entre las pacientes sin pCR, no más de 1 de cada 10 se marque como pCR (especificidad de al menos <span data-v="seleccion.umbral.especificidad_minima" data-f="d2"></span>).</p>
+        <p>La regla es el percentil 90 de la probabilidad por paciente (media de sus cortes) de todas las pacientes sin pCR fuera de fold: <strong><span data-v="seleccion.umbral.valor" data-f="d4"></span></strong>. Con él, en validación, la especificidad es <span data-v="seleccion.umbral.en_el_umbral.especificidad" data-f="d3"></span> y la sensibilidad <span data-v="seleccion.umbral.en_el_umbral.sensibilidad" data-f="d3"></span>: se renuncia a casi todas las pCR para casi no equivocarse con las que no lo son.</p>
+      </div>
+      <figure class="fig ancha">
+        <div class="grafico" data-grafico="umbral"></div>
+        <figcaption>Sensibilidad y especificidad por paciente fuera de fold en función del umbral.</figcaption>
+      </figure>
+      <div class="tabla-ancha">
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-umbrales">
+            <caption>Qué se obtendría con otros criterios (validación, fuera de fold, por paciente). Descriptivo: el umbral oficial no cambia.</caption>
+            <thead><tr><th>Criterio</th><th class="num">Umbral</th><th class="num">Sensibilidad</th><th class="num">Especificidad</th><th class="num">VPP</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <!-- 6. Resultados en test -->
+    <section class="seccion" id="test" aria-labelledby="t-test">
+      <h2 id="t-test"><span class="n">5</span> Resultados en test</h2>
+      <div class="texto">
+        <p>El test son <span data-v="test.pacientes.n" data-f="entero"></span> pacientes (<span data-v="test.pacientes.pcr"></span> con pCR) que ningún modelo vio y que no se usaron para elegir nada. Se evaluó <strong>una sola vez</strong>, con el conjunto de los 5 modelos, el umbral fijado antes y el SHA-256 de cada peso anotado en un plan previo. Las cifras son por paciente (media de sus cortes), con intervalos del 95 % por bootstrap.</p>
+      </div>
+      <div class="titular" aria-label="Resultado principal">
+        <p class="titular-cifra"><span class="num" data-v="test.auc.auc" data-f="d3"></span></p>
+        <p class="titular-texto">AUC en test, con intervalo <span class="num">[<span data-v="test.auc.ic95" data-f="rango3"></span>]</span>. El intervalo incluye 0,5.</p>
+      </div>
+
+      <div class="dos-columnas">
+        <figure class="fig">
+          <table class="matriz" aria-label="Matriz de confusión en test">
+            <thead><tr><th></th><th scope="col">Predice pCR</th><th scope="col">Predice no pCR</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">pCR real</th><td><b data-v="test.matriz.VP" data-f="entero"></b><span>verdaderos positivos</span></td><td><b data-v="test.matriz.FN" data-f="entero"></b><span>falsos negativos</span></td></tr>
+              <tr><th scope="row">No pCR real</th><td><b data-v="test.matriz.FP" data-f="entero"></b><span>falsos positivos</span></td><td><b data-v="test.matriz.VN" data-f="entero"></b><span>verdaderos negativos</span></td></tr>
+            </tbody>
+          </table>
+          <figcaption>Matriz de confusión en test, por paciente, con el umbral <span data-v="test.umbral" data-f="d4"></span>.</figcaption>
+        </figure>
+        <figure class="fig">
+          <div class="grafico" data-grafico="roc"></div>
+          <figcaption>Curva ROC en test, con el punto del umbral.</figcaption>
+        </figure>
+      </div>
+
+      <div class="tabla-ancha">
+        <div class="tabla-scroll">
+          <table class="datos" id="tabla-test">
+            <caption>Métricas en test, por paciente, frente a decir siempre «no pCR».</caption>
+            <thead><tr><th></th><th class="num">Este modelo</th><th class="num">Siempre «no pCR»</th></tr></thead>
+            <tbody>
+              <tr><th>AUC</th><td class="num"><span data-v="test.auc.auc" data-f="d3"></span></td><td class="num">0,5</td></tr>
+              <tr><th>Intervalo del 95 % del AUC</th><td class="num">[<span data-v="test.auc.ic95" data-f="rango3"></span>]</td><td class="num">—</td></tr>
+              <tr><th>Sensibilidad (recall de pCR)</th><td class="num"><span data-v="test.por_paciente.sensibilidad" data-f="d3"></span></td><td class="num"><span data-v="test.siempre_no_pcr.sensibilidad" data-f="d3"></span></td></tr>
+              <tr><th>Especificidad (recall de no pCR)</th><td class="num"><span data-v="test.por_paciente.especificidad" data-f="d3"></span></td><td class="num"><span data-v="test.siempre_no_pcr.especificidad" data-f="d3"></span></td></tr>
+              <tr><th>Precisión pCR / no pCR</th><td class="num"><span data-v="test.por_paciente.pcr1.precision" data-f="d3"></span> / <span data-v="test.por_paciente.pcr0.precision" data-f="d3"></span></td><td class="num">— / <span data-v="test.siempre_no_pcr.pcr0.precision" data-f="d3"></span></td></tr>
+              <tr><th>F1 pCR / no pCR</th><td class="num"><span data-v="test.por_paciente.pcr1.f1" data-f="d3"></span> / <span data-v="test.por_paciente.pcr0.f1" data-f="d3"></span></td><td class="num"><span data-v="test.siempre_no_pcr.pcr1.f1" data-f="d3"></span> / <span data-v="test.siempre_no_pcr.pcr0.f1" data-f="d3"></span></td></tr>
+              <tr><th>F1 macro</th><td class="num"><span data-v="test.por_paciente.f1_macro" data-f="d3"></span></td><td class="num"><span data-v="test.siempre_no_pcr.f1_macro" data-f="d3"></span></td></tr>
+              <tr><th>Exactitud</th><td class="num"><span data-v="test.por_paciente.exactitud" data-f="d3"></span></td><td class="num"><span data-v="test.siempre_no_pcr.exactitud" data-f="d3"></span></td></tr>
+            </tbody>
+          </table>
+        </div>
+        <p class="nota">La exactitud del modelo (<span data-v="test.por_paciente.exactitud" data-f="d3"></span>) queda por debajo de la de decir siempre «no pCR» (<span data-v="test.siempre_no_pcr.exactitud" data-f="d3"></span>): el umbral exigente cuesta aciertos. Lo que sí hace es no marcar casi a ninguna paciente que no responderá (especificidad <span data-v="test.por_paciente.especificidad" data-f="d3"></span>).</p>
+      </div>
+
+      <h3 class="h3-ancho">Por cohorte</h3>
+      <div class="texto">
+        <p>Con tan pocas pacientes por cohorte, los intervalos son enormes: ninguna cohorte permite una conclusión. I-SPY1 queda por debajo de 0,5 en test y Duke, la que menos señal tenía en validación, por encima, con un intervalo de <span data-v="test.por_cohorte.duke.ic95" data-f="rango3a"></span>.</p>
+      </div>
+      <figure class="fig">
+        <div class="grafico" data-grafico="cohortes-test"></div>
+        <figcaption>AUC en test por cohorte, con su intervalo del 95 %.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">Calibración</h3>
+      <div class="texto">
+        <p>Si el modelo estuviera calibrado, de las pacientes a las que da un 30 % de probabilidad, el 30 % alcanzaría pCR. Aquí la pendiente de calibración es <span data-v="test.calibracion.pendiente" data-f="d2"></span> (1 sería perfecta) con un intervalo de <span data-v="test.calibracion.ic95.pendiente" data-f="rango3a"></span>: no se puede decir que sea mejor ni peor que dar a todas la tasa base. El Brier del modelo (<span data-v="test.brier" data-f="d4"></span>) es el mismo que el de un modelo constante (<span data-v="test.brier_constante" data-f="d4"></span>).</p>
+      </div>
+      <figure class="fig">
+        <div class="grafico" data-grafico="calibracion"></div>
+        <figcaption>Pacientes con pCR frente a la probabilidad que el modelo les dio, en grupos de unas 17.</figcaption>
+      </figure>
+
+      <h3 class="h3-ancho">Cuánto fiarse, en lenguaje llano</h3>
+      <div class="texto lectura">
+        <p><b class="cifra"><span data-v="test.auc.auc" data-f="pct0"></span></b> Si se toma una paciente con pCR y otra sin pCR, el modelo da más probabilidad a la primera el <span data-v="test.auc.auc" data-f="pct0"></span> de las veces. Al azar sería el 50 %, y el margen va del <span data-v="test.auc.ic95.0" data-f="pct0"></span> al <span data-v="test.auc.ic95.1" data-f="pct0"></span>.</p>
+        <p><b class="cifra"><span data-v="fiarse.test.VP"></span> de <span data-v="fiarse.test.pcr"></span></b> Casi nunca avisa: en test marcó como pCR a <span data-v="fiarse.test.VP"></span> de las <span data-v="fiarse.test.pcr"></span> pacientes que sí la alcanzaron. De las que marca como pCR, unas <span data-v="fiarse.validacion.VPP" data-f="de10"></span> de cada 10 lo son en validación (<span data-v="fiarse.validacion.VP"></span> de <span data-v="fiarse.validacion.marcadas"></span>) y <span data-v="fiarse.test.VPP" data-f="de10"></span> de cada 10 en test (<span data-v="fiarse.test.VP"></span> de <span data-v="fiarse.test.marcadas"></span>), cuando sin modelo lo son <span data-v="fiarse.tasa_base" data-f="de10"></span> de cada 10.</p>
+        <p><b class="cifra">p&nbsp;=&nbsp;<span data-v="test.permutacion.p_dos_colas" data-f="d2"></span></b> En test el modelo no se distingue del azar (prueba de permutación). Además la potencia es baja: con <span data-v="test.pacientes.pcr"></span> pacientes con pCR y <span data-v="test.potencia.no_pcr"></span> sin ella, si el AUC real fuera <span data-v="test.potencia.auc_real" data-f="d2"></span>, el intervalo excluiría el 0,5 solo el <span data-v="test.potencia.formula_hanley_mcneil" data-f="pct0"></span> de las veces: este test no puede separar <span data-v="test.potencia.auc_real" data-f="d2"></span> de 0,5.</p>
+        <p><strong>No sirve para ninguna decisión clínica.</strong> Y el umbral se fijó por paciente, con la media de unos 10 cortes, mientras que la web recibe un solo corte: allí el resultado es algo más ruidoso.</p>
+      </div>
+    </section>
+
+    <!-- 7. Comparacion y limites -->
+    <section class="seccion" id="comparacion" aria-labelledby="t-comparacion">
+      <h2 id="t-comparacion"><span class="n">6</span> Comparación y límites</h2>
+      <div class="texto">
+        <p>El <strong>modelo de referencia del profesor</strong> da <span data-v="comparacion.referencias.profesor.auc_test" data-f="d2"></span> en test y cumple las mismas restricciones que este: un corte 2D, CNN desde cero, sin la caja del tumor ni variables clínicas (comunicación personal). Es la comparación directa. Este modelo queda por debajo. El margen típico de un AUC en este test es de ±<span data-v="comparacion.referencias.profesor.ic_semiancho" data-f="d2"></span>, así que los dos intervalos se solapan en parte. Aun así, los valores centrales están separados por unos <span data-v="comparacion.diferencia_profesor" data-f="d2"></span> y no sabemos qué lo explica.</p>
+        <p><strong>Fridman et al.</strong> (autores del dataset) llegan a <span data-v="comparacion.referencias.fridman_2025.auc_test" data-f="d2"></span> en el mismo test con un modelo <strong>preentrenado</strong>. No es comparable con una CNN desde cero: es una cota superior.</p>
+      </div>
+      <figure class="fig ancha">
+        <div class="grafico" data-grafico="comparacion"></div>
+        <figcaption>AUC de este modelo frente a las referencias. Arriba, en test; abajo, en validación (solo comparación). Círculo: este trabajo; cuadrado: referencia del profesor; rombo: publicado.</figcaption>
+      </figure>
+      <div class="texto">
+        <h3>Las variables clínicas</h3>
+        <p>Con subtipo, edad y volumen del tumor se llega a <span data-v="comparacion.clinica_e_imagen.clinica.media" data-f="d3"></span> en validación, bastante más que la imagen sola (<span data-v="comparacion.clinica_e_imagen.imagen_todas_las_epocas" data-f="d3"></span>). Añadir la imagen sube el AUC en <span data-v="comparacion.clinica_e_imagen.mejora" data-f="d3"></span> (mejora en <span data-v="comparacion.clinica_e_imagen.folds_a_favor"></span> de 5 folds), pero el margen de esa mejora (<span data-v="comparacion.clinica_e_imagen.mejora_global_ic95" data-f="rangoSigno3"></span>) incluye el cero. Solo se evaluó en validación, y esta web no pide datos clínicos.</p>
+        <h3>El límite de lo probado</h3>
+        <p>Con capacidad, resolución, entrada, resumen y localización variados, todas las configuraciones de 4 o 5 folds quedan entre <span data-v="seleccion.resumen.rango_4_o_5_folds.min" data-f="d3"></span> y <span data-v="seleccion.resumen.rango_4_o_5_folds.max" data-f="d3"></span>. Eso es lo que dio este planteamiento: una CNN 2D desde cero, un corte por paciente y ~<span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de entrenamiento. No probamos otros planteamientos (varios cortes, 3D, más datos), así que no sabemos si pasarían de aquí. Que el modelo de referencia del profesor llegue a <span data-v="comparacion.referencias.profesor.auc_test" data-f="d2"></span> sugiere que había margen.</p>
+        <h3>Las imágenes saturan</h3>
+        <p>En la zona que más realza, el <span data-v="saturacion.todas.early_255.fraccion_cortes" data-f="pct0"></span> de los cortes de train tiene más de la mitad de los píxeles a 255 en EARLY (y el <span data-v="saturacion.todas.late_255.fraccion_cortes" data-f="pct0"></span> en LATE). Con el tumor al máximo, ni cuánto realza ni cómo cambia de EARLY a LATE queda en la imagen. Es una limitación de los PNG de 8 bits del dataset, no del modelo: afecta igual a cualquier modelo que use estos PNG.</p>
+      </div>
+      <figure class="fig">
+        <div class="grafico" data-grafico="saturacion"></div>
+        <figcaption>Fracción de cortes de train con más de la mitad de la zona que más realza a 255, por cohorte.</figcaption>
+      </figure>
+      <div class="texto">
+        <h3>Otros límites</h3>
+        <ul class="lista">
+          <li>El umbral se eligió con modelos sueltos, y el conjunto de los 5 solo se evalúa en test.</li>
+          <li>Duke es el <span data-v="datos.cohortes.2.test_fraccion" data-f="pct0"></span> del test y aporta poca señal en validación.</li>
+          <li>Los cortes de una misma paciente se parecen mucho entre sí (ICC <span data-v="comparacion.consistencia.icc" data-f="d2"></span>): la web, con un corte, verá casi lo mismo que con la paciente entera, pero el <span data-v="comparacion.consistencia.fraccion_pacientes_dos_lados" data-f="pct1"></span> de las pacientes tiene cortes a los dos lados del umbral.</li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- 8. Creditos -->
+    <section class="seccion" id="creditos" aria-labelledby="t-creditos">
+      <h2 id="t-creditos"><span class="n">7</span> Créditos</h2>
+      <div class="texto">
+        <p><strong>Dataset.</strong> Imágenes desidentificadas derivadas de <strong><span data-v="creditos.nombre" data-f="texto"></span></strong> (<span data-v="creditos.cita" data-f="texto"></span>), construido a partir de las colecciones públicas <span id="colecciones"></span>. Licencia <a id="enlace-licencia" href="https://creativecommons.org/licenses/by-nc/4.0/"><span data-v="creditos.licencia" data-f="texto"></span></a>: uso docente y de investigación, sin fines comerciales y conservando esta atribución. No se permite la reidentificación, el diagnóstico ni la recomendación terapéutica.</p>
+        <p><strong>Código.</strong> Todo el proyecto, con los pesos, los resultados y las pruebas, está en <a id="enlace-repo" href="https://github.com/Valdi183/ML_Caso_1_Cancer">el repositorio</a>.</p>
+        <p><strong>Software incluido en esta web</strong> (sin cargar nada de fuera): ONNX Runtime Web (MIT), UPNG.js (MIT), pako (MIT y Zlib) y la tipografía Atkinson Hyperlegible (SIL OFL 1.1, Braille Institute). Sus licencias están en <code>js/vendor/</code> y <code>fonts/</code>.</p>
+      </div>
+      <div class="aviso-caja" role="note"><strong>Uso educativo. Sin validez clínica.</strong> <span>Es un trabajo académico sobre el dataset BreastDCEDL: no es un dispositivo médico y no debe usarse para diagnosticar ni para decidir tratamientos.</span></div>
+      <p><a class="boton" href="predecir.html">Probar el modelo</a></p>
+    </section>
+  </main>
+</div>
+
+<script src="js/vendor/pako_inflate.min.js"></script>
+<script src="js/vendor/UPNG.js"></script>
+<script src="js/png.js"></script>
+<script src="js/visualizacion.js"></script>
+<script src="js/comun.js"></script>
+<script src="js/graficos.js"></script>
+<script src="js/index.js"></script>
+</body>
+</html>
