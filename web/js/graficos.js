@@ -112,9 +112,11 @@
     return svg(W, fondo + abajo, s, nota);
   }
 
-  /* Curvas de AUC de train y de validacion por epoca, un panel por fold. */
-  function curvas(d, W) {
-    const folds = d.seleccion.curvas;
+  /* Curvas de AUC de train y de validacion por epoca, un panel por fold. Con `epoca`, solo hasta esa
+   * epoca y con la diferencia train - validacion marcada en ella (control de epoca de index.js). Usa
+   * web/historial.json si esta cargado (d.historial) y si no las curvas de datos.json. */
+  function curvas(d, W, epoca) {
+    const folds = (d.historial && d.historial.folds) || d.seleccion.curvas;
     const cols = W >= 1000 ? 5 : W >= 620 ? 3 : 2;
     const hueco = 14, pw = (W - hueco * (cols - 1)) / cols, ph = 200, titulo = 30;
     const filas = Math.ceil(folds.length / cols);
@@ -141,10 +143,23 @@
       for (const m of [1, ...marcas(1, maxEpoca, 10).filter((v) => v > 5)]) {
         s += texto(x(m), oy + titulo + ph + 22, m, "g-t2", "middle");
       }
-      s += camino(f.epoca.map((e, j) => [x(e), y(f.auc_train[j])]), "g-trazo2", ' stroke-dasharray="6 4"');
-      s += camino(f.epoca.map((e, j) => [x(e), y(f.auc_val[j])]), "g-trazo");
+      const hasta = epoca === undefined ? Infinity : epoca;
+      const n = f.epoca.filter((e) => e <= hasta).length;
+      if (n > 1) {
+        s += camino(f.epoca.slice(0, n).map((e, j) => [x(e), y(f.auc_train[j])]), "g-trazo2 g-curva", ' stroke-dasharray="6 4"');
+        s += camino(f.epoca.slice(0, n).map((e, j) => [x(e), y(f.auc_val[j])]), "g-trazo g-curva");
+      }
       const j = f.epoca.indexOf(f.epoca_elegida);
-      s += circulo(x(f.epoca_elegida), y(f.auc_val[j]), 6, "g-relleno");
+      if (f.epoca_elegida <= hasta) s += circulo(x(f.epoca_elegida), y(f.auc_val[j]), 6, "g-relleno");
+      if (epoca !== undefined) {
+        const k = Math.min(n, f.epoca.length) - 1;                      // la epoca pedida, o la ultima si paro antes
+        const ex = x(f.epoca[k]), yt = y(f.auc_train[k]), yv = y(f.auc_val[k]);
+        s += linea(x(epoca), oy + titulo, x(epoca), oy + titulo + ph, "g-eje", ' stroke-opacity=".45"');
+        s += linea(ex, yt, ex, yv, "g-trazo", ' stroke-width="4"');
+        s += circulo(ex, yt, 4.5, "g-fondo", ' stroke="var(--g-tx)" stroke-width="2"') + circulo(ex, yv, 4.5, "g-relleno");
+        const dif = f.auc_train[k] - f.auc_val[k];
+        s += texto(ox + margenIzq + 4, oy + titulo + ph - 10, `dif. ${dif >= 0 ? "+" : ""}${d3(dif)}`, "g-t g-b g-halo");
+      }
     });
     return svg(W, alto, s, "AUC de train y de validación por época en cada uno de los 5 folds");
   }
@@ -185,7 +200,7 @@
   }
 
   /* Sensibilidad y especificidad frente al umbral (validacion fuera de fold, por paciente). */
-  function umbral(d, W) {
+  function umbral(d, W, actual) {
     const u = d.seleccion.umbral, pts = u.curva;
     const izq = 52, dcha = 16, arriba = 44, alto = Math.min(380, Math.max(300, W * 0.5)), abajo = 54;
     const x = lin(0.15, 0.6, izq, W - dcha), y = lin(0, 1, arriba + alto, arriba);
@@ -194,8 +209,13 @@
     s += ejeX(x, arriba, arriba + alto, marcas(0.15, 0.6, 0.05).filter((_, i) => W >= 560 || i % 2 === 0), d2, arriba + alto + 24);
     s += texto(izq + (W - izq - dcha) / 2, arriba + alto + 48, "umbral (probabilidad por paciente)", "g-t2", "middle");
     const dentro = pts.filter((p) => p.umbral >= 0.15 && p.umbral <= 0.6);
-    s += camino(dentro.map((p) => [x(p.umbral), y(p.especificidad)]), "g-trazo");
-    s += camino(dentro.map((p) => [x(p.umbral), y(p.sensibilidad)]), "g-trazo2", ' stroke-dasharray="7 5"');
+    s += camino(dentro.map((p) => [x(p.umbral), y(p.especificidad)]), "g-trazo g-curva");
+    s += camino(dentro.map((p) => [x(p.umbral), y(p.sensibilidad)]), "g-trazo2 g-curva", ' stroke-dasharray="7 5"');
+    if (actual !== undefined && Math.abs(actual - u.valor) > 1e-9) {
+      const xa = x(Math.min(Math.max(actual, 0.15), 0.6));
+      s += linea(xa, arriba, xa, arriba + alto, "g-eje", ' stroke-width="2" stroke-dasharray="5 4"');
+      s += texto(xa, arriba + alto - 8, `tu umbral ${d4(actual)}`, "g-t g-halo", xa > W * 0.6 ? "end" : "start");
+    }
     const xu = x(u.valor);
     s += linea(xu, arriba - 8, xu, arriba + alto, "g-eje", ' stroke-width="2"');
     s += texto(Math.min(Math.max(xu, izq + 70), W - 90), arriba - 18, `umbral ${d4(u.valor)}`, "g-t g-b", "middle");
@@ -229,7 +249,7 @@
     s += texto(izq + area / 2, arriba + area + 48, "1 − especificidad (falsos positivos)", "g-t2", "middle");
     s += `<text transform="translate(14 ${arriba + area / 2}) rotate(-90)" class="g-t2" text-anchor="middle">sensibilidad</text>`;
     s += linea(x(0), y(0), x(1), y(1), "g-eje", ' stroke-dasharray="6 5"');
-    s += camino(r.fpr.map((f, i) => [x(f), y(r.tpr[i])]), "g-trazo");
+    s += camino(r.fpr.map((f, i) => [x(f), y(r.tpr[i])]), "g-trazo g-curva");
     const p = r.punto;
     s += circulo(x(p.fpr), y(p.tpr), 8, "g-relleno");
     s += linea(x(p.fpr), y(p.tpr) - 10, x(0.07), y(0.62), "g-eje");
@@ -406,28 +426,79 @@
       else s += texto(0, y0 - 2, f.nombre, "g-t");
       const off = ancho ? 0 : 6;
       const e = f.q.early_255.fraccion_cortes, l = f.q.late_255.fraccion_cortes;
-      s += rect(izq, y0 + off, x(e) - izq, 20, "g-relleno") + texto(x(e) + 8, y0 + off + 16, pct0(e), "g-t g-b");
-      s += rect(izq, y0 + off + 24, x(l) - izq, 20, "g-relleno2") + texto(x(l) + 8, y0 + off + 40, pct0(l), "g-t");
+      s += rect(izq, y0 + off, x(e) - izq, 20, "g-relleno g-barra") + texto(x(e) + 8, y0 + off + 16, pct0(e), "g-t g-b");
+      s += rect(izq, y0 + off + 24, x(l) - izq, 20, "g-relleno2 g-barra") + texto(x(l) + 8, y0 + off + 40, pct0(l), "g-t");
     });
     return svg(W, arriba + filas.length * filaH + 40, s, "Fracción de cortes de train con la zona que más realza saturada en EARLY y en LATE");
   }
 
   /* Monta un grafico en un contenedor y lo redibuja al cambiar su anchura. */
+  /* Dibuja al entrar en pantalla: las curvas (.g-curva) se trazan con stroke-dashoffset (las discontinuas,
+   * a traves de una mascara con el mismo trazo), las barras (.g-barra) crecen desde 0 y los puntos
+   * aparecen al final. ~800 ms, una sola vez; con movimiento reducido no hace nada (estado final). */
+  const DURACION = 800;
+  let mascaras = 0;
+  function animarSvg(svgEl) {
+    if (!svgEl || C.reducido()) return;
+    const curvas = [...svgEl.querySelectorAll(".g-curva")], barras = [...svgEl.querySelectorAll(".g-barra")];
+    if (!curvas.length && !barras.length) return;
+    const ns = "http://www.w3.org/2000/svg", transicion = `stroke-dashoffset ${DURACION}ms ease-out`;
+    let defs = svgEl.querySelector("defs");
+    if (!defs) { defs = document.createElementNS(ns, "defs"); svgEl.insertBefore(defs, svgEl.firstChild); }
+    const animadas = [];
+    for (const c of curvas) {
+      const largo = c.getTotalLength ? c.getTotalLength() : 0;
+      if (!largo) continue;
+      let objetivo = c;
+      if (c.getAttribute("stroke-dasharray")) {             // discontinua: se revela con una mascara
+        const id = `revelar-${++mascaras}`, mask = document.createElementNS(ns, "mask"), pl = c.cloneNode();
+        mask.setAttribute("id", id);
+        mask.setAttribute("maskUnits", "userSpaceOnUse");
+        pl.removeAttribute("class");
+        pl.removeAttribute("stroke-dasharray");
+        pl.setAttribute("fill", "none");
+        pl.setAttribute("stroke", "#fff");
+        pl.setAttribute("stroke-width", "10");
+        mask.appendChild(pl);
+        defs.appendChild(mask);
+        c.setAttribute("mask", `url(#${id})`);
+        objetivo = pl;
+      }
+      objetivo.style.strokeDasharray = `${largo} ${largo}`;
+      objetivo.style.strokeDashoffset = String(largo);
+      animadas.push(objetivo);
+    }
+    for (const b of barras) b.style.transform = "scaleX(0)";
+    const puntos = curvas.length ? [...svgEl.querySelectorAll("circle")] : [];
+    for (const p of puntos) p.style.opacity = "0";
+    svgEl.getBoundingClientRect();                           // fija el estado inicial antes de la transicion
+    requestAnimationFrame(() => {
+      for (const a of animadas) { a.style.transition = transicion; a.style.strokeDashoffset = "0"; }
+      for (const b of barras) { b.style.transition = `transform ${DURACION}ms ease-out`; b.style.transform = "scaleX(1)"; }
+      for (const p of puntos) { p.style.transition = `opacity 250ms ease-out ${DURACION - 150}ms`; p.style.opacity = "1"; }
+    });
+  }
+
+  /* Pinta el grafico y lo repinta al cambiar de anchura. La primera vez que entra en pantalla se anima
+   * (lo que este pintado en ese momento). Devuelve repintar(), para los controles del visitante. */
   function montar(contenedor, dibujar, datos) {
     let anterior = -1, esperando = false;
-    const pintar = () => {
+    const pintar = (forzar) => {
       esperando = false;
       const w = Math.floor(contenedor.clientWidth);
-      if (w < 200 || w === anterior) return;
+      if (w < 200 || (w === anterior && !forzar)) return;
       anterior = w;
       contenedor.innerHTML = dibujar(datos, w);
     };
     pintar();
     if (typeof ResizeObserver !== "undefined") {
-      new ResizeObserver(() => { if (!esperando) { esperando = true; requestAnimationFrame(pintar); } }).observe(contenedor);
+      new ResizeObserver(() => { if (!esperando) { esperando = true; requestAnimationFrame(() => pintar()); } }).observe(contenedor);
     }
+    C.alEntrar(contenedor, () => animarSvg(contenedor.querySelector("svg")), 0.2);
+    return { repintar: () => pintar(true) };
   }
 
   raiz.Graficos = { configuraciones, curvas, perdida, umbral, roc, cohortesTest, comparacion, calibracion, saturacion, folds,
+                    animarSvg,
                     bosque, montar, esc, lin, marcas, svg, texto, linea, circulo, rect, camino, ejeX };
 })(window);

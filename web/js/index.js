@@ -229,6 +229,155 @@
     secciones.forEach((s) => obs.observe(s));
   }
 
+  // ---------------------------------------------------------------------- //
+  // Movimiento: solo lo que cambia o lo que controla el visitante
+  // ---------------------------------------------------------------------- //
+  const estado = { epoca: undefined, umbral: undefined };
+
+  async function cargarOpcional(ruta) {
+    try {
+      const r = await fetch(ruta);
+      return r.ok ? r.json() : null;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  /* Las barras de las cohortes crecen desde 0 al entrar en pantalla. */
+  function animarBarras() {
+    C.alEntrar($("barras-cohortes"), (cont) => {
+      if (C.reducido()) return;
+      const barras = [...cont.querySelectorAll(".pista i")];
+      const finales = barras.map((b) => b.style.width);
+      barras.forEach((b) => { b.style.transition = "none"; b.style.width = "0"; });
+      cont.getBoundingClientRect();
+      requestAnimationFrame(() => barras.forEach((b, i) => { b.style.transition = "width 800ms ease-out"; b.style.width = finales[i]; }));
+    });
+  }
+
+  /* La matriz de confusion de test: las celdas aparecen contando hasta su recuento. */
+  function animarMatriz(d) {
+    C.alEntrar(document.querySelector('table.matriz[aria-label="Matriz de confusión en test"]'), (tabla) => {
+      if (C.reducido()) return;
+      tabla.querySelectorAll("td").forEach((td, i) => {
+        const b = td.querySelector("b");
+        td.style.animation = `aparecer 400ms ease-out ${i * 120}ms both`;
+        setTimeout(() => C.contar(b, C.camino(d, b.dataset.v), C.entero, 700), i * 120);
+      });
+    });
+  }
+
+  /* Control de epoca: las curvas de train y validacion avanzan juntas y se ve su diferencia. */
+  function controlEpoca(d, grafico) {
+    if (!d.historial || !grafico) return;
+    const folds = d.historial.folds, max = Math.max(...folds.map((f) => f.epoca[f.epoca.length - 1]));
+    const deslizador = $("epoca"), boton = $("reproducir-epoca");
+    let temporizador = null;
+    const lectura = (e) => folds.map((f) => {
+      const k = Math.min(f.epoca.filter((x) => x <= e).length, f.epoca.length) - 1;
+      const dif = f.auc_train[k] - f.auc_val[k];
+      const paro = e > f.epoca[f.epoca.length - 1] ? ` (paró en la época ${f.epoca[f.epoca.length - 1]})` : "";
+      return `fold ${f.fold}: train ${C.d3(f.auc_train[k])}, validación ${C.d3(f.auc_val[k])}, diferencia ${dif >= 0 ? "+" : ""}${C.d3(dif)}${paro}`;
+    }).join(" · ");
+    const poner = (e) => {
+      estado.epoca = e;
+      deslizador.value = e;
+      $("epoca-valor").textContent = `${e} de ${max}`;
+      $("epoca-lectura").textContent = lectura(e);
+      grafico.repintar();
+    };
+    const parar = () => {
+      clearInterval(temporizador);
+      temporizador = null;
+      boton.textContent = "Reproducir";
+      boton.setAttribute("aria-pressed", "false");
+    };
+    deslizador.max = max;
+    deslizador.value = max;
+    $("epoca-valor").textContent = `${max} de ${max}`;
+    deslizador.addEventListener("input", () => { parar(); poner(Number(deslizador.value)); });
+    boton.addEventListener("click", () => {
+      if (temporizador) { parar(); return; }
+      if (C.reducido()) { poner(max); return; }
+      let e = estado.epoca === undefined || estado.epoca >= max ? 1 : estado.epoca;
+      poner(e);
+      boton.textContent = "Pausa";
+      boton.setAttribute("aria-pressed", "true");
+      temporizador = setInterval(() => { e += 1; poner(e); if (e >= max) parar(); }, 260);
+    });
+    $("control-epoca").hidden = false;
+  }
+
+  /* Explorador de umbral sobre las predicciones fuera de fold de VALIDACION (web/umbral_validacion.json). */
+  function exploradorUmbral(pred, grafico) {
+    if (!pred || !grafico) return;
+    const pacientes = pred.pacientes, oficial = pred.umbral_oficial;
+    const deslizador = $("umbral-deslizador"), volver = $("umbral-oficial");
+    $("explorador-n").textContent = C.entero(pacientes.length);
+    volver.textContent = `Volver al oficial (${C.d4(oficial)})`;
+    const poner = (t, desdeDeslizador) => {
+      estado.umbral = t;
+      if (!desdeDeslizador) deslizador.value = t;
+      let vp = 0, fp = 0, fn = 0, vn = 0;
+      for (const [p, y] of pacientes) {
+        if (p > t) { if (y) vp++; else fp++; } else if (y) fn++; else vn++;
+      }
+      for (const [id, v] of [["VP", vp], ["FP", fp], ["FN", fn], ["VN", vn]]) $("ex-" + id).textContent = C.entero(v);
+      $("ex-sens").textContent = C.d3(vp / (vp + fn));
+      $("ex-esp").textContent = C.d3(vn / (vn + fp));
+      $("ex-vpp").textContent = vp + fp ? C.d3(vp / (vp + fp)) : "—";
+      $("umbral-valor").textContent = C.d4(t) + (t === oficial ? " (oficial)" : "");
+      volver.disabled = t === oficial;
+      grafico.repintar();
+    };
+    deslizador.addEventListener("input", () => poner(Number(deslizador.value), true));
+    volver.addEventListener("click", () => { poner(oficial); deslizador.focus(); });
+    $("explorador-umbral").hidden = false;
+    poner(oficial);
+  }
+
+  /* Recorrer la red: un corte pasa por las etapas y cambia de tamaño (alto x ancho) y de canales. */
+  function recorrerRed(d) {
+    const etapas = d.modelo.etapas, lis = [...$("arquitectura").children], visor = $("recorrido-tensor"), boton = $("recorrer");
+    const CAPAS = 8, MAX = 200;
+    visor.innerHTML = `<div class="tensor" aria-hidden="true">${Array.from({ length: CAPAS }, (_, i) =>
+      `<i style="--i:${i}"></i>`).join("")}</div><p class="tensor-texto"></p>`;
+    const capas = [...visor.querySelectorAll(".tensor i")], textoEl = visor.querySelector(".tensor-texto");
+    visor.hidden = true;                                       // hasta que el visitante pulse «Recorrer»
+    const portada = `url("ejemplos/${d.portada.corte}_EARLY.png")`;
+    let temporizador = null;
+    const mostrar = (i) => {
+      const e = etapas[i], n = (e.forma.match(/\d+/g) || []).map(Number);
+      lis.forEach((li, j) => li.classList.toggle("activo", j === i));
+      // lado proporcional a la raiz del alto (256 px -> 200 px, 16 px -> 50 px), para que se vean todos
+      let lado = 0, cuantas = 0, imagen = false;
+      if (n.length === 3) { lado = Math.max(18, Math.round(MAX * Math.sqrt(n[1] / 256))); cuantas = Math.min(n[0], CAPAS); imagen = n[0] === 3; }
+      else if (n.length === 1) { lado = 14; cuantas = CAPAS; }
+      else { lado = 44; cuantas = 1; }                         // la salida: una sola probabilidad
+      capas.forEach((c, k) => {
+        const visible = k < cuantas;
+        c.style.width = c.style.height = visible ? `${lado}px` : "0px";
+        c.style.opacity = visible ? "1" : "0";
+        c.style.borderRadius = n.length === 0 && k === 0 ? "50%" : "0";
+        c.style.backgroundImage = imagen && k === 0 ? portada : "none";
+      });
+      textoEl.textContent = `${e.nombre}: ${e.forma}` + (n.length === 3 ? " (canales × alto × ancho)" : "");
+    };
+    boton.addEventListener("click", () => {
+      clearInterval(temporizador);
+      visor.hidden = false;
+      if (C.reducido()) { mostrar(etapas.length - 1); return; }
+      let i = 0;
+      mostrar(i);
+      boton.disabled = true;
+      temporizador = setInterval(() => {
+        i += 1;
+        if (i >= etapas.length) { clearInterval(temporizador); boton.disabled = false; boton.textContent = "Recorrer otra vez"; boton.focus(); return; }
+        mostrar(i);
+      }, 1100);
+    });
+  }
+
   const DIBUJOS = {
     configuraciones: G.configuraciones, curvas: G.curvas, perdida: G.perdida, umbral: G.umbral, roc: G.roc,
     "cohortes-test": G.cohortesTest, calibracion: G.calibracion, comparacion: G.comparacion, saturacion: G.saturacion,
@@ -256,7 +405,21 @@
     conjunto(d);
     entrenamiento(d);
     tablaUmbrales(d);
-    document.querySelectorAll("[data-grafico]").forEach((el) => G.montar(el, DIBUJOS[el.dataset.grafico], d));
+    const [historial, prediccionesVal] = await Promise.all([cargarOpcional("historial.json"), cargarOpcional("umbral_validacion.json")]);
+    d.historial = historial;
+    if (prediccionesVal) estado.umbral = prediccionesVal.umbral_oficial;
+    const montados = {};
+    document.querySelectorAll("[data-grafico]").forEach((el) => {
+      const tipo = el.dataset.grafico;
+      const dibujo = tipo === "curvas" ? (dd, w) => G.curvas(dd, w, estado.epoca)
+        : tipo === "umbral" ? (dd, w) => G.umbral(dd, w, estado.umbral) : DIBUJOS[tipo];
+      montados[tipo] = G.montar(el, dibujo, d);
+    });
+    controlEpoca(d, montados.curvas);
+    exploradorUmbral(prediccionesVal, montados.umbral);
+    recorrerRed(d);
+    animarBarras();
+    animarMatriz(d);
     indice();
     campoReceptivo(d).catch((e) => console.error(e));
     window.__listo = true;

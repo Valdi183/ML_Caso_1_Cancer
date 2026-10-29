@@ -96,7 +96,32 @@
     return r.json();
   }
 
-  raiz.Comun = { FORMATOS, entero, d1: FORMATOS.d1, d2: FORMATOS.d2, d3: FORMATOS.d3, d4: FORMATOS.d4,
+  /* Movimiento: solo si el visitante no pidio reducirlo (entonces se muestra el estado final al instante). */
+  const reducido = () => !!(raiz.matchMedia && raiz.matchMedia("(prefers-reduced-motion: reduce)").matches);
+
+  /* `fn(el)` una sola vez, cuando `el` entra en pantalla (o ya, si no hay IntersectionObserver). */
+  function alEntrar(el, fn, umbral) {
+    if (!el) return;
+    if (typeof IntersectionObserver === "undefined") { fn(el); return; }
+    const obs = new IntersectionObserver((entradas) => {
+      if (entradas.some((e) => e.isIntersecting)) { obs.disconnect(); fn(el); }
+    }, { threshold: umbral === undefined ? 0.25 : umbral });
+    obs.observe(el);
+  }
+
+  /* Cuenta de 0 al valor final en `ms` (texto con `formato`); al acabar deja el texto original. */
+  function contar(el, valor, formato, ms) {
+    const final = el.textContent, t0 = performance.now();
+    const paso = (t) => {
+      const k = Math.min(1, (t - t0) / ms), suave = 1 - (1 - k) ** 3;
+      el.textContent = k < 1 ? formato(Math.round(valor * suave)) : final;
+      if (k < 1) requestAnimationFrame(paso);
+    };
+    el.textContent = formato(0);
+    requestAnimationFrame(paso);
+  }
+
+  raiz.Comun = { reducido, alEntrar, contar, FORMATOS, entero, d1: FORMATOS.d1, d2: FORMATOS.d2, d3: FORMATOS.d3, d4: FORMATOS.d4,
                  pct0: FORMATOS.pct0, pct1: FORMATOS.pct1, conComa, deCada10, camino, rellenar,
                  cargarDatos, entrenamientoHtml, esc, MENOS };
 })(window);

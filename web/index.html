@@ -129,6 +129,10 @@
         <ol id="arquitectura" class="arq" aria-label="Capas de la red"></ol>
         <figcaption>Tamaño del tensor tras cada etapa (canales × alto × ancho) y parámetros de cada una.</figcaption>
       </figure>
+      <div class="recorrido" id="recorrido">
+        <p class="control"><button class="boton secundario" id="recorrer" type="button" aria-controls="recorrido-tensor">Recorrer la red</button></p>
+        <div class="recorrido-visor" id="recorrido-tensor" aria-live="polite"></div>
+      </div>
       <div class="texto">
         <p><strong>El preprocesado va dentro de la red.</strong> El PNG entra tal cual, dividido entre 255, y la reducción de 256 a <span data-v="modelo.resolucion_interna"></span> píxeles (media de bloques de <span data-v="modelo.config.reducir"></span> × <span data-v="modelo.config.reducir"></span>) es la primera etapa. Así el entrenamiento y esta web no pueden preparar la imagen de forma distinta.</p>
         <h3>Lo que ve cada valor del mapa final</h3>
@@ -191,9 +195,15 @@
         <p>En ningún fold ni época la validación pasa de <span data-v="seleccion.resumen.auc_val_max" data-f="d3"></span>, mientras que train llega a <span data-v="seleccion.resumen.auc_train_max" data-f="d3"></span>: la red memoriza antes de generalizar. La época con mejor AUC de validación sale inflada, porque se eligió mirando esa misma validación: <span data-v="seleccion.validacion.auc_elegido.media" data-f="d3"></span> en la época elegida frente a <span data-v="seleccion.validacion.auc_medio.media" data-f="d3"></span> ± <span data-v="seleccion.validacion.auc_medio.desviacion" data-f="d3"></span> de la media de todas las épocas. Por eso la cifra de referencia es la segunda. La diferencia entre train y validación en la época elegida es de <span data-v="seleccion.validacion.diferencia_train_val.media" data-f="d3"></span>.</p>
       </div>
       <figure class="fig ancha">
-        <div class="grafico" data-grafico="curvas"></div>
+        <div class="grafico" id="grafico-curvas" data-grafico="curvas"></div>
         <figcaption>AUC por paciente en cada época de los 5 folds, con la época elegida.</figcaption>
       </figure>
+      <div class="control-epoca" id="control-epoca" hidden>
+        <button class="boton secundario" id="reproducir-epoca" type="button" aria-pressed="false">Reproducir</button>
+        <label for="epoca">Época <output id="epoca-valor" for="epoca"></output></label>
+        <input type="range" id="epoca" min="1" step="1">
+        <p class="lectura-epoca" id="epoca-lectura" aria-live="polite"></p>
+      </div>
 
       <h3 class="h3-ancho">Pérdida normal frente a ponderada</h3>
       <div class="texto">
@@ -210,9 +220,31 @@
         <p>La regla es el percentil 90 de la probabilidad por paciente (media de sus cortes) de todas las pacientes sin pCR fuera de fold: <strong><span data-v="seleccion.umbral.valor" data-f="d4"></span></strong>. Con él, en validación, la especificidad es <span data-v="seleccion.umbral.en_el_umbral.especificidad" data-f="d3"></span> y la sensibilidad <span data-v="seleccion.umbral.en_el_umbral.sensibilidad" data-f="d3"></span>: se renuncia a casi todas las pCR para casi no equivocarse con las que no lo son.</p>
       </div>
       <figure class="fig ancha">
-        <div class="grafico" data-grafico="umbral"></div>
+        <div class="grafico" id="grafico-umbral" data-grafico="umbral"></div>
         <figcaption>Sensibilidad y especificidad por paciente fuera de fold en función del umbral.</figcaption>
       </figure>
+      <div class="explorador" id="explorador-umbral" hidden>
+        <p class="rotulo-validacion"><strong>Explora el umbral · validación, no test</strong> (las <span id="explorador-n"></span> pacientes de validación fuera de fold).</p>
+        <div class="explorador-control">
+          <label for="umbral-deslizador">Umbral <output id="umbral-valor" for="umbral-deslizador"></output></label>
+          <input type="range" id="umbral-deslizador" min="0.15" max="0.6" step="0.001">
+          <button class="boton secundario" id="umbral-oficial" type="button">Volver al oficial</button>
+        </div>
+        <div class="explorador-resultado">
+          <table class="matriz matriz-explorador" aria-label="Matriz de confusión en validación con el umbral elegido">
+            <thead><tr><th></th><th scope="col">Predice pCR</th><th scope="col">Predice no pCR</th></tr></thead>
+            <tbody>
+              <tr><th scope="row">pCR real</th><td><b id="ex-VP"></b><span>verdaderos positivos</span></td><td><b id="ex-FN"></b><span>falsos negativos</span></td></tr>
+              <tr><th scope="row">No pCR real</th><td><b id="ex-FP"></b><span>falsos positivos</span></td><td><b id="ex-VN"></b><span>verdaderos negativos</span></td></tr>
+            </tbody>
+          </table>
+          <dl class="explorador-cifras" aria-live="polite">
+            <div><dt>Sensibilidad</dt><dd id="ex-sens"></dd></div>
+            <div><dt>Especificidad</dt><dd id="ex-esp"></dd></div>
+            <div><dt>VPP</dt><dd id="ex-vpp"></dd></div>
+          </dl>
+        </div>
+      </div>
       <div class="tabla-ancha">
         <div class="tabla-scroll">
           <table class="datos" id="tabla-umbrales">
