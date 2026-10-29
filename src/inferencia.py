@@ -23,6 +23,7 @@ import argparse
 import hashlib
 import io
 import json
+import math
 import re
 import time
 from contextlib import contextmanager
@@ -224,6 +225,135 @@ def avisos_corte(x: np.ndarray, nombres: dict[str, str] | None = None) -> list[s
             avisos.append(f"El fichero subido como {fase} se llama «{nombre}» "
                           f"(sufijo _{sufijo.group(1).upper()}).")
     return avisos
+
+
+# --------------------------------------------------------------------------- #
+# Las tres fases son del mismo corte de una RM de mama (nombres y contenido)
+# --------------------------------------------------------------------------- #
+# Umbrales calibrados con tripletes reales de train y falsos (src/utils/calibrar_entrada.py).
+# La web hace lo mismo en JS (web/js/png.js: rasgosCorte, validarCorte), con el mismo JSON.
+# Los rasgos salen de sumas enteras (exactas en int64 y en doble) y de unas pocas operaciones
+# en coma flotante en el mismo orden que en JS, para que las dos decidan exactamente lo mismo.
+
+UMBRALES_ENTRADA = REPO / "web" / "validacion_entrada.json"
+TEJIDO = 25                     # por encima de este gris (de 255) el pixel es tejido, no fondo
+BLOQUE = 16                     # la anatomia se compara con sumas por bloques de 16 x 16 px
+_NOMBRE_CORTE = re.compile(r"^(?P<corte>.+_z[0-9]+)_(?P<fase>PRE|EARLY|LATE)\.png$", re.IGNORECASE)
+
+
+def comprobar_nombres(nombres: dict[str, str] | None) -> list[str]:
+    """Si los tres nombres siguen <paciente>_z<NNN>_<FASE>.png, el corte debe ser el mismo y cada
+    fase estar en su casilla (si no, ErrorEntrada). Si alguno no sigue el patron, no se bloquea por
+    el nombre: un aviso, y se decide por el contenido."""
+    nombres = nombres or {}
+    if not all(nombres.get(f) for f in FASES):
+        return []
+    # Solo el nombre, sin carpetas (con / o \), como en JS
+    m = {f: _NOMBRE_CORTE.match(re.split(r"[\\/]", nombres[f])[-1]) for f in FASES}
+    if not all(m.values()):
+        return ["Los nombres de los ficheros no siguen el patrón <paciente>_z<corte>_<FASE>.png, así que no "
+                "se puede comprobar por el nombre que sean del mismo corte: se comprueba por el contenido."]
+    for f in FASES:
+        if m[f].group("fase").upper() != f:
+            raise ErrorEntrada(f"El fichero de la casilla {f} es la fase {m[f].group('fase').upper()} "
+                               f"(«{nombres[f]}»): pon cada fase en su casilla.")
+    cortes = {f: m[f].group("corte") for f in FASES}
+    for a, b in (("PRE", "EARLY"), ("EARLY", "LATE"), ("PRE", "LATE")):
+        if cortes[a] != cortes[b]:
+            raise ErrorEntrada(f"{a} es de {cortes[a]} y {b} de {cortes[b]}: "
+                               "sube las tres fases del mismo corte.")
+    return []
+
+
+def _correlacion(n: int, sx: int, sy: int, sxx: int, syy: int, sxy: int) -> float:
+    """Pearson desde sumas enteras exactas; 0 si alguna varianza es 0. Mismo orden que en JS."""
+    da, db = n * sxx - sx * sx, n * syy - sy * sy
+    if da <= 0 or db <= 0:
+        return 0.0
+    return float(n * sxy - sx * sy) / math.sqrt(float(da) * float(db))
+
+
+def rasgos_corte(x: np.ndarray) -> dict[str, float]:
+    """Rasgos de las tres fases (uint8 3 x 256 x 256) para decidir si son el mismo corte de una RM:
+    tejido (fraccion de EARLY por encima de TEJIDO), contraste (|EARLY - PRE| medio y realce
+    medio dentro del tejido de EARLY), misma anatomia (Dice de las mascaras de tejido y correlacion
+    de las sumas por bloques de 16 x 16, PRE-EARLY y EARLY-LATE) y textura (variacion horizontal
+    media de EARLY relativa a su intensidad)."""
+    p, e, late = (np.asarray(x[i], np.int64) for i in range(3))
+    mp, me, ml = p > TEJIDO, e > TEJIDO, late > TEJIDO
+    n = int(me.sum())
+
+    def dice(a, b):
+        s = int(a.sum()) + int(b.sum())
+        return 2 * int((a & b).sum()) / s if s else 0.0
+
+    def bloques(img):
+        return img.reshape(LADO // BLOQUE, BLOQUE, LADO // BLOQUE, BLOQUE).sum(axis=(1, 3)).ravel()
+
+    def anatomia(a, b):
+        a, b = bloques(a), bloques(b)
+        return _correlacion(a.size, int(a.sum()), int(b.sum()), int((a * a).sum()), int((b * b).sum()),
+                            int((a * b).sum()))
+
+    r = {"tejido": n / e.size, "dice_pe": dice(mp, me), "dice_el": dice(me, ml),
+         "anatomia_pe": anatomia(p, e), "anatomia_el": anatomia(e, late),
+         "textura": int(np.abs(np.diff(e, axis=1)).sum()) / (int(e.sum()) + e.size)}
+    if n:
+        r["contraste"] = int(np.abs(e - p)[me].sum()) / n
+        r["realce"] = (int(e[me].sum()) - int(p[me].sum())) / n
+    else:
+        r["contraste"] = r["realce"] = 0.0
+    return r
+
+
+MENSAJES_RASGOS = {
+    "tejido": "casi no hay tejido en EARLY (casi todo es fondo): no parece un corte de RM de mama",
+    "contraste": "PRE y EARLY son iguales o casi iguales: falta el contraste "
+                 "(¿la misma imagen subida dos veces?)",
+    "realce": "EARLY es más oscura que PRE dentro de la mama: las fases parecen intercambiadas",
+    "anatomia_pe": "PRE y EARLY no muestran la misma anatomía: parecen de pacientes o cortes distintos",
+    "anatomia_el": "EARLY y LATE no muestran la misma anatomía: parecen de pacientes o cortes distintos",
+    "dice_pe": "el contorno del tejido no coincide entre PRE y EARLY: "
+               "parecen de pacientes o cortes distintos",
+    "dice_el": "el contorno del tejido no coincide entre EARLY y LATE: "
+               "parecen de pacientes o cortes distintos",
+    "textura": "la textura no se parece a la de una RM del dataset (demasiado lisa o demasiado ruidosa)",
+}
+
+
+def leer_umbrales_entrada(ruta: Path = UMBRALES_ENTRADA) -> dict:
+    return json.loads(ruta.read_text(encoding="utf-8"))
+
+
+def juzgar_rasgos(r: dict[str, float], umbrales: dict) -> tuple[list[str], list[str]]:
+    """(errores, avisos): error si un rasgo cae claramente fuera de todo lo visto en tripletes reales
+    (limites duros); aviso si cae en la zona gris (fuera de lo habitual, dentro de lo visto)."""
+    errores, avisos = [], []
+    for nombre, u in umbrales["rasgos"].items():
+        v = r[nombre]
+        fuera_duro = ("min_error" in u and v < u["min_error"]) or ("max_error" in u and v > u["max_error"])
+        fuera_gris = ("min_aviso" in u and v < u["min_aviso"]) or ("max_aviso" in u and v > u["max_aviso"])
+        if fuera_duro:
+            errores.append(MENSAJES_RASGOS[nombre])
+        elif fuera_gris:
+            avisos.append(MENSAJES_RASGOS[nombre])
+    return errores, avisos
+
+
+def validar_corte(x: np.ndarray, nombres: dict[str, str] | None = None,
+                  umbrales: dict | None = None) -> list[str]:
+    """Las tres fases son del mismo corte de una misma paciente y parecen una RM del dataset.
+    Lanza ErrorEntrada si no (por el nombre o porque el contenido cae claramente fuera de lo
+    visto en tripletes reales) y devuelve los avisos que no bloquean (incluidos los de
+    `avisos_corte`). No cambia la imagen ni la prediccion."""
+    x = comprobar_corte(x)
+    avisos = comprobar_nombres(nombres)
+    errores, grises = juzgar_rasgos(rasgos_corte(x), umbrales or leer_umbrales_entrada())
+    if errores:
+        raise ErrorEntrada("Las tres fases no parecen el mismo corte de una RM de mama: " + "; ".join(errores)
+                           + ". Sube las tres fases (PRE, EARLY, LATE) del mismo corte de la misma paciente.")
+    avisos += [f"Aviso (se predice igualmente): {a}." for a in grises]
+    return avisos + avisos_corte(x, nombres)
 
 
 # --------------------------------------------------------------------------- #

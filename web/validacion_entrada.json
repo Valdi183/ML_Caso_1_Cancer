@@ -1,0 +1,174 @@
+{
+ "version": 1,
+ "aviso": "Generado por src/utils/calibrar_entrada.py con tripletes de TRAIN; no se edita a mano. Lo leen src/inferencia.py (validar_corte) y web/js/png.js (validarCorte).",
+ "tejido": 25,
+ "bloque": 16,
+ "margen": 1.0,
+ "factor": 2.0,
+ "cuantil_aviso": 0.001,
+ "rasgos": {
+  "tejido": {
+   "min_error": 0.06281280517578125,
+   "min_aviso": 0.1563251953125
+  },
+  "contraste": {
+   "min_error": 5.095907230559345,
+   "min_aviso": 12.008401823527263
+  },
+  "textura": {
+   "min_error": 0.019775755779883403,
+   "min_aviso": 0.05062936746887917,
+   "max_error": 0.7198700772062624,
+   "max_aviso": 0.3306575555543116
+  },
+  "realce": {
+   "min_error": -40.73567751742399,
+   "min_aviso": 3.583595477667203
+  },
+  "anatomia_pe": {
+   "min_error": 0.2109255187046999,
+   "min_aviso": 0.5986001937519171
+  },
+  "anatomia_el": {
+   "min_error": 0.08889230623291189,
+   "min_aviso": 0.7424226914534229
+  },
+  "dice_pe": {
+   "min_aviso": 0.6196419940853402
+  },
+  "dice_el": {
+   "min_aviso": 0.6832595494210109
+  }
+ },
+ "calibracion": {
+  "cortes_train": 10945,
+  "train_con_umbrales_finales": {
+   "aceptados": 1.0,
+   "con_aviso": 0.007309273640931932
+  },
+  "fold4_con_umbrales_de_folds_0_3": {
+   "spy1": {
+    "cortes": 200,
+    "aceptados": 1.0,
+    "con_aviso": 0.05
+   },
+   "spy2": {
+    "cortes": 1565,
+    "aceptados": 1.0,
+    "con_aviso": 0.008945686900958467
+   },
+   "duke": {
+    "cortes": 420,
+    "aceptados": 1.0,
+    "con_aviso": 0.0
+   }
+  },
+  "cada_fold_con_umbrales_de_los_otros_cuatro": {
+   "0": {
+    "cortes": 2186,
+    "rechazados": 0,
+    "con_aviso": 28
+   },
+   "1": {
+    "cortes": 2190,
+    "rechazados": 0,
+    "con_aviso": 37
+   },
+   "2": {
+    "cortes": 2192,
+    "rechazados": 0,
+    "con_aviso": 6
+   },
+   "3": {
+    "cortes": 2192,
+    "rechazados": 0,
+    "con_aviso": 12
+   },
+   "4": {
+    "cortes": 2185,
+    "rechazados": 0,
+    "con_aviso": 24
+   }
+  },
+  "falsos_del_fold4_con_umbrales_de_folds_0_3": {
+   "pacientes distintas (misma cohorte)": {
+    "n": 300,
+    "error": 0.4766666666666667,
+    "aviso": 0.43666666666666665,
+    "pasa": 0.08666666666666667
+   },
+   "pacientes distintas (otra cohorte)": {
+    "n": 300,
+    "error": 0.42333333333333334,
+    "aviso": 0.53,
+    "pasa": 0.04666666666666667
+   },
+   "LATE de otra paciente": {
+    "n": 300,
+    "error": 0.7533333333333333,
+    "aviso": 0.24666666666666667,
+    "pasa": 0.0
+   },
+   "la misma imagen tres veces": {
+    "n": 300,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "PRE y EARLY intercambiadas": {
+    "n": 300,
+    "error": 0.56,
+    "aviso": 0.44,
+    "pasa": 0.0
+   },
+   "otro corte de la misma paciente": {
+    "n": 219,
+    "error": 0.0,
+    "aviso": 0.0319634703196347,
+    "pasa": 0.9680365296803652
+   },
+   "no es mama: ruido uniforme": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "no es mama: ruido gaussiano": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "no es mama: imagen constante": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "no es mama: degradado": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "no es mama: degradado que realza": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   },
+   "no es mama: disco que realza": {
+    "n": 40,
+    "error": 0.65,
+    "aviso": 0.35,
+    "pasa": 0.0
+   },
+   "no es mama: tablero": {
+    "n": 40,
+    "error": 1.0,
+    "aviso": 0.0,
+    "pasa": 0.0
+   }
+  }
+ }
+}
