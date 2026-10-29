@@ -107,6 +107,27 @@
 
   const comaN = (v, n) => C.conComa(v.toFixed(n));
 
+  /* Tras una prediccion (accion del visitante): la marca del corte se desliza desde 0 hasta su
+   * probabilidad y los puntos de los 5 modelos se reunen en ella, que es su media. Solo al predecir,
+   * no al cambiar de anchura; con movimiento reducido, el estado final directamente. */
+  function animarEscala(cont) {
+    const svgEl = cont.querySelector("svg");
+    if (!svgEl || C.reducido()) return;
+    const marca = svgEl.querySelector(".marca-prob"), fantasmas = [...svgEl.querySelectorAll(".fantasma")];
+    marca.style.transform = `translateX(${marca.dataset.dx0}px)`;
+    fantasmas.forEach((f) => { f.style.opacity = "0.9"; f.style.transform = "none"; });
+    svgEl.getBoundingClientRect();
+    requestAnimationFrame(() => {
+      marca.style.transition = "transform 700ms cubic-bezier(.2,.7,.2,1)";
+      marca.style.transform = "none";
+      fantasmas.forEach((f) => {
+        f.style.transition = "transform 700ms ease-in-out 150ms, opacity 300ms ease-in 650ms";
+        f.style.transform = `translateX(${f.dataset.dx}px)`;
+        f.style.opacity = "0";
+      });
+    });
+  }
+
   /* Escala de 0 a 1: el corte (triangulo), los 5 modelos (puntos; aro el que no vio a la paciente), el
    * umbral (linea continua) y la tasa base (discontinua). Cada marca tiene forma y rotulo propios. */
   function escalaSvg(W, prob, umbral, tasa, porModelo, destacado) {
@@ -128,7 +149,9 @@
     s += G.linea(xu, yB - 8, xu, yM + 14, "g-trazo", ' stroke-width="2"');
     porModelo.forEach((v, i) => { if (i !== destacado) s += G.circulo(x(v), yM, 4.5, "g-relleno2", ' fill-opacity=".9"'); });
     if (destacado !== null && destacado !== undefined) s += G.circulo(x(porModelo[destacado]), yM, 8, "g-fondo", ' stroke="var(--g-tx)" stroke-width="2.5"');
-    s += `<path d="M${(xp - 10).toFixed(1)},22 L${(xp + 10).toFixed(1)},22 L${xp.toFixed(1)},44 Z" class="g-relleno"/>`;
+    // para la animacion (animarEscala): copias invisibles de los 5 puntos, que se reuniran en la media
+    porModelo.forEach((v) => { s += G.circulo(x(v), yM, 4.5, "g-relleno2 fantasma", ` data-dx="${(xp - x(v)).toFixed(1)}" style="opacity:0"`); });
+    s += `<g class="marca-prob" data-dx0="${(izq - xp).toFixed(1)}"><path d="M${(xp - 10).toFixed(1)},22 L${(xp + 10).toFixed(1)},22 L${xp.toFixed(1)},44 Z" class="g-relleno"/></g>`;
     const xt = Math.min(Math.max(xp, izq + 50), W - dcha - 50);
     s += G.texto(xt, 14, "este corte", "g-t g-b", "middle");
     // leyenda de las dos lineas, apilada a la izquierda: con anchuras pequeñas los rotulos junto a cada linea se salen
@@ -236,6 +259,7 @@
       $("umbral").textContent = C.d4(r.umbral);
       $("tiempo").textContent = `${r.ms.toFixed(0)} ms`;
       dibujarEscala((w) => escalaSvg(w, r.prob, r.umbral, tasa, r.porModelo, destacado));
+      animarEscala($("escala"));
       dibujarCurva((w) => curvaSvg(w, curva));
       $("leyenda-escala").textContent = "Triángulo: este corte (media de los 5 modelos). Puntos: cada modelo" +
         (destacado !== null ? "; el aro es el modelo que no vio a esta paciente" : "") +
