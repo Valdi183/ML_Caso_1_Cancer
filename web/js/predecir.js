@@ -10,7 +10,7 @@
   const C = window.Comun, G = window.Graficos, V = window.Visualizacion;
   const FASES = window.Png.FASES;
   const COHORTES = { spy1: "I-SPY1", spy2: "I-SPY2", duke: "Duke" };
-  let meta = null, d = null, huella = "";
+  let meta = null, d = null, huella = "", umbralesEntrada = null;
   let ultimo = null;
 
   // ---------------------------------------------------------------------- //
@@ -213,7 +213,8 @@
         fases.push(r.x);
         avisos.push(...r.avisos);
       }
-      avisos.push(...window.Png.avisosCorte(fases, nombres));
+      // que las tres fases sean el mismo corte de una RM (por nombre y por contenido); lanza ErrorEntrada si no
+      avisos.push(...window.Png.validarCorte(fases, nombres, umbralesEntrada));
       const mapa = V.mapaCaptacion(fases), curva = V.curvaCaptacion(fases);
       pintarVisor(fases, nombres, mapa);
       for (const a of avisos) {
@@ -360,11 +361,18 @@
   // ---------------------------------------------------------------------- //
   // Arranque
   // ---------------------------------------------------------------------- //
+  /* Umbrales de la validacion del corte (src/utils/calibrar_entrada.py): sin ellos no se predice nada. */
+  async function cargarUmbralesEntrada() {
+    const r = await fetch("validacion_entrada.json");
+    if (!r.ok) throw new Error("no se pudo cargar validacion_entrada.json");
+    return r.json();
+  }
+
   async function iniciar() {
     try {
       // si algo se atasca (red lenta, WebAssembly bloqueado), que la pagina lo diga en vez de quedarse en «Cargando…»
       const limite = new Promise((_, rechazar) => setTimeout(() => rechazar(new Error("tarda más de 45 s; recarga la página o prueba con otro navegador")), 45000));
-      [meta, d] = await Promise.race([Promise.all([window.Modelo.cargar(""), C.cargarDatos()]), limite]);
+      [meta, d, umbralesEntrada] = await Promise.race([Promise.all([window.Modelo.cargar(""), C.cargarDatos(), cargarUmbralesEntrada()]), limite]);
     } catch (e) {
       $("estado").textContent = "";
       mostrarError("No se pudo cargar el modelo: " + e.message);

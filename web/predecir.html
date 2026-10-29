@@ -33,7 +33,9 @@
     <p class="suave pequeno">Pacientes de <strong>train</strong>: 4 de los 5 modelos las vieron al entrenar, así que su resultado es optimista. Sirven para probar la web, no para medirla.</p>
 
     <h3>Tus imágenes</h3>
+    <p><strong>Sube las tres fases (PRE, EARLY, LATE) del mismo corte de la misma paciente.</strong> Usa un corte que incluya el tumor: el modelo se entrenó con cortes cercanos a la lesión.</p>
     <p class="suave pequeno">Tres PNG en escala de grises de 8 bits, de 256 × 256 px y hasta 2 MB cada uno. No se redimensiona ni se convierte nada.</p>
+    <p class="suave pequeno" id="limites-validacion">Antes de predecir se comprueba que las tres fases sean del mismo corte: por el nombre, si los tres siguen <code>&lt;paciente&gt;_z&lt;corte&gt;_&lt;FASE&gt;.png</code>, y por el contenido (misma anatomía, que haya contraste de PRE a EARLY y que parezca una RM del dataset). <strong>No detecta</strong> fases de cortes vecinos de la misma paciente con los nombres cambiados (su anatomía es casi la misma), ni un corte sin tumor: en ese caso la predicción no tiene sentido y la web no lo sabe. Algunas mezclas de pacientes muy parecidas solo dan un aviso.</p>
     <div class="ficheros">
       <label for="fichero-PRE"><b>PRE</b> <span class="suave">antes del contraste</span></label>
       <input type="file" id="fichero-PRE" accept="image/png">

@@ -7,7 +7,8 @@
  *
  * Los mensajes son los de la app. Entre parentesis, en los errores de "corrupto", va el tipo de
  * excepcion de Python (OSError, SyntaxError...), que aqui se reproduce segun donde falla el fichero.
- * La prueba web/pruebas/lectura.html compara este fichero con Python en ~60 casos.
+ * La prueba web/pruebas/lectura.html compara este fichero con Python en ~60 casos; la validacion del
+ * corte (validarCorte) la compara tests/test_validacion_entrada.py con src/inferencia.py.
  */
 (function (raiz) {
   "use strict";
@@ -280,10 +281,122 @@
     return avisos;
   }
 
+  // --- Las tres fases son del mismo corte de una RM de mama ------------------------------------- //
+  // Port de src/inferencia.py (comprobar_nombres, rasgos_corte, juzgar_rasgos, validar_corte), con los
+  // umbrales de web/validacion_entrada.json (src/utils/calibrar_entrada.py, calibrado con train). Las
+  // sumas son enteras (exactas en doble por debajo de 2^53) y las operaciones en coma flotante van en el
+  // mismo orden que en Python, asi que las dos implementaciones aceptan y rechazan exactamente lo mismo.
+
+  const TEJIDO = 25, BLOQUE = 16;
+  const NOMBRE_CORTE = /^(.+_z[0-9]+)_(PRE|EARLY|LATE)\.png$/i;
+  const MENSAJES_RASGOS = {
+    tejido: "casi no hay tejido en EARLY (casi todo es fondo): no parece un corte de RM de mama",
+    contraste: "PRE y EARLY son iguales o casi iguales: falta el contraste (¿la misma imagen subida dos veces?)",
+    realce: "EARLY es más oscura que PRE dentro de la mama: las fases parecen intercambiadas",
+    anatomia_pe: "PRE y EARLY no muestran la misma anatomía: parecen de pacientes o cortes distintos",
+    anatomia_el: "EARLY y LATE no muestran la misma anatomía: parecen de pacientes o cortes distintos",
+    dice_pe: "el contorno del tejido no coincide entre PRE y EARLY: parecen de pacientes o cortes distintos",
+    dice_el: "el contorno del tejido no coincide entre EARLY y LATE: parecen de pacientes o cortes distintos",
+    textura: "la textura no se parece a la de una RM del dataset (demasiado lisa o demasiado ruidosa)",
+  };
+
+  /* Si los tres nombres siguen <paciente>_z<NNN>_<FASE>.png: el mismo corte y cada fase en su casilla. */
+  function comprobarNombres(nombres) {
+    if (!nombres || !FASES.every((f) => nombres[f])) return [];
+    const m = {};
+    for (const f of FASES) m[f] = NOMBRE_CORTE.exec(nombres[f].split(/[\\/]/).pop());
+    if (!FASES.every((f) => m[f])) {
+      return ["Los nombres de los ficheros no siguen el patrón <paciente>_z<corte>_<FASE>.png, así que no se puede comprobar por el nombre que sean del mismo corte: se comprueba por el contenido."];
+    }
+    for (const f of FASES) {
+      if (m[f][2].toUpperCase() !== f) {
+        throw new ErrorEntrada(`El fichero de la casilla ${f} es la fase ${m[f][2].toUpperCase()} («${nombres[f]}»): pon cada fase en su casilla.`);
+      }
+    }
+    for (const [a, b] of [["PRE", "EARLY"], ["EARLY", "LATE"], ["PRE", "LATE"]]) {
+      if (m[a][1] !== m[b][1]) throw new ErrorEntrada(`${a} es de ${m[a][1]} y ${b} de ${m[b][1]}: sube las tres fases del mismo corte.`);
+    }
+    return [];
+  }
+
+  /* Pearson desde sumas enteras exactas; 0 si alguna varianza es 0 (mismo orden que _correlacion). */
+  function correlacion(n, sx, sy, sxx, syy, sxy) {
+    const da = n * sxx - sx * sx, db = n * syy - sy * sy;
+    if (da <= 0 || db <= 0) return 0;
+    return (n * sxy - sx * sy) / Math.sqrt(da * db);
+  }
+
+  function sumasBloques(img) {
+    const k = LADO / BLOQUE, b = new Array(k * k).fill(0);
+    for (let y = 0; y < LADO; y++) {
+      const fila = Math.floor(y / BLOQUE) * k;
+      for (let x = 0; x < LADO; x++) b[fila + Math.floor(x / BLOQUE)] += img[y * LADO + x];
+    }
+    return b;
+  }
+
+  function anatomia(a, b) {
+    const ba = sumasBloques(a), bb = sumasBloques(b);
+    let sx = 0, sy = 0, sxx = 0, syy = 0, sxy = 0;
+    for (let i = 0; i < ba.length; i++) {
+      sx += ba[i]; sy += bb[i]; sxx += ba[i] * ba[i]; syy += bb[i] * bb[i]; sxy += ba[i] * bb[i];
+    }
+    return correlacion(ba.length, sx, sy, sxx, syy, sxy);
+  }
+
+  /* Los rasgos de src/inferencia.py (rasgos_corte). */
+  function rasgosCorte(fases) {
+    const [p, e, l] = fases, N = LADO * LADO;
+    let np_ = 0, ne = 0, nl = 0, pe = 0, el = 0, sumaE = 0, sumaPm = 0, sumaEm = 0, absPE = 0, rug = 0;
+    for (let i = 0; i < N; i++) {
+      const tp = p[i] > TEJIDO, te = e[i] > TEJIDO, tl = l[i] > TEJIDO;
+      np_ += tp; ne += te; nl += tl;
+      if (tp && te) pe++;
+      if (te && tl) el++;
+      sumaE += e[i];
+      if (te) { sumaPm += p[i]; sumaEm += e[i]; absPE += Math.abs(e[i] - p[i]); }
+    }
+    for (let y = 0; y < LADO; y++) for (let x = 0; x + 1 < LADO; x++) rug += Math.abs(e[y * LADO + x + 1] - e[y * LADO + x]);
+    const dice = (inter, s) => (s ? (2 * inter) / s : 0);
+    return {
+      tejido: ne / N, dice_pe: dice(pe, np_ + ne), dice_el: dice(el, ne + nl),
+      anatomia_pe: anatomia(p, e), anatomia_el: anatomia(e, l),
+      textura: rug / (sumaE + N),
+      contraste: ne ? absPE / ne : 0, realce: ne ? (sumaEm - sumaPm) / ne : 0,
+    };
+  }
+
+  /* (errores, avisos) con los umbrales del JSON (juzgar_rasgos). */
+  function juzgarRasgos(r, umbrales) {
+    const errores = [], avisos = [];
+    for (const [nombre, u] of Object.entries(umbrales.rasgos)) {
+      const v = r[nombre];
+      const duro = ("min_error" in u && v < u.min_error) || ("max_error" in u && v > u.max_error);
+      const gris = ("min_aviso" in u && v < u.min_aviso) || ("max_aviso" in u && v > u.max_aviso);
+      if (duro) errores.push(MENSAJES_RASGOS[nombre]);
+      else if (gris) avisos.push(MENSAJES_RASGOS[nombre]);
+    }
+    return { errores, avisos };
+  }
+
+  /* validar_corte: lanza ErrorEntrada si las fases no son el mismo corte; devuelve los avisos. */
+  function validarCorte(fases, nombres, umbrales) {
+    comprobarCorte(fases);
+    const avisos = comprobarNombres(nombres);
+    const { errores, avisos: grises } = juzgarRasgos(rasgosCorte(fases), umbrales);
+    if (errores.length) {
+      throw new ErrorEntrada("Las tres fases no parecen el mismo corte de una RM de mama: " + errores.join("; ") +
+                             ". Sube las tres fases (PRE, EARLY, LATE) del mismo corte de la misma paciente.");
+    }
+    for (const a of grises) avisos.push(`Aviso (se predice igualmente): ${a}.`);
+    return avisos.concat(avisosCorte(fases, nombres));
+  }
+
   async function sha256Hex(bytes) {
     const h = new Uint8Array(await crypto.subtle.digest("SHA-256", bytes));
     return Array.from(h, (b) => b.toString(16).padStart(2, "0")).join("");
   }
 
-  raiz.Png = { LADO, TAMANO_MAXIMO, FASES, ErrorEntrada, leerFase, comprobarCorte, aEntrada, avisosCorte, sha256Hex };
+  raiz.Png = { LADO, TAMANO_MAXIMO, FASES, ErrorEntrada, leerFase, comprobarCorte, aEntrada, avisosCorte, sha256Hex,
+               comprobarNombres, rasgosCorte, juzgarRasgos, validarCorte };
 })(typeof window !== "undefined" ? window : globalThis);
