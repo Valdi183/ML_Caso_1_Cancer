@@ -1,0 +1,2838 @@
+{
+ "formato": 1,
+ "aviso": "Generado por src/web/datos.py; no se edita a mano.",
+ "datos": {
+  "pacientes": 1273,
+  "cortes": 12703,
+  "pcr": 375,
+  "tasa_pcr": 0.2945797329143755,
+  "train": {
+   "pacientes": 1097,
+   "pcr": 322,
+   "cortes": 10945
+  },
+  "test": {
+   "pacientes": 176,
+   "pcr": 53,
+   "cortes": 1758
+  },
+  "cohortes": [
+   {
+    "id": "spy1",
+    "nombre": "I-SPY1",
+    "pacientes": 139,
+    "train": 104,
+    "test": 35,
+    "test_fraccion": 0.19886363636363635
+   },
+   {
+    "id": "spy2",
+    "nombre": "I-SPY2",
+    "pacientes": 883,
+    "train": 784,
+    "test": 99,
+    "test_fraccion": 0.5625
+   },
+   {
+    "id": "duke",
+    "nombre": "Duke",
+    "pacientes": 251,
+    "train": 209,
+    "test": 42,
+    "test_fraccion": 0.23863636363636365
+   }
+  ],
+  "fases": [
+   "PRE",
+   "EARLY",
+   "LATE"
+  ],
+  "folds": 5,
+  "lado": 256
+ },
+ "modelo": {
+  "etapas": [
+   {
+    "nombre": "Entrada",
+    "detalle": "PRE, EARLY, LATE\n(3 fases, no RGB)\nuint8 / 255",
+    "forma": "3 × 256 × 256",
+    "parametros": 0,
+    "tipo": "entrada"
+   },
+   {
+    "nombre": "Reducir",
+    "detalle": "media de bloques\n2 × 2",
+    "forma": "3 × 128 × 128",
+    "parametros": 0,
+    "tipo": "fijo"
+   },
+   {
+    "nombre": "Bloque 1",
+    "detalle": "2 × (conv 3×3\n+ BatchNorm + ReLU)\nmax pool 2",
+    "forma": "8 × 64 × 64",
+    "parametros": 824,
+    "tipo": "conv"
+   },
+   {
+    "nombre": "Bloque 2",
+    "detalle": "2 × (conv 3×3\n+ BatchNorm + ReLU)\nmax pool 2",
+    "forma": "16 × 32 × 32",
+    "parametros": 3520,
+    "tipo": "conv"
+   },
+   {
+    "nombre": "Bloque 3",
+    "detalle": "2 × (conv 3×3\n+ BatchNorm + ReLU)\nmax pool 2",
+    "forma": "32 × 16 × 16",
+    "parametros": 13952,
+    "tipo": "conv"
+   },
+   {
+    "nombre": "Resumen",
+    "detalle": "media global\n(cada mapa → 1 valor)",
+    "forma": "32",
+    "parametros": 0,
+    "tipo": "cabeza"
+   },
+   {
+    "nombre": "Clasificador",
+    "detalle": "dropout 0,7\nlineal 32 → 1\nsigmoide",
+    "forma": "p(pCR)",
+    "parametros": 33,
+    "tipo": "salida"
+   }
+  ],
+  "parametros": 18329,
+  "config": {
+   "realce": false,
+   "sin_late": false,
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "normalizar": false,
+   "pooling": "media",
+   "reducir": 2
+  },
+  "n_modelos": 5,
+  "n_bloques": 3,
+  "resolucion_interna": 128,
+  "campo_receptivo": {
+   "px": 72,
+   "fraccion_area": 0.0791015625,
+   "por_etapa": [
+    {
+     "etapa": "reducir",
+     "px": 2
+    },
+    {
+     "etapa": "bloque 1",
+     "px": 12
+    },
+    {
+     "etapa": "bloque 2",
+     "px": 32
+    },
+    {
+     "etapa": "bloque 3",
+     "px": 72
+    }
+   ],
+   "salto_final": 16
+  },
+  "entrenamiento": {
+   "objetivo": "pcr",
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.4002329192546585
+  },
+  "pesos": [
+   {
+    "nombre": "it6_3bloques_f0",
+    "fold": 0,
+    "epoca": 6,
+    "sha256": "f1eb794abdee19ae3c8308727741a1d3db2b53c27e8112b1d241d6728e671862"
+   },
+   {
+    "nombre": "it6_3bloques_f1",
+    "fold": 1,
+    "epoca": 13,
+    "sha256": "0c62d2e98b46ae493758c1670dbd56fcfd683d7e6f75074de00e02ff52e3a563"
+   },
+   {
+    "nombre": "it8_3bloques_f2",
+    "fold": 2,
+    "epoca": 6,
+    "sha256": "b58239fd676a4d9050524933589dd80fb3f56d178e5f6dec5e3b56df4f5e29c8"
+   },
+   {
+    "nombre": "it8_3bloques_f3",
+    "fold": 3,
+    "epoca": 26,
+    "sha256": "3c3826e3f1d07d3254b7ddf6a068c94e1ee24e791f04d981d38c9242afd47145"
+   },
+   {
+    "nombre": "it8_3bloques_f4",
+    "fold": 4,
+    "epoca": 13,
+    "sha256": "e2d184a2ea3275a958630c1481be64dd3c9d751ed8c20e8e0e1d97d4db7ff1f3"
+   }
+  ]
+ },
+ "seleccion": {
+  "configuraciones": [
+   {
+    "etiqueta": "16-32-64-128 · 256 px · ponderada · sin regularizar",
+    "configuracion": "16-32-64-128 · 256 px · media · ponderada · aum",
+    "bloques": 4,
+    "parametros": 294129,
+    "folds": [
+     0
+    ],
+    "auc_por_fold": [
+     0.5094959677419355
+    ],
+    "auc_medio": 0.5094959677419355,
+    "iteraciones": [
+     "1"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 128 px · media + máximo",
+    "configuracion": "8-16-32-64 · 128 px · mediamax · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73977,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.5092137096774194,
+     0.5145811930689679
+    ],
+    "auc_medio": 0.5118974513731936,
+    "iteraciones": [
+     "6"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "16-32-64-128 · 256 px · lr 0.0001 · sin regularizar",
+    "configuracion": "16-32-64-128 · 256 px · media · normal · aum · lr 0.0001",
+    "bloques": 4,
+    "parametros": 294129,
+    "folds": [
+     0
+    ],
+    "auc_por_fold": [
+     0.5160282258064517
+    ],
+    "auc_medio": 0.5160282258064517,
+    "iteraciones": [
+     "2"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 64 px",
+    "configuracion": "8-16-32-64 · 64 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73913,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.5149126344086021,
+     0.5195945483186084
+    ],
+    "auc_medio": 0.5172535913636053,
+    "iteraciones": [
+     "6"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 256 px · canales de realce",
+    "configuracion": "8-16-32-64 · 256 px · media · normal · aum · realce · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 74057,
+    "folds": [
+     0
+    ],
+    "auc_por_fold": [
+     0.5219959677419355
+    ],
+    "auc_medio": 0.5219959677419355,
+    "iteraciones": [
+     "3"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "16-32-64-128 · 128 px",
+    "configuracion": "16-32-64-128 · 128 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 294129,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.525638440860215,
+     0.5298489829463736
+    ],
+    "auc_medio": 0.5277437119032944,
+    "iteraciones": [
+     "6"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 256 px · normalizar corte",
+    "configuracion": "8-16-32-64 · 256 px · media · normal · aum · normalizar · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73913,
+    "folds": [
+     0
+    ],
+    "auc_por_fold": [
+     0.5301682692307692
+    ],
+    "auc_medio": 0.5301682692307692,
+    "iteraciones": [
+     "3"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32 · 128 px · atención · atención con caja",
+    "configuracion": "8-16-32 · 128 px · atencion · normal · caja 0.2 · aum · wd 0.001 · dropout 0.7",
+    "bloques": 3,
+    "parametros": 18362,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.5553780241935484,
+     0.5342647763851791,
+     0.5626118538793557,
+     0.5309920424403184,
+     0.5141086226970756
+    ],
+    "auc_medio": 0.5394710639190954,
+    "iteraciones": [
+     "7",
+     "9"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "4-8-16-32 · 128 px",
+    "configuracion": "4-8-16-32 · 128 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 18669,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.5568951612903226,
+     0.5231354016848162
+    ],
+    "auc_medio": 0.5400152814875694,
+    "iteraciones": [
+     "6"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32 · 128 px · atención",
+    "configuracion": "8-16-32 · 128 px · atencion · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 3,
+    "parametros": 18362,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.5615630929791271,
+     0.5211218409697965
+    ],
+    "auc_medio": 0.5413424669744618,
+    "iteraciones": [
+     "7"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "16-32-64-128 · 256 px · sin regularizar",
+    "configuracion": "16-32-64-128 · 256 px · media · normal · aum",
+    "bloques": 4,
+    "parametros": 294129,
+    "folds": [
+     0
+    ],
+    "auc_por_fold": [
+     0.5415456989247311
+    ],
+    "auc_medio": 0.5415456989247311,
+    "iteraciones": [
+     "1"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 256 px",
+    "configuracion": "8-16-32-64 · 256 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73913,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.5635752688172044,
+     0.5309773303198412,
+     0.5571797031266449,
+     0.515055938697318,
+     0.5530511608793919
+    ],
+    "auc_medio": 0.5439678803680801,
+    "iteraciones": [
+     "2",
+     "4"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 128 px",
+    "configuracion": "8-16-32-64 · 128 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73913,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.5598737266553481,
+     0.5198958975412643,
+     0.5490121767203566,
+     0.5290246305418719,
+     0.5687185381138278
+    ],
+    "auc_medio": 0.5453049939145338,
+    "iteraciones": [
+     "5"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64 · 256 px · atención",
+    "configuracion": "8-16-32-64 · 256 px · atencion · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 4,
+    "parametros": 73978,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.5236129032258064,
+     0.5447211618526488,
+     0.5665859564164648,
+     0.5502476190476191,
+     0.5505444832545715
+    ],
+    "auc_medio": 0.5471424247594221,
+    "iteraciones": [
+     "5"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32-64-128 · 128 px",
+    "configuracion": "8-16-32-64-128 · 128 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 5,
+    "parametros": 295673,
+    "folds": [
+     0,
+     1
+    ],
+    "auc_por_fold": [
+     0.5712768817204302,
+     0.5253407300869803
+    ],
+    "auc_medio": 0.5483088059037053,
+    "iteraciones": [
+     "6"
+    ],
+    "congelado": false
+   },
+   {
+    "etiqueta": "8-16-32 · 128 px",
+    "configuracion": "8-16-32 · 128 px · media · normal · aum · wd 0.001 · dropout 0.7",
+    "bloques": 3,
+    "parametros": 18329,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.55059811827957,
+     0.5481767393622747,
+     0.5501210653753026,
+     0.5381014198782961,
+     0.5681362333303981
+    ],
+    "auc_medio": 0.5510267152451683,
+    "iteraciones": [
+     "6",
+     "8"
+    ],
+    "congelado": true
+   },
+   {
+    "etiqueta": "8-16-32 · 128 px · ponderada",
+    "configuracion": "8-16-32 · 128 px · media · ponderada · aum · wd 0.001 · dropout 0.7",
+    "bloques": 3,
+    "parametros": 18329,
+    "folds": [
+     0,
+     1,
+     2,
+     3,
+     4
+    ],
+    "auc_por_fold": [
+     0.5595564516129031,
+     0.5412232038901444,
+     0.5562199529775064,
+     0.5506022988505748,
+     0.5566947469351415
+    ],
+    "auc_medio": 0.5528593308532541,
+    "iteraciones": [
+     "8"
+    ],
+    "congelado": false
+   }
+  ],
+  "curvas": [
+   {
+    "ejecucion": "it6_3bloques_f0",
+    "fold": 0,
+    "epoca_elegida": 6,
+    "epoca": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15
+    ],
+    "auc_train": [
+     0.5647786946736684,
+     0.6084583645911479,
+     0.6039322330582645,
+     0.6004501125281321,
+     0.6281820455113778,
+     0.6334021005251312,
+     0.6310390097524381,
+     0.6409789947486872,
+     0.6395973993498374,
+     0.6385846461615404,
+     0.6425856464116029,
+     0.6553513378344586,
+     0.6524506126531634,
+     0.6490185046261565,
+     0.662621905476369
+    ],
+    "auc_val": [
+     0.5440524193548387,
+     0.5265120967741935,
+     0.5644153225806452,
+     0.5548387096774193,
+     0.5642137096774194,
+     0.5793346774193548,
+     0.5431451612903226,
+     0.560483870967742,
+     0.5535282258064516,
+     0.5545362903225806,
+     0.5424395161290323,
+     0.543649193548387,
+     0.5577620967741934,
+     0.5283266129032258,
+     0.541733870967742
+    ]
+   },
+   {
+    "ejecucion": "it6_3bloques_f1",
+    "fold": 1,
+    "epoca_elegida": 13,
+    "epoca": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21
+    ],
+    "auc_train": [
+     0.5711787403534977,
+     0.6052713467762011,
+     0.6005476723923326,
+     0.6113455314911624,
+     0.626250933532487,
+     0.6317836694050286,
+     0.6117625093353248,
+     0.6449713716704009,
+     0.5911812297734628,
+     0.6413305949713717,
+     0.6462845407020165,
+     0.6374533233756534,
+     0.6371545929798356,
+     0.6680109534478466,
+     0.6608040826487429,
+     0.6719629076425193,
+     0.6723798854866816,
+     0.71147000248942,
+     0.72029499626587,
+     0.716697784416231,
+     0.7189693801344287
+    ],
+    "auc_val": [
+     0.5207520032874461,
+     0.5277378261762893,
+     0.519724676392028,
+     0.5313334703102527,
+     0.5609204848982946,
+     0.5777686459831518,
+     0.5477707006369427,
+     0.5966714608588453,
+     0.4790425313334703,
+     0.5610232175878365,
+     0.6081775220875283,
+     0.5700636942675158,
+     0.5818779535648244,
+     0.5576330388329566,
+     0.5374974316827615,
+     0.5838298746661188,
+     0.5165399630162316,
+     0.5423258680912266,
+     0.5262995685227039,
+     0.5229093897678241,
+     0.5418122046435175
+    ]
+   },
+   {
+    "ejecucion": "it8_3bloques_f2",
+    "fold": 2,
+    "epoca_elegida": 6,
+    "epoca": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15
+    ],
+    "auc_train": [
+     0.5746151273826184,
+     0.5575605949889153,
+     0.5753830148251818,
+     0.5955834086771281,
+     0.6090090536406534,
+     0.6095416207379151,
+     0.5817490494296578,
+     0.6142418350032821,
+     0.6209980059697056,
+     0.6147682094598779,
+     0.626837666117586,
+     0.6339096617579668,
+     0.6462268240423081,
+     0.6409506941950186,
+     0.6590146270172528
+    ],
+    "auc_val": [
+     0.5407937677650279,
+     0.4589956837561848,
+     0.5010001052742394,
+     0.5953258237709232,
+     0.5936414359406254,
+     0.6044846825981682,
+     0.4808927255500579,
+     0.5754289925255289,
+     0.515527950310559,
+     0.6082745552163386,
+     0.5778503000315822,
+     0.5623749868407201,
+     0.5463733024528898,
+     0.536056426992315,
+     0.5547952416043794
+    ]
+   },
+   {
+    "ejecucion": "it8_3bloques_f3",
+    "fold": 3,
+    "epoca_elegida": 26,
+    "epoca": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21,
+     22,
+     23,
+     24,
+     25,
+     26,
+     27,
+     28,
+     29,
+     30,
+     31,
+     32,
+     33,
+     34
+    ],
+    "auc_train": [
+     0.5935608251397725,
+     0.5731829573934837,
+     0.6228134438660755,
+     0.6298309877257244,
+     0.6169654906497011,
+     0.6490199858620911,
+     0.6532549322023006,
+     0.6379795642953539,
+     0.6364565259302102,
+     0.6458196773986247,
+     0.6664031874558191,
+     0.6638390848917164,
+     0.6860741597583703,
+     0.68356789409421,
+     0.6915750915750917,
+     0.6790694685431529,
+     0.6910417068311805,
+     0.6915686652528759,
+     0.7080136238030975,
+     0.6891909260330313,
+     0.7020949810423494,
+     0.7058029689608637,
+     0.7219266114002957,
+     0.7221579590000642,
+     0.7117923012659855,
+     0.7217209690893901,
+     0.7283208020050126,
+     0.7221515326778484,
+     0.7095302358460254,
+     0.73419446051025,
+     0.7440331598226335,
+     0.7474969474969475,
+     0.7416040100250627,
+     0.7456011824432878
+    ],
+    "auc_val": [
+     0.43567816091954026,
+     0.5083218390804597,
+     0.48009195402298854,
+     0.4971954022988506,
+     0.48836781609195407,
+     0.520551724137931,
+     0.5374712643678161,
+     0.4925057471264368,
+     0.511632183908046,
+     0.5161379310344828,
+     0.4971954022988506,
+     0.519632183908046,
+     0.5226666666666666,
+     0.5370114942528735,
+     0.544,
+     0.5702988505747126,
+     0.5684597701149425,
+     0.5667126436781609,
+     0.5597241379310345,
+     0.5482298850574713,
+     0.5628505747126437,
+     0.5645977011494253,
+     0.5438160919540229,
+     0.5694712643678161,
+     0.5734252873563219,
+     0.5655172413793104,
+     0.542344827586207,
+     0.5670804597701149,
+     0.5621149425287356,
+     0.5653333333333334,
+     0.5554942528735632,
+     0.559264367816092,
+     0.5715862068965517,
+     0.5706666666666667
+    ]
+   },
+   {
+    "ejecucion": "it8_3bloques_f4",
+    "fold": 4,
+    "epoca_elegida": 13,
+    "epoca": [
+     1,
+     2,
+     3,
+     4,
+     5,
+     6,
+     7,
+     8,
+     9,
+     10,
+     11,
+     12,
+     13,
+     14,
+     15,
+     16,
+     17,
+     18,
+     19,
+     20,
+     21
+    ],
+    "auc_train": [
+     0.5767612646253424,
+     0.5839370176748817,
+     0.611656708986806,
+     0.5894946477470749,
+     0.6325429424943988,
+     0.6245892457057506,
+     0.6286221060492906,
+     0.6383930794124969,
+     0.6455065969629077,
+     0.6428180234005477,
+     0.6487241722678616,
+     0.6561239731142644,
+     0.6450896191187453,
+     0.6621172516803585,
+     0.6574931540950958,
+     0.6567089868060743,
+     0.6561177495643515,
+     0.6715210355987056,
+     0.6812671147622604,
+     0.6895195419467264,
+     0.6945481702763256
+    ],
+    "auc_val": [
+     0.564002465584549,
+     0.5762276556400248,
+     0.5372919663036778,
+     0.5152044380521883,
+     0.5777686459831518,
+     0.5782823094308609,
+     0.5534209985617423,
+     0.5841380727347442,
+     0.5665707828230944,
+     0.5783850421204028,
+     0.568933634682556,
+     0.5922539552085473,
+     0.6132114238750771,
+     0.5420176700226012,
+     0.5782823094308609,
+     0.566159852064927,
+     0.540476679679474,
+     0.5776659132936101,
+     0.5778713786726937,
+     0.5750975960550646,
+     0.5675981097185124
+    ]
+   }
+  ],
+  "validacion": {
+   "auc_medio": {
+    "media": 0.5510267152451683,
+    "desviacion": 0.010827339574065238
+   },
+   "auc_elegido": {
+    "media": 0.588885195767347,
+    "desviacion": 0.019503105519479404
+   },
+   "diferencia_train_val": {
+    "media": 0.06049658472285646,
+    "desviacion": 0.05727347945719477
+   },
+   "por_fold": [
+    {
+     "fold": 0,
+     "ejecucion": "it6_3bloques_f0",
+     "ponderada": false,
+     "auc_medio": 0.55059811827957,
+     "auc_medio_1_15": 0.55059811827957,
+     "mismo_hospital_medio": null,
+     "auc_elegido": 0.5793346774193548,
+     "epoca_elegida": 6,
+     "diferencia_train_val": 0.05406742310577639,
+     "perdida_val_min": 0.5991599559783936,
+     "perdida_constante": 0.6046152272322711,
+     "masa_caja_15": null,
+     "fraccion_caja_15": null
+    },
+    {
+     "fold": 1,
+     "ejecucion": "it6_3bloques_f1",
+     "ponderada": false,
+     "auc_medio": 0.5481767393622747,
+     "auc_medio_1_15": 0.5518663105266763,
+     "mismo_hospital_medio": null,
+     "auc_elegido": 0.5818779535648244,
+     "epoca_elegida": 13,
+     "diferencia_train_val": 0.05527663941501115,
+     "perdida_val_min": 0.5965098738670349,
+     "perdida_constante": 0.5958620343257244,
+     "masa_caja_15": null,
+     "fraccion_caja_15": null
+    },
+    {
+     "fold": 2,
+     "ejecucion": "it8_3bloques_f2",
+     "ponderada": false,
+     "auc_medio": 0.5501210653753026,
+     "auc_medio_1_15": 0.5501210653753026,
+     "mismo_hospital_medio": 0.5486195658857529,
+     "auc_elegido": 0.6044846825981682,
+     "epoca_elegida": 6,
+     "diferencia_train_val": 0.005056938139746836,
+     "perdida_val_min": 0.56519615650177,
+     "perdida_constante": 0.580590889276893,
+     "masa_caja_15": null,
+     "fraccion_caja_15": null
+    },
+    {
+     "fold": 3,
+     "ejecucion": "it8_3bloques_f3",
+     "ponderada": false,
+     "auc_medio": 0.5381014198782961,
+     "auc_medio_1_15": 0.5072306513409962,
+     "mismo_hospital_medio": 0.5286944045911046,
+     "auc_elegido": 0.5655172413793104,
+     "epoca_elegida": 26,
+     "diferencia_train_val": 0.15620372771007973,
+     "perdida_val_min": 0.6583097577095032,
+     "perdida_constante": 0.6424534184921284,
+     "masa_caja_15": null,
+     "fraccion_caja_15": null
+    },
+    {
+     "fold": 4,
+     "ejecucion": "it8_3bloques_f4",
+     "ponderada": false,
+     "auc_medio": 0.5681362333303981,
+     "auc_medio_1_15": 0.5683994246969386,
+     "mismo_hospital_medio": 0.5596905901924523,
+     "auc_elegido": 0.6132114238750771,
+     "epoca_elegida": 13,
+     "diferencia_train_val": 0.031878195243668195,
+     "perdida_val_min": 0.5902540683746338,
+     "perdida_constante": 0.5964629141480099,
+     "masa_caja_15": null,
+     "fraccion_caja_15": null
+    }
+   ],
+   "global": {
+    "auc": 0.5879863754758566,
+    "ic95": [
+     0.5495159766923864,
+     0.6253537229950178
+    ],
+    "pacientes": 1097
+   },
+   "por_cohorte": {
+    "spy1": {
+     "auc": 0.6180966469428009,
+     "ic95": [
+      0.47771598290981787,
+      0.7613178056699398
+     ],
+     "pacientes": 104
+    },
+    "spy2": {
+     "auc": 0.5857799260054899,
+     "ic95": [
+      0.5411680032161572,
+      0.6311445403797608
+     ],
+     "pacientes": 784
+    },
+    "duke": {
+     "auc": 0.5497245179063361,
+     "ic95": [
+      0.458476359509321,
+      0.6394547209127552
+     ],
+     "pacientes": 209
+    }
+   },
+   "perdida_constante": {
+    "media": 0.6039968966950053,
+    "desviacion": 0.02318439379964585
+   },
+   "perdida_val_min": {
+    "media": 0.6018859624862671,
+    "desviacion": 0.0342834542145361
+   }
+  },
+  "resumen": {
+   "n_configuraciones": 17,
+   "n_con_4_o_5_folds": 6,
+   "rango_4_o_5_folds": {
+    "min": 0.5394710639190954,
+    "max": 0.5528593308532541
+   },
+   "rango_todas": {
+    "min": 0.5094959677419355,
+    "max": 0.5528593308532541
+   },
+   "congelado_por_fold": {
+    "min": 0.5381014198782961,
+    "max": 0.5681362333303981
+   },
+   "auc_val_max": 0.6132114238750771,
+   "auc_train_max": 0.7474969474969475
+  },
+  "control_cohorte": {
+   "auc_val_max": 0.9981167608286252,
+   "epocas": 15
+  },
+  "perdida": {
+   "normal": {
+    "auc_medio": {
+     "media": 0.5510267152451683,
+     "desviacion": 0.010827339574065238
+    },
+    "auc_elegido": {
+     "media": 0.588885195767347,
+     "desviacion": 0.019503105519479404
+    },
+    "auc_por_fold": [
+     0.55059811827957,
+     0.5481767393622747,
+     0.5501210653753026,
+     0.5381014198782961,
+     0.5681362333303981
+    ],
+    "sensibilidad_05": {
+     "media": 0.010666666666666668,
+     "desviacion": 0.02385139175999776,
+     "por_fold": [
+      0.0,
+      0.0,
+      0.0,
+      0.05333333333333334,
+      0.0
+     ]
+    },
+    "especificidad_05": {
+     "media": 0.993103448275862,
+     "desviacion": 0.015421158465515773
+    }
+   },
+   "ponderada": {
+    "auc_medio": {
+     "media": 0.5528593308532541,
+     "desviacion": 0.007268928191543489
+    },
+    "auc_elegido": {
+     "media": 0.5978394851738874,
+     "desviacion": 0.014424506030315344
+    },
+    "auc_por_fold": [
+     0.5595564516129031,
+     0.5412232038901444,
+     0.5562199529775064,
+     0.5506022988505748,
+     0.5566947469351415
+    ],
+    "sensibilidad_05": {
+     "media": 0.4173632677237106,
+     "desviacion": 0.26372826616205386,
+     "por_fold": [
+      0.21875,
+      0.41935483870967744,
+      0.13559322033898305,
+      0.5066666666666667,
+      0.8064516129032258
+     ]
+    },
+    "especificidad_05": {
+     "media": 0.6876141746556057,
+     "desviacion": 0.2157862889260375
+    }
+   },
+   "pos_weight": 2.4
+  },
+  "umbral": {
+   "valor": 0.363489137,
+   "criterio": "especificidad >= 0.9 por paciente (media de sus cortes)",
+   "especificidad_minima": 0.9,
+   "regla": "percentil 90 (method='higher') de la probabilidad por paciente de todas las pCR=0 fuera de fold; pCR si prob > umbral_final",
+   "pacientes": {
+    "n": 1097,
+    "pcr": 322
+   },
+   "curva": [
+    {
+     "umbral": 0.1,
+     "sensibilidad": 0.984472049689441,
+     "especificidad": 0.02838709677419355
+    },
+    {
+     "umbral": 0.105,
+     "sensibilidad": 0.984472049689441,
+     "especificidad": 0.02838709677419355
+    },
+    {
+     "umbral": 0.11,
+     "sensibilidad": 0.9813664596273292,
+     "especificidad": 0.03096774193548387
+    },
+    {
+     "umbral": 0.115,
+     "sensibilidad": 0.9813664596273292,
+     "especificidad": 0.03225806451612903
+    },
+    {
+     "umbral": 0.12,
+     "sensibilidad": 0.9813664596273292,
+     "especificidad": 0.03354838709677419
+    },
+    {
+     "umbral": 0.125,
+     "sensibilidad": 0.9751552795031055,
+     "especificidad": 0.03354838709677419
+    },
+    {
+     "umbral": 0.13,
+     "sensibilidad": 0.9720496894409938,
+     "especificidad": 0.03870967741935484
+    },
+    {
+     "umbral": 0.135,
+     "sensibilidad": 0.9658385093167702,
+     "especificidad": 0.04258064516129032
+    },
+    {
+     "umbral": 0.14,
+     "sensibilidad": 0.9658385093167702,
+     "especificidad": 0.05032258064516129
+    },
+    {
+     "umbral": 0.145,
+     "sensibilidad": 0.9596273291925466,
+     "especificidad": 0.05419354838709677
+    },
+    {
+     "umbral": 0.15,
+     "sensibilidad": 0.9565217391304348,
+     "especificidad": 0.05806451612903226
+    },
+    {
+     "umbral": 0.155,
+     "sensibilidad": 0.953416149068323,
+     "especificidad": 0.07096774193548387
+    },
+    {
+     "umbral": 0.16,
+     "sensibilidad": 0.9472049689440993,
+     "especificidad": 0.07483870967741936
+    },
+    {
+     "umbral": 0.165,
+     "sensibilidad": 0.9316770186335404,
+     "especificidad": 0.08258064516129032
+    },
+    {
+     "umbral": 0.17,
+     "sensibilidad": 0.9316770186335404,
+     "especificidad": 0.09419354838709677
+    },
+    {
+     "umbral": 0.175,
+     "sensibilidad": 0.9254658385093167,
+     "especificidad": 0.11096774193548387
+    },
+    {
+     "umbral": 0.18,
+     "sensibilidad": 0.9161490683229814,
+     "especificidad": 0.12258064516129032
+    },
+    {
+     "umbral": 0.185,
+     "sensibilidad": 0.9099378881987578,
+     "especificidad": 0.13419354838709677
+    },
+    {
+     "umbral": 0.19,
+     "sensibilidad": 0.9006211180124224,
+     "especificidad": 0.14838709677419354
+    },
+    {
+     "umbral": 0.195,
+     "sensibilidad": 0.8975155279503105,
+     "especificidad": 0.1625806451612903
+    },
+    {
+     "umbral": 0.2,
+     "sensibilidad": 0.8819875776397516,
+     "especificidad": 0.17548387096774193
+    },
+    {
+     "umbral": 0.205,
+     "sensibilidad": 0.8664596273291926,
+     "especificidad": 0.1935483870967742
+    },
+    {
+     "umbral": 0.21,
+     "sensibilidad": 0.8509316770186336,
+     "especificidad": 0.21806451612903227
+    },
+    {
+     "umbral": 0.215,
+     "sensibilidad": 0.8385093167701864,
+     "especificidad": 0.23870967741935484
+    },
+    {
+     "umbral": 0.22,
+     "sensibilidad": 0.8260869565217391,
+     "especificidad": 0.25806451612903225
+    },
+    {
+     "umbral": 0.225,
+     "sensibilidad": 0.7919254658385093,
+     "especificidad": 0.27225806451612905
+    },
+    {
+     "umbral": 0.23,
+     "sensibilidad": 0.782608695652174,
+     "especificidad": 0.2967741935483871
+    },
+    {
+     "umbral": 0.235,
+     "sensibilidad": 0.7608695652173914,
+     "especificidad": 0.3109677419354839
+    },
+    {
+     "umbral": 0.24,
+     "sensibilidad": 0.7360248447204969,
+     "especificidad": 0.3303225806451613
+    },
+    {
+     "umbral": 0.245,
+     "sensibilidad": 0.7018633540372671,
+     "especificidad": 0.3638709677419355
+    },
+    {
+     "umbral": 0.25,
+     "sensibilidad": 0.6832298136645962,
+     "especificidad": 0.3909677419354839
+    },
+    {
+     "umbral": 0.255,
+     "sensibilidad": 0.6583850931677019,
+     "especificidad": 0.4258064516129032
+    },
+    {
+     "umbral": 0.26,
+     "sensibilidad": 0.6273291925465838,
+     "especificidad": 0.4593548387096774
+    },
+    {
+     "umbral": 0.265,
+     "sensibilidad": 0.6118012422360248,
+     "especificidad": 0.49806451612903224
+    },
+    {
+     "umbral": 0.27,
+     "sensibilidad": 0.5962732919254659,
+     "especificidad": 0.5212903225806451
+    },
+    {
+     "umbral": 0.275,
+     "sensibilidad": 0.5683229813664596,
+     "especificidad": 0.5432258064516129
+    },
+    {
+     "umbral": 0.28,
+     "sensibilidad": 0.5372670807453416,
+     "especificidad": 0.5690322580645162
+    },
+    {
+     "umbral": 0.285,
+     "sensibilidad": 0.5124223602484472,
+     "especificidad": 0.5922580645161291
+    },
+    {
+     "umbral": 0.29,
+     "sensibilidad": 0.48757763975155277,
+     "especificidad": 0.6193548387096774
+    },
+    {
+     "umbral": 0.295,
+     "sensibilidad": 0.45652173913043476,
+     "especificidad": 0.6425806451612903
+    },
+    {
+     "umbral": 0.3,
+     "sensibilidad": 0.43788819875776397,
+     "especificidad": 0.6683870967741935
+    },
+    {
+     "umbral": 0.305,
+     "sensibilidad": 0.4161490683229814,
+     "especificidad": 0.6903225806451613
+    },
+    {
+     "umbral": 0.31,
+     "sensibilidad": 0.39751552795031053,
+     "especificidad": 0.7135483870967742
+    },
+    {
+     "umbral": 0.315,
+     "sensibilidad": 0.3695652173913043,
+     "especificidad": 0.7329032258064516
+    },
+    {
+     "umbral": 0.32,
+     "sensibilidad": 0.35093167701863354,
+     "especificidad": 0.7496774193548387
+    },
+    {
+     "umbral": 0.325,
+     "sensibilidad": 0.33540372670807456,
+     "especificidad": 0.775483870967742
+    },
+    {
+     "umbral": 0.33,
+     "sensibilidad": 0.3167701863354037,
+     "especificidad": 0.8025806451612904
+    },
+    {
+     "umbral": 0.335,
+     "sensibilidad": 0.2795031055900621,
+     "especificidad": 0.8232258064516129
+    },
+    {
+     "umbral": 0.34,
+     "sensibilidad": 0.2577639751552795,
+     "especificidad": 0.8387096774193549
+    },
+    {
+     "umbral": 0.345,
+     "sensibilidad": 0.2360248447204969,
+     "especificidad": 0.8580645161290322
+    },
+    {
+     "umbral": 0.35,
+     "sensibilidad": 0.2236024844720497,
+     "especificidad": 0.8709677419354839
+    },
+    {
+     "umbral": 0.355,
+     "sensibilidad": 0.2080745341614907,
+     "especificidad": 0.8825806451612903
+    },
+    {
+     "umbral": 0.36,
+     "sensibilidad": 0.18633540372670807,
+     "especificidad": 0.8941935483870967
+    },
+    {
+     "umbral": 0.365,
+     "sensibilidad": 0.17701863354037267,
+     "especificidad": 0.9032258064516129
+    },
+    {
+     "umbral": 0.37,
+     "sensibilidad": 0.16149068322981366,
+     "especificidad": 0.9135483870967742
+    },
+    {
+     "umbral": 0.375,
+     "sensibilidad": 0.14285714285714285,
+     "especificidad": 0.9264516129032258
+    },
+    {
+     "umbral": 0.38,
+     "sensibilidad": 0.11490683229813664,
+     "especificidad": 0.9341935483870968
+    },
+    {
+     "umbral": 0.385,
+     "sensibilidad": 0.10559006211180125,
+     "especificidad": 0.9419354838709677
+    },
+    {
+     "umbral": 0.39,
+     "sensibilidad": 0.09006211180124224,
+     "especificidad": 0.9548387096774194
+    },
+    {
+     "umbral": 0.395,
+     "sensibilidad": 0.08074534161490683,
+     "especificidad": 0.9612903225806452
+    },
+    {
+     "umbral": 0.4,
+     "sensibilidad": 0.06832298136645963,
+     "especificidad": 0.9651612903225807
+    },
+    {
+     "umbral": 0.405,
+     "sensibilidad": 0.06521739130434782,
+     "especificidad": 0.9664516129032258
+    },
+    {
+     "umbral": 0.41,
+     "sensibilidad": 0.059006211180124224,
+     "especificidad": 0.9690322580645161
+    },
+    {
+     "umbral": 0.415,
+     "sensibilidad": 0.049689440993788817,
+     "especificidad": 0.9741935483870968
+    },
+    {
+     "umbral": 0.42,
+     "sensibilidad": 0.049689440993788817,
+     "especificidad": 0.9767741935483871
+    },
+    {
+     "umbral": 0.425,
+     "sensibilidad": 0.049689440993788817,
+     "especificidad": 0.9780645161290322
+    },
+    {
+     "umbral": 0.43,
+     "sensibilidad": 0.043478260869565216,
+     "especificidad": 0.983225806451613
+    },
+    {
+     "umbral": 0.435,
+     "sensibilidad": 0.043478260869565216,
+     "especificidad": 0.9858064516129033
+    },
+    {
+     "umbral": 0.44,
+     "sensibilidad": 0.037267080745341616,
+     "especificidad": 0.9870967741935484
+    },
+    {
+     "umbral": 0.445,
+     "sensibilidad": 0.037267080745341616,
+     "especificidad": 0.9883870967741936
+    },
+    {
+     "umbral": 0.45,
+     "sensibilidad": 0.034161490683229816,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.455,
+     "sensibilidad": 0.034161490683229816,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.46,
+     "sensibilidad": 0.031055900621118012,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.465,
+     "sensibilidad": 0.031055900621118012,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.47,
+     "sensibilidad": 0.031055900621118012,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.475,
+     "sensibilidad": 0.024844720496894408,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.48,
+     "sensibilidad": 0.018633540372670808,
+     "especificidad": 0.9896774193548387
+    },
+    {
+     "umbral": 0.485,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9909677419354839
+    },
+    {
+     "umbral": 0.49,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9909677419354839
+    },
+    {
+     "umbral": 0.495,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9922580645161291
+    },
+    {
+     "umbral": 0.5,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9935483870967742
+    },
+    {
+     "umbral": 0.505,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9948387096774194
+    },
+    {
+     "umbral": 0.51,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9948387096774194
+    },
+    {
+     "umbral": 0.515,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9948387096774194
+    },
+    {
+     "umbral": 0.52,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9948387096774194
+    },
+    {
+     "umbral": 0.525,
+     "sensibilidad": 0.012422360248447204,
+     "especificidad": 0.9948387096774194
+    },
+    {
+     "umbral": 0.53,
+     "sensibilidad": 0.009316770186335404,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.535,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.54,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.545,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.55,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.555,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9961290322580645
+    },
+    {
+     "umbral": 0.56,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9974193548387097
+    },
+    {
+     "umbral": 0.565,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9974193548387097
+    },
+    {
+     "umbral": 0.57,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9974193548387097
+    },
+    {
+     "umbral": 0.575,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9974193548387097
+    },
+    {
+     "umbral": 0.58,
+     "sensibilidad": 0.006211180124223602,
+     "especificidad": 0.9974193548387097
+    },
+    {
+     "umbral": 0.585,
+     "sensibilidad": 0.003105590062111801,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.59,
+     "sensibilidad": 0.003105590062111801,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.595,
+     "sensibilidad": 0.003105590062111801,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.6,
+     "sensibilidad": 0.003105590062111801,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.605,
+     "sensibilidad": 0.003105590062111801,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.61,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.615,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.62,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.625,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.63,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.635,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.64,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.645,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.65,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.655,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.66,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.665,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.67,
+     "sensibilidad": 0.0,
+     "especificidad": 0.9987096774193548
+    },
+    {
+     "umbral": 0.675,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    },
+    {
+     "umbral": 0.68,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    },
+    {
+     "umbral": 0.685,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    },
+    {
+     "umbral": 0.69,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    },
+    {
+     "umbral": 0.695,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    },
+    {
+     "umbral": 0.7,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0
+    }
+   ],
+   "en_el_umbral": {
+    "sensibilidad": 0.17701863354037267,
+    "especificidad": 0.9006451612903226
+   },
+   "matriz": {
+    "VP": 57,
+    "FP": 77,
+    "FN": 265,
+    "VN": 698
+   },
+   "por_paciente": {
+    "sensibilidad": 0.17701863354037267,
+    "especificidad": 0.9006451612903226,
+    "VPP": 0.4253731343283582,
+    "VPN": 0.7248182762201454,
+    "f1_macro": 0.5266110471806674
+   },
+   "por_corte": {
+    "sensibilidad": 0.1865671641791045,
+    "especificidad": 0.890930262647173,
+    "VPP": 0.4158004158004158
+   },
+   "siempre_no_pcr_f1_macro": 0.41399572649572647,
+   "alternativas": [
+    {
+     "criterio": "especificidad >= 0.95",
+     "umbral": 0.388432051,
+     "VP": 30,
+     "FP": 38,
+     "FN": 292,
+     "VN": 737,
+     "sensibilidad": 0.09316770186335403,
+     "especificidad": 0.9509677419354838,
+     "VPP": 0.4411764705882353,
+     "f1_macro": 0.48545966228893056
+    },
+    {
+     "criterio": "especificidad >= 0.90",
+     "umbral": 0.363489137,
+     "VP": 57,
+     "FP": 77,
+     "FN": 265,
+     "VN": 698,
+     "sensibilidad": 0.17701863354037267,
+     "especificidad": 0.9006451612903226,
+     "VPP": 0.4253731343283582,
+     "f1_macro": 0.5266110471806674
+    },
+    {
+     "criterio": "especificidad >= 0.80",
+     "umbral": 0.329961292,
+     "VP": 102,
+     "FP": 154,
+     "FN": 220,
+     "VN": 621,
+     "sensibilidad": 0.3167701863354037,
+     "especificidad": 0.8012903225806451,
+     "VPP": 0.3984375,
+     "f1_macro": 0.560752766453116
+    },
+    {
+     "criterio": "especificidad >= 0.70",
+     "umbral": 0.306487726,
+     "VP": 132,
+     "FP": 232,
+     "FN": 190,
+     "VN": 543,
+     "sensibilidad": 0.40993788819875776,
+     "especificidad": 0.7006451612903226,
+     "VPP": 0.3626373626373626,
+     "f1_macro": 0.5524994006697033
+    },
+    {
+     "criterio": "especificidad >= 0.50",
+     "umbral": 0.26552935899999996,
+     "VP": 197,
+     "FP": 387,
+     "FN": 125,
+     "VN": 388,
+     "sensibilidad": 0.6118012422360248,
+     "especificidad": 0.5006451612903225,
+     "VPP": 0.3373287671232877,
+     "f1_macro": 0.5186815296230787
+    },
+    {
+     "criterio": "Youden",
+     "umbral": 0.33131708299999996,
+     "VP": 101,
+     "FP": 147,
+     "FN": 221,
+     "VN": 628,
+     "sensibilidad": 0.3136645962732919,
+     "especificidad": 0.8103225806451613,
+     "VPP": 0.40725806451612906,
+     "f1_macro": 0.5638924898453028
+    },
+    {
+     "criterio": "oficial (0,3635)",
+     "umbral": 0.363489137,
+     "VP": 57,
+     "FP": 77,
+     "FN": 265,
+     "VN": 698,
+     "sensibilidad": 0.17701863354037267,
+     "especificidad": 0.9006451612903226,
+     "VPP": 0.4253731343283582,
+     "f1_macro": 0.5266110471806674
+    },
+    {
+     "criterio": "siempre no pCR",
+     "umbral": null,
+     "VP": 0,
+     "FP": 0,
+     "FN": 322,
+     "VN": 775,
+     "sensibilidad": 0.0,
+     "especificidad": 1.0,
+     "VPP": null,
+     "f1_macro": 0.41399572649572647
+    },
+    {
+     "criterio": "azar con especificidad 0,90 (esperado)",
+     "umbral": null,
+     "VP": 32.2,
+     "FP": 77.49999999999999,
+     "FN": 289.8,
+     "VN": 697.5,
+     "sensibilidad": 0.1,
+     "especificidad": 0.9,
+     "VPP": 0.29352780309936194,
+     "f1_macro": 0.47037842798433005
+    }
+   ]
+  },
+  "atencion_supervisada": {
+   "ejecuciones": [
+    "it7_3b_atsup_f0",
+    "it7_3b_atsup_f1",
+    "it9_3b_atsup_f2",
+    "it9_3b_atsup_f3",
+    "it9_3b_atsup_f4"
+   ],
+   "por_fold": [
+    {
+     "fold": 0,
+     "ejecucion": "it7_3b_atsup_f0",
+     "ponderada": false,
+     "auc_medio": 0.5553780241935484,
+     "auc_medio_1_15": 0.5287298387096774,
+     "mismo_hospital_medio": 0.554361288039632,
+     "auc_elegido": 0.5863911290322581,
+     "epoca_elegida": 33,
+     "diferencia_train_val": 0.17489919354838712,
+     "perdida_val_min": 0.6041780710220337,
+     "perdida_constante": 0.6046152272322711,
+     "masa_caja_15": 0.9503592252731324,
+     "fraccion_caja_15": 0.1588866263628006
+    },
+    {
+     "fold": 1,
+     "ejecucion": "it7_3b_atsup_f1",
+     "ponderada": false,
+     "auc_medio": 0.5342647763851791,
+     "auc_medio_1_15": 0.5342647763851791,
+     "mismo_hospital_medio": 0.5315001527650475,
+     "auc_elegido": 0.5412985411958084,
+     "epoca_elegida": 7,
+     "diferencia_train_val": 0.07927029126622787,
+     "perdida_val_min": 0.5916805267333984,
+     "perdida_constante": 0.5958620343257244,
+     "masa_caja_15": 0.9237922430038452,
+     "fraccion_caja_15": 0.1502746045589447
+    },
+    {
+     "fold": 2,
+     "ejecucion": "it9_3b_atsup_f2",
+     "ponderada": false,
+     "auc_medio": 0.5626118538793557,
+     "auc_medio_1_15": 0.5570270554795242,
+     "mismo_hospital_medio": 0.5766371518170079,
+     "auc_elegido": 0.5900621118012422,
+     "epoca_elegida": 12,
+     "diferencia_train_val": 0.038881052142726635,
+     "perdida_val_min": 0.57433021068573,
+     "perdida_constante": 0.580590889276893,
+     "masa_caja_15": 0.9347892999649048,
+     "fraccion_caja_15": 0.1554532200098037
+    },
+    {
+     "fold": 3,
+     "ejecucion": "it9_3b_atsup_f3",
+     "ponderada": false,
+     "auc_medio": 0.5309920424403184,
+     "auc_medio_1_15": 0.5079478927203065,
+     "mismo_hospital_medio": 0.508878097830752,
+     "auc_elegido": 0.5723218390804597,
+     "epoca_elegida": 18,
+     "diferencia_train_val": 0.09410062734200664,
+     "perdida_val_min": 0.6456433534622192,
+     "perdida_constante": 0.6424534184921284,
+     "masa_caja_15": 0.924698770046234,
+     "fraccion_caja_15": 0.1449638605117797
+    },
+    {
+     "fold": 4,
+     "ejecucion": "it9_3b_atsup_f4",
+     "ponderada": false,
+     "auc_medio": 0.5141086226970756,
+     "auc_medio_1_15": 0.5141086226970756,
+     "mismo_hospital_medio": 0.49245138026836904,
+     "auc_elegido": 0.568419971234847,
+     "epoca_elegida": 2,
+     "diferencia_train_val": -0.039853877134772286,
+     "perdida_val_min": 0.5933343768119812,
+     "perdida_constante": 0.5964629141480099,
+     "masa_caja_15": 0.937861979007721,
+     "fraccion_caja_15": 0.1492534279823303
+    }
+   ],
+   "auc_medio": {
+    "media": 0.5394710639190954,
+    "desviacion": 0.019562593162856103
+   },
+   "auc_medio_1_15": {
+    "media": 0.5284156371983526,
+    "desviacion": 0.019212909955516166
+   },
+   "mismo_hospital_medio": {
+    "media": 0.5327656141441617,
+    "desviacion": 0.03386937122939034
+   },
+   "auc_elegido": {
+    "media": 0.5716987184689231,
+    "desviacion": 0.019289831413191127
+   },
+   "epoca_elegida": {
+    "media": 14.4,
+    "desviacion": 11.970797801316335
+   },
+   "diferencia_train_val": {
+    "media": 0.06945945743291519,
+    "desviacion": 0.07858979203988924
+   },
+   "perdida_val_min": {
+    "media": 0.6018333077430725,
+    "desviacion": 0.02672334727207444
+   },
+   "perdida_constante": {
+    "media": 0.6039968966950053,
+    "desviacion": 0.02318439379964585
+   },
+   "folds_con_mismo_hospital": [
+    0,
+    1,
+    2,
+    3,
+    4
+   ],
+   "auc_global": {
+    "auc": 0.5714646363454218,
+    "ic95": [
+     0.5329263357122368,
+     0.6108702404465381
+    ],
+    "pacientes": 1097
+   },
+   "mismo_hospital_global": {
+    "auc": 0.5662809029521737,
+    "ic95": [
+     0.5232115087720605,
+     0.6071937089368225
+    ],
+    "pacientes": 1097
+   },
+   "por_cohorte": {
+    "spy1": {
+     "auc": 0.5216962524654833,
+     "ic95": [
+      0.3859453020069883,
+      0.6580794270833334
+     ],
+     "pacientes": 104
+    },
+    "spy2": {
+     "auc": 0.567531179138322,
+     "ic95": [
+      0.5213267040477916,
+      0.6120377801841447
+     ],
+     "pacientes": 784
+    },
+    "duke": {
+     "auc": 0.5556473829201102,
+     "ic95": [
+      0.4561958117290527,
+      0.6561117886178861
+     ],
+     "pacientes": 209
+    }
+   },
+   "brier": 0.20675935699786951,
+   "brier_constante": 0.20736923190702414,
+   "masa_caja_15": {
+    "media": 0.9343003034591675,
+    "desviacion": 0.010879135978275247
+   },
+   "fraccion_caja_15": {
+    "media": 0.1517663478851318,
+    "desviacion": 0.005456768519851527
+   },
+   "frente_al_congelado": {
+    "dif_auc_medio_por_fold": {
+     "0": 0.0048,
+     "1": -0.0139,
+     "2": 0.0125,
+     "3": -0.0071,
+     "4": -0.054
+    },
+    "dif_auc_medio": {
+     "media": -0.011555651326072836,
+     "desviacion": 0.025856675068191955
+    },
+    "dif_mismo_hospital_medio": {
+     "folds": [
+      2,
+      3,
+      4
+     ],
+     "media": -0.019679310251060272,
+     "desviacion": 0.04762854569676745
+    },
+    "dif_auc_global": {
+     "diferencia": -0.016521739130434865,
+     "ic95": [
+      -0.056598532089360984,
+      0.02363492118369034
+     ],
+     "pacientes": 1097
+    }
+   }
+  }
+ },
+ "test": {
+  "pacientes": {
+   "n": 176,
+   "pcr": 53,
+   "cortes": 1758
+  },
+  "umbral": 0.363489137,
+  "auc": {
+   "auc": 0.5444086516336861,
+   "ic95": [
+    0.45688883131294095,
+    0.6287516276041667
+   ],
+   "pacientes": 176
+  },
+  "matriz": {
+   "VP": 2,
+   "FP": 8,
+   "FN": 51,
+   "VN": 115
+  },
+  "por_paciente": {
+   "sensibilidad": 0.03773584905660377,
+   "especificidad": 0.9349593495934959,
+   "VPP": 0.2,
+   "VPN": 0.6927710843373494,
+   "f1_macro": 0.4296699071785577,
+   "exactitud": 0.6647727272727273,
+   "pcr1": {
+    "precision": 0.2,
+    "recall": 0.03773584905660377,
+    "f1": 0.06349206349206349
+   },
+   "pcr0": {
+    "precision": 0.6927710843373494,
+    "recall": 0.9349593495934959,
+    "f1": 0.7958477508650519
+   },
+   "ic95": {
+    "sensibilidad": [
+     0.0,
+     0.09438497822931761
+    ],
+    "especificidad": [
+     0.8870932678821879,
+     0.975609756097561
+    ],
+    "VPP": [
+     0.0,
+     0.5
+    ],
+    "VPN": [
+     0.6227344092303199,
+     0.7619047619047619
+    ],
+    "f1_macro": [
+     0.3824561403508772,
+     0.4839425910450387
+    ],
+    "exactitud": [
+     0.5965909090909091,
+     0.7329545454545454
+    ],
+    "pcr1_precision": [
+     0.0,
+     0.5
+    ],
+    "pcr1_recall": [
+     0.0,
+     0.09438497822931761
+    ],
+    "pcr1_f1": [
+     0.0,
+     0.15384615384615385
+    ],
+    "pcr0_precision": [
+     0.6227344092303199,
+     0.7619047619047619
+    ],
+    "pcr0_recall": [
+     0.8870932678821879,
+     0.975609756097561
+    ],
+    "pcr0_f1": [
+     0.7418181818181818,
+     0.8438723399479212
+    ]
+   }
+  },
+  "siempre_no_pcr": {
+   "VP": 0,
+   "FP": 0,
+   "FN": 53,
+   "VN": 123,
+   "sensibilidad": 0.0,
+   "especificidad": 1.0,
+   "VPP": null,
+   "VPN": 0.6988636363636364,
+   "pcr1": {
+    "precision": null,
+    "recall": 0.0,
+    "f1": 0.0
+   },
+   "pcr0": {
+    "precision": 0.6988636363636364,
+    "recall": 1.0,
+    "f1": 0.822742474916388
+   },
+   "f1_macro": 0.411371237458194,
+   "exactitud": 0.6988636363636364
+  },
+  "corte_suelto": {
+   "auc": {
+    "auc": 0.5451247618462295,
+    "ic95": [
+     0.4642825116109689,
+     0.6244101188425147
+    ]
+   },
+   "sensibilidad": 0.04905660377358491,
+   "especificidad": 0.9250814332247557,
+   "VPP": 0.22033898305084745,
+   "f1_macro": 0.4362182963996074
+  },
+  "por_cohorte": {
+   "spy1": {
+    "pacientes": 35,
+    "pcr": 12,
+    "auc": 0.35144927536231885,
+    "ic95": [
+     0.18180171277997365,
+     0.5279720279720279
+    ],
+    "sensibilidad": 0.0,
+    "especificidad": 1.0,
+    "VP": 0,
+    "FP": 0,
+    "FN": 12,
+    "VN": 23
+   },
+   "spy2": {
+    "pacientes": 99,
+    "pcr": 32,
+    "auc": 0.5648320895522388,
+    "ic95": [
+     0.44715454944703953,
+     0.6753905153718586
+    ],
+    "sensibilidad": 0.03125,
+    "especificidad": 0.8805970149253731,
+    "VP": 1,
+    "FP": 8,
+    "FN": 31,
+    "VN": 59
+   },
+   "duke": {
+    "pacientes": 42,
+    "pcr": 9,
+    "auc": 0.6498316498316498,
+    "ic95": [
+     0.43013412309368193,
+     0.8657031249999997
+    ],
+    "sensibilidad": 0.1111111111111111,
+    "especificidad": 1.0,
+    "VP": 1,
+    "FP": 0,
+    "FN": 8,
+    "VN": 33
+   }
+  },
+  "mismo_hospital": {
+   "auc": 0.5524475524475524,
+   "ic95": [
+    0.4574185420110932,
+    0.6476851457440453
+   ],
+   "pacientes": 176
+  },
+  "roc": {
+   "fpr": [
+    0.0,
+    0.008130081300813009,
+    0.032520325203252036,
+    0.032520325203252036,
+    0.056910569105691054,
+    0.056910569105691054,
+    0.06504065040650407,
+    0.06504065040650407,
+    0.07317073170731707,
+    0.07317073170731707,
+    0.08130081300813008,
+    0.08130081300813008,
+    0.12195121951219512,
+    0.12195121951219512,
+    0.21951219512195122,
+    0.21951219512195122,
+    0.23577235772357724,
+    0.23577235772357724,
+    0.2601626016260163,
+    0.2601626016260163,
+    0.3089430894308943,
+    0.3089430894308943,
+    0.3170731707317073,
+    0.3170731707317073,
+    0.3252032520325203,
+    0.3252032520325203,
+    0.3333333333333333,
+    0.3333333333333333,
+    0.34959349593495936,
+    0.34959349593495936,
+    0.37398373983739835,
+    0.37398373983739835,
+    0.3902439024390244,
+    0.3902439024390244,
+    0.43089430894308944,
+    0.43089430894308944,
+    0.43902439024390244,
+    0.43902439024390244,
+    0.44715447154471544,
+    0.44715447154471544,
+    0.45528455284552843,
+    0.45528455284552843,
+    0.4634146341463415,
+    0.4634146341463415,
+    0.4959349593495935,
+    0.4959349593495935,
+    0.5203252032520326,
+    0.5203252032520326,
+    0.5528455284552846,
+    0.5528455284552846,
+    0.5772357723577236,
+    0.5772357723577236,
+    0.6178861788617886,
+    0.6178861788617886,
+    0.6422764227642277,
+    0.6422764227642277,
+    0.6504065040650406,
+    0.6504065040650406,
+    0.6666666666666666,
+    0.6666666666666666,
+    0.7317073170731707,
+    0.7317073170731707,
+    0.7479674796747967,
+    0.7479674796747967,
+    0.7560975609756098,
+    0.7560975609756098,
+    0.7723577235772358,
+    0.7723577235772358,
+    0.8211382113821138,
+    0.8211382113821138,
+    0.8536585365853658,
+    0.8536585365853658,
+    0.8861788617886179,
+    0.8861788617886179,
+    1.0
+   ],
+   "tpr": [
+    0.0,
+    0.0,
+    0.0,
+    0.018867924528301886,
+    0.018867924528301886,
+    0.03773584905660377,
+    0.03773584905660377,
+    0.05660377358490566,
+    0.05660377358490566,
+    0.07547169811320754,
+    0.07547169811320754,
+    0.09433962264150944,
+    0.09433962264150944,
+    0.11320754716981132,
+    0.11320754716981132,
+    0.1320754716981132,
+    0.1320754716981132,
+    0.1509433962264151,
+    0.1509433962264151,
+    0.18867924528301888,
+    0.18867924528301888,
+    0.20754716981132076,
+    0.20754716981132076,
+    0.22641509433962265,
+    0.22641509433962265,
+    0.24528301886792453,
+    0.24528301886792453,
+    0.2830188679245283,
+    0.2830188679245283,
+    0.39622641509433965,
+    0.39622641509433965,
+    0.41509433962264153,
+    0.41509433962264153,
+    0.4339622641509434,
+    0.4339622641509434,
+    0.49056603773584906,
+    0.49056603773584906,
+    0.5094339622641509,
+    0.5094339622641509,
+    0.5283018867924528,
+    0.5283018867924528,
+    0.5471698113207547,
+    0.5471698113207547,
+    0.5849056603773585,
+    0.5849056603773585,
+    0.6037735849056604,
+    0.6037735849056604,
+    0.6226415094339622,
+    0.6226415094339622,
+    0.7169811320754716,
+    0.7169811320754716,
+    0.7358490566037735,
+    0.7358490566037735,
+    0.7547169811320755,
+    0.7547169811320755,
+    0.7735849056603774,
+    0.7735849056603774,
+    0.8113207547169812,
+    0.8113207547169812,
+    0.8301886792452831,
+    0.8301886792452831,
+    0.8490566037735849,
+    0.8490566037735849,
+    0.8679245283018868,
+    0.8679245283018868,
+    0.8867924528301887,
+    0.8867924528301887,
+    0.9433962264150944,
+    0.9433962264150944,
+    0.9622641509433962,
+    0.9622641509433962,
+    0.9811320754716981,
+    0.9811320754716981,
+    1.0,
+    1.0
+   ],
+   "punto": {
+    "fpr": 0.06504065040650409,
+    "tpr": 0.03773584905660377,
+    "umbral": 0.363489137
+   }
+  },
+  "fiabilidad": [
+   {
+    "grupo": 0,
+    "prob_media": 0.15351215874155363,
+    "observada": 0.05555555555555555,
+    "pacientes": 18
+   },
+   {
+    "grupo": 1,
+    "prob_media": 0.20877189603116778,
+    "observada": 0.2777777777777778,
+    "pacientes": 18
+   },
+   {
+    "grupo": 2,
+    "prob_media": 0.23298138643012328,
+    "observada": 0.23529411764705882,
+    "pacientes": 17
+   },
+   {
+    "grupo": 3,
+    "prob_media": 0.24876179214980867,
+    "observada": 0.3333333333333333,
+    "pacientes": 18
+   },
+   {
+    "grupo": 4,
+    "prob_media": 0.2664414819549112,
+    "observada": 0.35294117647058826,
+    "pacientes": 17
+   },
+   {
+    "grupo": 5,
+    "prob_media": 0.28205067416032154,
+    "observada": 0.5,
+    "pacientes": 18
+   },
+   {
+    "grupo": 6,
+    "prob_media": 0.29691211966907277,
+    "observada": 0.5294117647058824,
+    "pacientes": 17
+   },
+   {
+    "grupo": 7,
+    "prob_media": 0.31783876650863224,
+    "observada": 0.3333333333333333,
+    "pacientes": 18
+   },
+   {
+    "grupo": 8,
+    "prob_media": 0.33689723645939545,
+    "observada": 0.11764705882352941,
+    "pacientes": 17
+   },
+   {
+    "grupo": 9,
+    "prob_media": 0.3741649455494351,
+    "observada": 0.2777777777777778,
+    "pacientes": 18
+   }
+  ],
+  "brier": 0.21042507685267164,
+  "brier_constante": 0.21051114432567666,
+  "tasa_pcr_train": 0.2935278030993619,
+  "modelos_por_separado": {
+   "auc_por_paciente": {
+    "it6_3bloques_f0": 0.5557600859027458,
+    "it6_3bloques_f1": 0.5773891701181162,
+    "it8_3bloques_f2": 0.5448688449148642,
+    "it8_3bloques_f3": 0.5066728025770824,
+    "it8_3bloques_f4": 0.5279950912716674
+   },
+   "media": 0.5425371989568951,
+   "desviacion": 0.026891769323975936,
+   "min": 0.5066728025770824,
+   "max": 0.5773891701181162
+  },
+  "calibracion": {
+   "ap": 0.30875202832189497,
+   "brier": 0.21042507739372052,
+   "brier_skill": 0.0004088473901552314,
+   "intercepto": -0.12620731396480359,
+   "pendiente": 0.7181595630235202,
+   "intercepto_pendiente_1": 0.14786216526798387,
+   "ic95": {
+    "ap": [
+     0.23224768707105956,
+     0.41905136202965954
+    ],
+    "brier": [
+     0.17982906855076397,
+     0.2410838364505207
+    ],
+    "brier_skill": [
+     -0.033425281963963285,
+     0.03606203430056438
+    ],
+    "intercepto": [
+     -1.0071792020480896,
+     0.8111427480016955
+    ],
+    "pendiente": [
+     -0.07098333216947485,
+     1.5785364985878232
+    ],
+    "intercepto_pendiente_1": [
+     -0.207135278335714,
+     0.46731163967542944
+    ]
+   },
+   "ap_sin_senal": 0.30113636363636365,
+   "pacientes": 176,
+   "pcr": 53,
+   "brier_constante": 0.21051114432567666,
+   "tasa_pcr_train": 0.2935278030993619,
+   "punto_umbral": {
+    "umbral": 0.363489137,
+    "precision": 0.2,
+    "recall": 0.03773584905660377
+   }
+  },
+  "permutacion": {
+   "auc": 0.5444086516336861,
+   "permutaciones": 10000,
+   "p_una_cola": 0.17848215178482152,
+   "p_dos_colas": 0.3531646835316468,
+   "nulo_percentiles_2.5_97.5": [
+    0.4068108605614358,
+    0.5942667587053229
+   ]
+  },
+  "potencia": {
+   "auc_real": 0.55,
+   "pcr": 53,
+   "no_pcr": 123,
+   "formula_hanley_mcneil": 0.18113620381327805,
+   "simulacion": 0.184,
+   "simulaciones": 1000,
+   "metodo_simulacion": "puntuaciones binormales con AUC 0,55; IC por bootstrap percentil de pacientes (1000 remuestreos), como en test"
+  },
+  "ap": {
+   "test": 0.30875202832189497,
+   "sin_senal": 0.30113636363636365
+  },
+  "fridman": {
+   "auc": 0.72,
+   "sensibilidad": 0.27,
+   "especificidad": 0.95
+  }
+ },
+ "comparacion": {
+  "referencias": {
+   "aviso": "Referencias externas del informe y de la web. Son la unica fuente de las cifras que no salen de results/: web/datos.json las copia de aqui (src/web/datos.py). Si cambian, se cambian aqui.",
+   "profesor": {
+    "auc_test": 0.64,
+    "rango_buen_trabajo": [
+     0.6,
+     0.7
+    ],
+    "ic_semiancho": 0.08,
+    "restricciones": "un corte 2D, CNN desde cero, sin la caja del tumor ni variables clinicas",
+    "fuente": "comunicacion personal del profesor: correo del 14-10-2026 y respuesta en persona (28-10-2026). Es la referencia directa: cumple las mismas restricciones que este modelo."
+   },
+   "fridman_2025": {
+    "auc_test": 0.72,
+    "por_cohorte": {
+     "spy1": 0.68,
+     "spy2": 0.78,
+     "duke": 0.54
+    },
+    "preentrenado": true,
+    "cita": "Fridman et al., 2025, arXiv:2506.12190 (autores del dataset), mismo conjunto de test",
+    "nota": "ViT preentrenado; pasan las imagenes a 8 bits y fusionan las tres fases como RGB. Es una cota superior, no comparable con una CNN desde cero."
+   },
+   "dataset": {
+    "nombre": "BreastDCEDL",
+    "cita": "Fridman et al., 2025, arXiv:2506.12190",
+    "colecciones": [
+     "I-SPY1",
+     "I-SPY2",
+     "Duke Breast Cancer MRI"
+    ],
+    "licencia": "CC BY-NC 4.0",
+    "url_licencia": "https://creativecommons.org/licenses/by-nc/4.0/",
+    "uso": "docente y de investigacion, sin fines comerciales, conservando la atribucion; sin reidentificacion, diagnostico ni recomendacion terapeutica"
+   },
+   "repositorio": "https://github.com/Valdi183/ML_Caso_1_Cancer"
+  },
+  "clinica_e_imagen": {
+   "clinica": {
+    "media": 0.6922992217299856,
+    "desviacion": 0.03222485925556891
+   },
+   "imagen": {
+    "media": 0.588885195767347,
+    "desviacion": 0.01744410788556292
+   },
+   "combinada": {
+    "media": 0.7038975197598515,
+    "desviacion": 0.02888454436888958
+   },
+   "imagen_todas_las_epocas": 0.5510267152451683,
+   "imagen_test": 0.5444086516336861,
+   "mejora": 0.011598298029865829,
+   "folds_a_favor": 5,
+   "mejora_global_ic95": [
+    -0.0011435829462792895,
+    0.02779276548951165
+   ],
+   "pacientes": 1097
+  },
+  "diferencia_profesor": 0.09559134836631389,
+  "consistencia": {
+   "icc": 0.9155940864094263,
+   "fraccion_pacientes_dos_lados": 0.15496809480401094
+  },
+  "combinado": {
+   "auc_por_fold": {
+    "0": 0.7429435483870966,
+    "1": 0.728682966920074,
+    "2": 0.6667017580797979,
+    "3": 0.702712643678161,
+    "4": 0.6784466817341278
+   }
+  }
+ },
+ "saturacion": {
+  "criterio": "corte saturado si mas de la mitad de la zona que mas realza (el 2 % de la mama con mayor EARLY - PRE, la de src.visualizacion.curva_captacion) esta a 255 (o >= 250, el criterio de la app)",
+  "todas": {
+   "cortes": 10945,
+   "pacientes": 1097,
+   "early_255": {
+    "fraccion_cortes": 0.6322521699406122,
+    "mediana_fraccion_de_la_zona": 0.5957746478873239,
+    "fraccion_pacientes_mayoria_de_cortes": 0.6335460346399271
+   },
+   "late_255": {
+    "fraccion_cortes": 0.2797624486066697,
+    "mediana_fraccion_de_la_zona": 0.25526315789473686,
+    "fraccion_pacientes_mayoria_de_cortes": 0.2670920692798541
+   },
+   "early_250": {
+    "fraccion_cortes": 0.6907263590680676,
+    "mediana_fraccion_de_la_zona": 0.6519916142557652,
+    "fraccion_pacientes_mayoria_de_cortes": 0.690975387420237
+   },
+   "late_250": {
+    "fraccion_cortes": 0.31100959342165374,
+    "mediana_fraccion_de_la_zona": 0.2839160839160839,
+    "fraccion_pacientes_mayoria_de_cortes": 0.3017319963536919
+   },
+   "early_y_late_255_fraccion_cortes": 0.24723618090452262
+  },
+  "por_cohorte": {
+   "spy1": {
+    "cortes": 1040,
+    "pacientes": 104,
+    "early_255": {
+     "fraccion_cortes": 0.6057692307692307,
+     "mediana_fraccion_de_la_zona": 0.6040404838693405,
+     "fraccion_pacientes_mayoria_de_cortes": 0.6057692307692307
+    },
+    "late_255": {
+     "fraccion_cortes": 0.5423076923076923,
+     "mediana_fraccion_de_la_zona": 0.5361853220102268,
+     "fraccion_pacientes_mayoria_de_cortes": 0.5288461538461539
+    },
+    "early_250": {
+     "fraccion_cortes": 0.6490384615384616,
+     "mediana_fraccion_de_la_zona": 0.6454901960784314,
+     "fraccion_pacientes_mayoria_de_cortes": 0.6442307692307693
+    },
+    "late_250": {
+     "fraccion_cortes": 0.5769230769230769,
+     "mediana_fraccion_de_la_zona": 0.5655568527864976,
+     "fraccion_pacientes_mayoria_de_cortes": 0.5769230769230769
+    },
+    "early_y_late_255_fraccion_cortes": 0.44519230769230766
+   },
+   "spy2": {
+    "cortes": 7835,
+    "pacientes": 784,
+    "early_255": {
+     "fraccion_cortes": 0.6583280153158902,
+     "mediana_fraccion_de_la_zona": 0.6122177954847278,
+     "fraccion_pacientes_mayoria_de_cortes": 0.6581632653061225
+    },
+    "late_255": {
+     "fraccion_cortes": 0.24671346522016593,
+     "mediana_fraccion_de_la_zona": 0.22994652406417113,
+     "fraccion_pacientes_mayoria_de_cortes": 0.2308673469387755
+    },
+    "early_250": {
+     "fraccion_cortes": 0.7198468410976387,
+     "mediana_fraccion_de_la_zona": 0.6712141882673943,
+     "fraccion_pacientes_mayoria_de_cortes": 0.7232142857142857
+    },
+    "late_250": {
+     "fraccion_cortes": 0.2814294830887045,
+     "mediana_fraccion_de_la_zona": 0.2610497237569061,
+     "fraccion_pacientes_mayoria_de_cortes": 0.27040816326530615
+    },
+    "early_y_late_255_fraccion_cortes": 0.22552648372686662
+   },
+   "duke": {
+    "cortes": 2070,
+    "pacientes": 209,
+    "early_255": {
+     "fraccion_cortes": 0.5468599033816425,
+     "mediana_fraccion_de_la_zona": 0.5362138820769805,
+     "fraccion_pacientes_mayoria_de_cortes": 0.5550239234449761
+    },
+    "late_255": {
+     "fraccion_cortes": 0.27294685990338163,
+     "mediana_fraccion_de_la_zona": 0.22234985575662208,
+     "fraccion_pacientes_mayoria_de_cortes": 0.2727272727272727
+    },
+    "early_250": {
+     "fraccion_cortes": 0.6014492753623188,
+     "mediana_fraccion_de_la_zona": 0.5779895623465978,
+     "fraccion_pacientes_mayoria_de_cortes": 0.5933014354066986
+    },
+    "late_250": {
+     "fraccion_cortes": 0.2893719806763285,
+     "mediana_fraccion_de_la_zona": 0.24798643950681265,
+     "fraccion_pacientes_mayoria_de_cortes": 0.2822966507177033
+    },
+    "early_y_late_255_fraccion_cortes": 0.22995169082125605
+   }
+  }
+ },
+ "fiarse": {
+  "tasa_base": 0.2935278030993619,
+  "validacion": {
+   "pacientes": 1097,
+   "pcr": 322,
+   "marcadas": 134,
+   "VP": 57,
+   "VPP": 0.4253731343283582,
+   "sensibilidad": 0.17701863354037267,
+   "especificidad": 0.9006451612903226,
+   "auc": {
+    "auc": 0.5879863754758566,
+    "ic95": [
+     0.5495159766923864,
+     0.6253537229950178
+    ],
+    "pacientes": 1097
+   }
+  },
+  "test": {
+   "pacientes": 176,
+   "pcr": 53,
+   "auc": 0.5444086516336861,
+   "ic95": [
+    0.45688883131294095,
+    0.6287516276041667
+   ],
+   "marcadas": 10,
+   "VP": 2,
+   "VPP": 0.2,
+   "sensibilidad": 0.03773584905660377,
+   "especificidad": 0.9349593495934959
+  }
+ },
+ "portada": {
+  "corte": "Breast_MRI_290_z010",
+  "cohorte": "duke",
+  "subida": 206.03623188405797,
+  "medias": {
+   "PRE": 47.0024154589372,
+   "EARLY": 253.03864734299518,
+   "LATE": 239.97826086956522
+  }
+ },
+ "creditos": {
+  "nombre": "BreastDCEDL",
+  "cita": "Fridman et al., 2025, arXiv:2506.12190",
+  "colecciones": [
+   "I-SPY1",
+   "I-SPY2",
+   "Duke Breast Cancer MRI"
+  ],
+  "licencia": "CC BY-NC 4.0",
+  "url_licencia": "https://creativecommons.org/licenses/by-nc/4.0/",
+  "uso": "docente y de investigacion, sin fines comerciales, conservando la atribucion; sin reidentificacion, diagnostico ni recomendacion terapeutica",
+  "repositorio": "https://github.com/Valdi183/ML_Caso_1_Cancer"
+ },
+ "umbral": 0.363489137
+}
