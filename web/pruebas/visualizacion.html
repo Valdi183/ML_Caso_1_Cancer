@@ -1,0 +1,73 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba del mapa y la curva de captación</title>
+<link rel="icon" href="data:,">
+<style>
+  body { font: 16px/1.5 system-ui, sans-serif; margin: 16px; max-width: 70rem; }
+  pre { white-space: pre-wrap; background: #f3f3f3; padding: 8px; }
+  .bien { color: #0a6b2d; } .mal { color: #b00020; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Prueba del mapa y la curva de captación</h1>
+<p>Compara <code>js/visualizacion.js</code> con Python (<code>python -m src.web.casos_visualizacion</code>) en los 24 cortes de
+<code>visualizacion.json</code>: curva (medias, cambio, tipo, píxeles, saturación) y mapa (fracciones, recuentos y SHA-256 del tipo
+de cada píxel y de la imagen en color).</p>
+<p id="estado">Ejecutando…</p>
+<pre id="detalle"></pre>
+<script src="../js/vendor/pako_inflate.min.js"></script>
+<script src="../js/vendor/UPNG.js"></script>
+<script src="../js/png.js"></script>
+<script src="../js/visualizacion.js"></script>
+<script>
+(async function () {
+  const esperado = await (await fetch("visualizacion.json")).json();
+  const csv = (await (await fetch("../ejemplos/ejemplos.csv")).text()).trim().split(/\r?\n/).slice(1);
+  const FASES = ["PRE", "EARLY", "LATE"];
+  // los colores de src/visualizacion.py (la web usa otra paleta; el calculo es el mismo)
+  const PALETA_PYTHON = { persistente: "#5B8FD4", meseta: "#D9B648", lavado: "#D2595A" };
+  const lectura = {};
+  for (const linea of csv) {
+    const corte = linea.split(",")[0];
+    lectura[corte] = [];
+    for (const f of FASES) {
+      const d = new Uint8Array(await (await fetch(`../ejemplos/${corte}_${f}.png`)).arrayBuffer());
+      lectura[corte].push(Png.leerFase(d, f).x);
+    }
+  }
+  const filas = [];
+  let fallos = 0;
+  for (const c of esperado.casos) {
+    const x = c.orden.map((i) => lectura[c.corte][i]);
+    const curva = Visualizacion.curvaCaptacion(x), mapa = Visualizacion.mapaCaptacion(x, PALETA_PYTHON);
+    const rgb = new Uint8Array(256 * 256 * 3);
+    for (let i = 0; i < 256 * 256; i++) for (let k = 0; k < 3; k++) rgb[i * 3 + k] = mapa.rgba[i * 4 + k];
+    const problemas = [];
+    const p = c.curva;
+    for (const f of FASES) if (Math.abs(curva.medias[f] - p.medias[f]) > 1e-9) problemas.push(`media ${f}: ${curva.medias[f]} frente a ${p.medias[f]}`);
+    if (curva.cambio !== p.cambio) problemas.push(`cambio ${curva.cambio} frente a ${p.cambio}`);
+    if (curva.tipo !== p.tipo) problemas.push(`tipo ${curva.tipo} frente a ${p.tipo}`);
+    if (curva.nPixeles !== p.n_pixeles) problemas.push(`n_pixeles ${curva.nPixeles} frente a ${p.n_pixeles}`);
+    if (Math.abs(curva.saturadaEarly - p.saturada_early) > 1e-12 || Math.abs(curva.saturadaLate - p.saturada_late) > 1e-12) problemas.push("saturacion");
+    const m = c.mapa;
+    if (mapa.nColoreados !== m.n_coloreados) problemas.push(`n_coloreados ${mapa.nColoreados} frente a ${m.n_coloreados}`);
+    if (mapa.nSaturados !== m.n_saturados) problemas.push(`n_saturados ${mapa.nSaturados} frente a ${m.n_saturados}`);
+    if (mapa.nMama !== m.n_mama) problemas.push(`n_mama ${mapa.nMama} frente a ${m.n_mama}`);
+    for (const t of Visualizacion.TIPOS) if (Math.abs(mapa.fracciones[t] - m.fracciones[t]) > 1e-12) problemas.push(`fraccion ${t}`);
+    if (await Visualizacion.sha256Bytes(mapa.tipo) !== m.sha256_tipo) problemas.push("sha256 de tipo distinto");
+    if (await Png.sha256Hex(rgb) !== m.sha256_rgb) problemas.push("sha256 de rgb distinto");
+    if (problemas.length) fallos++;
+    filas.push({ nombre: `${c.corte} orden ${c.orden.join("")}`, bien: problemas.length === 0, detalle: problemas.join("; ") || `${p.tipo || "sin tipo"} ${(p.cambio * 100).toFixed(0)} %` });
+  }
+  document.getElementById("estado").innerHTML = fallos === 0
+    ? `<span class="bien">${filas.length} de ${filas.length} cortes iguales que Python.</span>`
+    : `<span class="mal">${fallos} de ${filas.length} cortes distintos de Python.</span>`;
+  document.getElementById("detalle").textContent = filas.map((f) => (f.bien ? "  OK  " : "FALLO ") + f.nombre.padEnd(34) + f.detalle).join("\n");
+  window.__resultado = { total: filas.length, fallos, filas };
+})().catch((e) => { document.getElementById("estado").textContent = "Error: " + e; window.__resultado = { error: String(e) }; });
+</script>
+</body>
+</html>
