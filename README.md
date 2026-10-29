@@ -116,6 +116,7 @@ ML_Caso_1_Cancer/
 ├── app/                       ← app web (Streamlit): app.py, ejemplos/, requirements.txt
 ├── data/                      ← sitio opcional para el dataset (no se versiona)
 ├── docs/figuras/              ← figuras del informe
+├── docs/data/referencias.json ← referencias externas de la web (profesor, Fridman, licencia)
 ├── models/                    ← pesos .pt (solo se versionan los que se entregan)
 ├── notebooks/eda.ipynb        ← analisis exploratorio
 ├── presentations/             ← diapositivas
@@ -304,6 +305,44 @@ probabilidades cambian hasta ~7e-4 frente a las oficiales. En validación
 ninguna paciente cambia de clase con 0,3635. En test hay una paciente a 1,9e-4 del umbral
 cuya clase podría cambiar; no se recalcula para no volver a usar el test. Detalle en
 `docs/decisiones.md`.
+
+---
+
+## Web estática (GitHub Pages)
+
+La app de Streamlit sigue de respaldo. La web estática (`web/`) es a la vez la presentación del caso y la
+app: la predicción se hace **en el navegador** con ONNX Runtime Web (WebAssembly, 1 hilo), las imágenes no
+salen del ordenador y no hace falta servidor. Todo va en el repositorio, sin CDN ni nada externo en
+tiempo de ejecución (`web/js/vendor/LEEME.md`; tipografía Atkinson Hyperlegible, SIL OFL, en `web/fonts/`).
+
+- `web/index.html`: **el caso explicado**, con métricas: portada con un corte real (PRE → EARLY), el
+  problema, los datos, el modelo, cómo se eligió, resultados en test, comparación y límites, créditos.
+  Los gráficos son SVG dibujados desde los datos (`web/js/graficos.js`).
+- `web/predecir.html`: **la predicción**, con lo que hace la app de Streamlit: visor de las tres fases, mapa
+  y curva de captación (descriptivos), resultado con su escala y los 5 modelos, «¿cuánto fiarse?»,
+  comparación con las clínicas, detalles técnicos, descarga en JSON y «Comprobar con el pipeline».
+- **Ninguna cifra está escrita en el HTML ni en el JS.** Salen de `web/datos.json` (todas las cifras de las
+  dos páginas) y de `web/modelo.json` (modelo, SHA-256, referencias de PyTorch), que genera
+  `python -m src.web.exportar` desde `results/`, la red y `docs/data/referencias.json` (la referencia del
+  profesor, Fridman et al. y la licencia: lo que no sale de `results/`). `--solo-datos` regenera solo
+  `datos.json`, sin volver a exportar el ONNX. Un test comprueba que está al día y que cada `data-v` del
+  HTML apunta a un dato que existe.
+- `web/js/png.js` lee el PNG sin `canvas` (gestión de color), con las mismas reglas y mensajes que
+  `src/inferencia.py`; `web/js/visualizacion.js` es el mapa y la curva de `src/visualizacion.py`.
+- **Exportar** (solo si cambia el modelo o `results/`; `pip install -r requirements-web.txt`): el ONNX
+  (`web/modelo/conjunto.onnx`, los 5 pesos del plan, opset 17), `web/modelo.json`, `web/datos.json` y los
+  ejemplos con su licencia. El `.onnx` está ignorado por git salvo en `web/modelo/`.
+- **Probar en local:** `python -m http.server` dentro de `web/` y abrir <http://localhost:8000/>.
+- **Comprobar:** `pytest -q` (ONNX frente a PyTorch FP32, < 1e-5 y misma clase, en los ejemplos y en 51
+  cortes de train; cifras y ficheros de prueba al día) y, con navegadores reales,
+  `python -m src.web.probar_navegador` (`pip install playwright && python -m playwright install firefox`;
+  Chrome es el instalado): la lectura del PNG da lo mismo que Python en 76 casos, el mapa y la curva en 24
+  cortes, y los 4 ejemplos coinciden con `python -m src.inferencia` a 4 decimales. Los casos los generan
+  `python -m src.web.casos_lectura` y `python -m src.web.casos_visualizacion` (en `web/pruebas/`).
+  `python -m src.web.capturas CARPETA` hace capturas a 1440, 1024 y 390 px y avisa de errores de consola y
+  de desbordes.
+- **Despliegue:** `.github/workflows/pages.yml` publica `web/` en cada push a `main` que lo toque. En
+  GitHub: *Settings → Pages → Source: GitHub Actions*.
 
 ---
 
