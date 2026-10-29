@@ -121,7 +121,11 @@ dan 0,507-0,577 (0,543 ± 0,027); el conjunto, 0,544.
 **Frente a las referencias:** el AUC de test queda unos **0,10 por debajo de la meta
 del profesor (0,64 en test)**, justo por encima del límite superior de su IC
 [0,457-0,629]; esa meta tiene su propia incertidumbre (±0,08), así que la diferencia no es
-concluyente, pero en test el modelo no se distingue del azar. Fridman et al. 2025
+concluyente, pero en test el modelo no se distingue del azar. Según el profesor
+(comunicación personal, en persona), su modelo de referencia cumple las mismas
+restricciones que este: un corte 2D, CNN desde cero, sin la caja del tumor ni variables
+clínicas. Es, por tanto, la comparación directa: lo alcanzable con este planteamiento
+ronda 0,64 y este modelo queda unos 0,10 por debajo. Fridman et al. 2025
 (0,72 en el mismo test) usa un modelo **preentrenado**: es una cota superior, no
 comparable con una CNN desde cero. El 0,544 coincide con la estimación sin sesgo de
 validación (AUC medio de todas las épocas, 0,551 ± 0,011).
