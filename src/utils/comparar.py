@@ -48,7 +48,8 @@ def brier(prob, pcr) -> float:
 def diferencia_pareada(a: pd.DataFrame, b: pd.DataFrame, remuestreos: int, semilla: int) -> dict:
     """AUC(b) - AUC(a) sobre las MISMAS pacientes, con IC 95 % remuestreando pacientes
     (la misma muestra para los dos modelos). Entradas: columnas percentil y pcr por paciente."""
-    juntas = a[["percentil", "pcr"]].join(b[["percentil"]], rsuffix="_b", how="inner")
+    b = b[["percentil"]].rename(columns={"percentil": "percentil_b"})
+    juntas = a[["percentil", "pcr"]].join(b, how="inner")
     pa, pb, y = juntas.percentil.values, juntas.percentil_b.values, juntas.pcr.values
     valor = auc(pb, y) - auc(pa, y)
     rng = np.random.default_rng(semilla)
