@@ -1,0 +1,8 @@
+# Web estatica (web/): exportar el modelo a ONNX y comprobar que da lo mismo que PyTorch.
+# Solo hacen falta para `python -m src.web.exportar` y tests/test_web.py; la pagina en el
+# navegador usa ONNX Runtime Web, que va copiado en web/js/vendor (ver su LEEME.md).
+# Las pruebas en navegador real (`python -m src.web.probar_navegador`) piden ademas
+# `pip install playwright` y `python -m playwright install firefox`.
+onnx
+onnxruntime==1.30.0
+onnxscript

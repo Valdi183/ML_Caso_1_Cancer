@@ -1,0 +1,405 @@
+{
+ "formato": 1,
+ "aviso": "Generado por src/web/exportar.py; no se edita a mano.",
+ "modelo": {
+  "onnx": "modelo/conjunto.onnx",
+  "bytes": 391961,
+  "sha256": "b6779db9769e1c62f61032dfec4c67215e862a0a4696fcd266f141382853413d",
+  "opset": 17,
+  "entrada": {
+   "nombre": "imagen",
+   "forma": [
+    1,
+    3,
+    256,
+    256
+   ],
+   "tipo": "float32",
+   "rango": [
+    0,
+    1
+   ],
+   "nota": "PNG en gris de 8 bits dividido entre 255; el resto del preprocesado va dentro de la red"
+  },
+  "salidas": {
+   "prob": "media de las 5 sigmoides, forma (1,)",
+   "por_modelo": "forma (1, 5)"
+  },
+  "pesos": [
+   {
+    "nombre": "it6_3bloques_f0",
+    "fichero": "models/it6_3bloques_f0.pt",
+    "sha256": "f1eb794abdee19ae3c8308727741a1d3db2b53c27e8112b1d241d6728e671862"
+   },
+   {
+    "nombre": "it6_3bloques_f1",
+    "fichero": "models/it6_3bloques_f1.pt",
+    "sha256": "0c62d2e98b46ae493758c1670dbd56fcfd683d7e6f75074de00e02ff52e3a563"
+   },
+   {
+    "nombre": "it8_3bloques_f2",
+    "fichero": "models/it8_3bloques_f2.pt",
+    "sha256": "b58239fd676a4d9050524933589dd80fb3f56d178e5f6dec5e3b56df4f5e29c8"
+   },
+   {
+    "nombre": "it8_3bloques_f3",
+    "fichero": "models/it8_3bloques_f3.pt",
+    "sha256": "3c3826e3f1d07d3254b7ddf6a068c94e1ee24e791f04d981d38c9242afd47145"
+   },
+   {
+    "nombre": "it8_3bloques_f4",
+    "fichero": "models/it8_3bloques_f4.pt",
+    "sha256": "e2d184a2ea3275a958630c1481be64dd3c9d751ed8c20e8e0e1d97d4db7ff1f3"
+   }
+  ],
+  "plan": "results/test/plan.json",
+  "arquitectura": {
+   "realce": false,
+   "sin_late": false,
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "normalizar": false,
+   "pooling": "media",
+   "reducir": 2
+  },
+  "parametros_por_modelo": 18329
+ },
+ "umbral": 0.363489137,
+ "regla": "pCR si probabilidad > umbral",
+ "entrenamiento": {
+  "it6_3bloques_f0": {
+   "epoca": 6,
+   "auc_val": 0.5793346774193548,
+   "objetivo": "pcr",
+   "fold": 0,
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.4002329192546585
+  },
+  "it6_3bloques_f1": {
+   "epoca": 13,
+   "auc_val": 0.5818779535648244,
+   "objetivo": "pcr",
+   "fold": 1,
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.3724961479198767
+  },
+  "it8_3bloques_f2": {
+   "epoca": 6,
+   "auc_val": 0.6044846825981682,
+   "objetivo": "pcr",
+   "fold": 2,
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.3281368821292774,
+   "peso_caja": 0.0
+  },
+  "it8_3bloques_f3": {
+   "epoca": 26,
+   "auc_val": 0.5655172413793104,
+   "objetivo": "pcr",
+   "fold": 3,
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.5494728304947283,
+   "peso_caja": 0.0
+  },
+  "it8_3bloques_f4": {
+   "epoca": 13,
+   "auc_val": 0.6132114238750771,
+   "objetivo": "pcr",
+   "fold": 4,
+   "ponderada": false,
+   "aumentado": true,
+   "normalizar": false,
+   "reducir": 2,
+   "pooling": "media",
+   "filtros": [
+    8,
+    16,
+    32
+   ],
+   "dropout": 0.7,
+   "epocas": 40,
+   "lote": 32,
+   "lr": 0.001,
+   "wd": 0.001,
+   "semilla": 42,
+   "pos_weight": 2.37442218798151,
+   "peso_caja": 0.0
+  }
+ },
+ "metricas": {
+  "validacion": {
+   "auc_medio_epocas": {
+    "media": 0.5510267152451683,
+    "desviacion": 0.010827339574065238
+   },
+   "auc_epoca_elegida": {
+    "media": 0.588885195767347,
+    "desviacion": 0.019503105519479404
+   },
+   "auc_global_fuera_de_fold": {
+    "auc": 0.5879863754758566,
+    "ic95": [
+     0.5495159766923864,
+     0.6253537229950178
+    ],
+    "pacientes": 1097
+   },
+   "por_cohorte": {
+    "spy1": {
+     "auc": 0.6180966469428009,
+     "ic95": [
+      0.47771598290981787,
+      0.7613178056699398
+     ],
+     "pacientes": 104
+    },
+    "spy2": {
+     "auc": 0.5857799260054899,
+     "ic95": [
+      0.5411680032161572,
+      0.6311445403797608
+     ],
+     "pacientes": 784
+    },
+    "duke": {
+     "auc": 0.5497245179063361,
+     "ic95": [
+      0.458476359509321,
+      0.6394547209127552
+     ],
+     "pacientes": 209
+    }
+   },
+   "ejecuciones": [
+    "it6_3bloques_f0",
+    "it6_3bloques_f1",
+    "it8_3bloques_f2",
+    "it8_3bloques_f3",
+    "it8_3bloques_f4"
+   ]
+  },
+  "umbral_fuera_de_fold": {
+   "umbral": 0.363489137,
+   "criterio": "especificidad >= 0.9 por paciente (media de sus cortes)",
+   "pacientes": {
+    "n": 1097,
+    "pcr": 322
+   },
+   "por_paciente": {
+    "sensibilidad": 0.17701863354037267,
+    "especificidad": 0.9006451612903226,
+    "VPP": 0.4253731343283582,
+    "VPN": 0.7248182762201454,
+    "f1_macro": 0.5266110471806674
+   },
+   "por_corte": {
+    "n": 10945,
+    "sensibilidad": 0.1865671641791045,
+    "especificidad": 0.890930262647173,
+    "VPP": 0.4158004158004158,
+    "VPN": 0.7246895390444117,
+    "f1_macro": 0.5284115770469096
+   }
+  },
+  "test": {
+   "pacientes": {
+    "n": 176,
+    "pcr": 53,
+    "cortes": 1758
+   },
+   "por_paciente": {
+    "auc": {
+     "auc": 0.5444086516336861,
+     "ic95": [
+      0.45688883131294095,
+      0.6287516276041667
+     ],
+     "pacientes": 176
+    },
+    "sensibilidad": 0.03773584905660377,
+    "especificidad": 0.9349593495934959,
+    "VPP": 0.2,
+    "VPN": 0.6927710843373494,
+    "f1_macro": 0.4296699071785577
+   },
+   "por_corte": {
+    "auc": {
+     "auc": 0.5451247618462295,
+     "ic95": [
+      0.4642825116109689,
+      0.6244101188425147
+     ]
+    },
+    "sensibilidad": 0.04905660377358491,
+    "especificidad": 0.9250814332247557,
+    "VPP": 0.22033898305084745,
+    "VPN": 0.6926829268292682,
+    "f1_macro": 0.4362182963996074
+   }
+  }
+ },
+ "generado_con": {
+  "torch": "2.15.0+cpu",
+  "onnx": "1.23.2",
+  "onnxruntime": "1.30.0",
+  "numpy": "2.5.4"
+ },
+ "ejemplos": [
+  {
+   "corte": "ISPY1_1103_z017",
+   "paciente": "ISPY1_1103",
+   "cohorte": "spy1",
+   "pcr": 1,
+   "fold": 3,
+   "ficheros": {
+    "PRE": "ejemplos/ISPY1_1103_z017_PRE.png",
+    "EARLY": "ejemplos/ISPY1_1103_z017_EARLY.png",
+    "LATE": "ejemplos/ISPY1_1103_z017_LATE.png"
+   },
+   "referencia": {
+    "prob": 0.30228742957115173,
+    "clase": "no pCR",
+    "por_modelo": [
+     0.34939348697662354,
+     0.29915595054626465,
+     0.21824529767036438,
+     0.3091326653957367,
+     0.3355098366737366
+    ]
+   }
+  },
+  {
+   "corte": "ISPY2-884266_z021",
+   "paciente": "ISPY2-884266",
+   "cohorte": "spy2",
+   "pcr": 0,
+   "fold": 4,
+   "ficheros": {
+    "PRE": "ejemplos/ISPY2-884266_z021_PRE.png",
+    "EARLY": "ejemplos/ISPY2-884266_z021_EARLY.png",
+    "LATE": "ejemplos/ISPY2-884266_z021_LATE.png"
+   },
+   "referencia": {
+    "prob": 0.15046584606170654,
+    "clase": "no pCR",
+    "por_modelo": [
+     0.2099086493253708,
+     0.1772247552871704,
+     0.12263557314872742,
+     0.06583993136882782,
+     0.17672033607959747
+    ]
+   }
+  },
+  {
+   "corte": "ISPY2-329941_z008",
+   "paciente": "ISPY2-329941",
+   "cohorte": "spy2",
+   "pcr": 1,
+   "fold": 0,
+   "ficheros": {
+    "PRE": "ejemplos/ISPY2-329941_z008_PRE.png",
+    "EARLY": "ejemplos/ISPY2-329941_z008_EARLY.png",
+    "LATE": "ejemplos/ISPY2-329941_z008_LATE.png"
+   },
+   "referencia": {
+    "prob": 0.28767237067222595,
+    "clase": "no pCR",
+    "por_modelo": [
+     0.25791776180267334,
+     0.31010499596595764,
+     0.3026033043861389,
+     0.26205316185951233,
+     0.3056827187538147
+    ]
+   }
+  },
+  {
+   "corte": "Breast_MRI_290_z010",
+   "paciente": "Breast_MRI_290",
+   "cohorte": "duke",
+   "pcr": 0,
+   "fold": 4,
+   "ficheros": {
+    "PRE": "ejemplos/Breast_MRI_290_z010_PRE.png",
+    "EARLY": "ejemplos/Breast_MRI_290_z010_EARLY.png",
+    "LATE": "ejemplos/Breast_MRI_290_z010_LATE.png"
+   },
+   "referencia": {
+    "prob": 0.31366032361984253,
+    "clase": "no pCR",
+    "por_modelo": [
+     0.35538819432258606,
+     0.27599599957466125,
+     0.3281075656414032,
+     0.32913875579833984,
+     0.27967116236686707
+    ]
+   }
+  }
+ ]
+}

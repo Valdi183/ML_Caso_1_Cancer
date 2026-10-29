@@ -31,6 +31,8 @@ __pycache__/
 *.pth
 *.ckpt
 *.onnx
+# ...salvo el de la web estatica, que es lo que sirve GitHub Pages
+!web/modelo/*.onnx
 
 # --- Entrenamiento ---------------------------------------------------------
 runs/
