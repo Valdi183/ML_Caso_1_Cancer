@@ -1,0 +1,68 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Prueba de lectura de PNG</title>
+<link rel="icon" href="data:,">
+<style>
+  body { font: 15px/1.5 system-ui, sans-serif; margin: 16px; max-width: 70rem; }
+  pre { white-space: pre-wrap; background: #f3f3f3; padding: 8px; }
+  .bien { color: #0a6b2d; } .mal { color: #b00020; font-weight: 600; }
+</style>
+</head>
+<body>
+<h1>Prueba de lectura de PNG</h1>
+<p>Compara <code>js/png.js</code> con lo que dice Python (<code>python -m src.web.casos_lectura</code>) en cada caso de
+<code>casos.json</code>: el mismo mensaje de error o los mismos avisos y la misma huella SHA-256 de la fase leida.</p>
+<p id="estado">Ejecutando…</p>
+<pre id="detalle"></pre>
+<script src="../js/vendor/pako_inflate.min.js"></script>
+<script src="../js/vendor/UPNG.js"></script>
+<script src="../js/png.js"></script>
+<script>
+(async function () {
+  const esperado = await (await fetch("casos.json")).json();
+  const FIRMA = [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a];
+  const filas = [];
+  let fallos = 0;
+  for (const c of esperado.casos) {
+    let datos;
+    if (c.grande) { datos = new Uint8Array(c.grande); datos.set(FIRMA); }
+    else datos = new Uint8Array(await (await fetch(c.fichero)).arrayBuffer());
+    let obtenido;
+    try {
+      const r = Png.leerFase(datos, esperado.fase);
+      obtenido = { avisos: r.avisos, sha256: await Png.sha256Hex(r.x) };
+    } catch (e) {
+      if (!(e instanceof Png.ErrorEntrada)) throw e;
+      obtenido = { error: e.message };
+    }
+    const bien = c.error !== undefined
+      ? obtenido.error === c.error
+      : obtenido.error === undefined && obtenido.sha256 === c.sha256 && JSON.stringify(obtenido.avisos) === JSON.stringify(c.avisos);
+    if (!bien) fallos++;
+    filas.push({ nombre: c.nombre, bien, python: c.error ?? ("OK " + c.avisos.join(" | ")), js: obtenido.error ?? ("OK " + obtenido.avisos.join(" | ") + (obtenido.sha256 !== c.sha256 ? "  [SHA DISTINTO]" : "")) });
+  }
+  // avisos del corte completo (fases intercambiadas, nombres que no cuadran)
+  for (const c of esperado.corte) {
+    const fases = [];
+    for (const f of Png.FASES) {
+      const d = new Uint8Array(await (await fetch("../ejemplos/" + c.ficheros[f])).arrayBuffer());
+      fases.push(Png.leerFase(d, f).x);
+    }
+    const avisos = Png.avisosCorte(fases, c.nombres);
+    const bien = JSON.stringify(avisos) === JSON.stringify(c.avisos);
+    if (!bien) fallos++;
+    filas.push({ nombre: c.nombre, bien, python: c.avisos.join(" | ") || "(sin avisos)", js: avisos.join(" | ") || "(sin avisos)" });
+  }
+  document.getElementById("estado").innerHTML = fallos === 0
+    ? `<span class="bien">${filas.length} de ${filas.length} casos iguales que Python.</span>`
+    : `<span class="mal">${fallos} de ${filas.length} casos distintos de Python.</span>`;
+  document.getElementById("detalle").textContent = filas.map((f) =>
+    (f.bien ? "  OK  " : "FALLO ") + f.nombre.padEnd(32) + (f.bien ? f.python.slice(0, 90) : "\n        Python: " + f.python + "\n        JS:     " + f.js)).join("\n");
+  window.__resultado = { total: filas.length, fallos, filas };
+})().catch((e) => { document.getElementById("estado").textContent = "Error: " + e; window.__resultado = { error: String(e) }; });
+</script>
+</body>
+</html>

@@ -1,0 +1,517 @@
+{
+ "fase": "PRE",
+ "casos": [
+  {
+   "nombre": "ejemplo_dataset",
+   "fichero": "casos/ejemplo_dataset.png",
+   "avisos": [],
+   "sha256": "8969cbeb5b156ca9b5dd9a1721069e121354f4084ef8caf12982a985647c6351",
+   "media": 46.565704345703125
+  },
+  {
+   "nombre": "gris_8",
+   "fichero": "casos/gris_8.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtro_0",
+   "fichero": "casos/filtro_0.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtro_1",
+   "fichero": "casos/filtro_1.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtro_2",
+   "fichero": "casos/filtro_2.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtro_3",
+   "fichero": "casos/filtro_3.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtro_4",
+   "fichero": "casos/filtro_4.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "filtros_mezclados",
+   "fichero": "casos/filtros_mezclados.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "entrelazado",
+   "fichero": "casos/entrelazado.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "gris_4",
+   "fichero": "casos/gris_4.png",
+   "avisos": [],
+   "sha256": "1e1555d53c952c3cc96e01a84f7ca534b732b76ca1f850151a168a20f10c113b",
+   "media": 127.20272827148438
+  },
+  {
+   "nombre": "gris_2",
+   "fichero": "casos/gris_2.png",
+   "avisos": [],
+   "sha256": "c90f37ff6d9a900a51e2aeecc5424ba27676f5b9fad60ed8ee283ae418b31209",
+   "media": 127.14202880859375
+  },
+  {
+   "nombre": "gris_2_entrelazado",
+   "fichero": "casos/gris_2_entrelazado.png",
+   "avisos": [],
+   "sha256": "c90f37ff6d9a900a51e2aeecc5424ba27676f5b9fad60ed8ee283ae418b31209",
+   "media": 127.14202880859375
+  },
+  {
+   "nombre": "gris_1",
+   "fichero": "casos/gris_1.png",
+   "error": "PRE: modo de imagen 1; se espera un PNG en escala de grises de 8 bits, como los del dataset."
+  },
+  {
+   "nombre": "gris_16",
+   "fichero": "casos/gris_16.png",
+   "error": "PRE: modo de imagen I;16; se espera un PNG en escala de grises de 8 bits, como los del dataset."
+  },
+  {
+   "nombre": "rgb_gris",
+   "fichero": "casos/rgb_gris.png",
+   "avisos": [
+    "PRE: PNG en modo RGB (gris guardado como RGB); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "rgb_color",
+   "fichero": "casos/rgb_color.png",
+   "error": "PRE: la imagen tiene color; se espera escala de grises."
+  },
+  {
+   "nombre": "rgb16_gris_byte_alto",
+   "fichero": "casos/rgb16_gris_byte_alto.png",
+   "avisos": [
+    "PRE: PNG en modo RGB (gris guardado como RGB); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "3bca80b998aa02698565735591ca0666b2d0d9681fa61ae42ec92996ed6d70cb",
+   "media": 127.52543640136719
+  },
+  {
+   "nombre": "rgb16_distinto_byte_bajo",
+   "fichero": "casos/rgb16_distinto_byte_bajo.png",
+   "avisos": [
+    "PRE: PNG en modo RGB (gris guardado como RGB); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "3bca80b998aa02698565735591ca0666b2d0d9681fa61ae42ec92996ed6d70cb",
+   "media": 127.52543640136719
+  },
+  {
+   "nombre": "rgba_gris",
+   "fichero": "casos/rgba_gris.png",
+   "avisos": [
+    "PRE: PNG en modo RGBA (gris guardado como RGBA); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "rgba_color",
+   "fichero": "casos/rgba_color.png",
+   "error": "PRE: la imagen tiene color; se espera escala de grises."
+  },
+  {
+   "nombre": "rgba16_gris",
+   "fichero": "casos/rgba16_gris.png",
+   "avisos": [
+    "PRE: PNG en modo RGBA (gris guardado como RGBA); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "3bca80b998aa02698565735591ca0666b2d0d9681fa61ae42ec92996ed6d70cb",
+   "media": 127.52543640136719
+  },
+  {
+   "nombre": "la_8",
+   "fichero": "casos/la_8.png",
+   "avisos": [
+    "PRE: PNG en modo LA (gris guardado como LA); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "la_16",
+   "fichero": "casos/la_16.png",
+   "avisos": [
+    "PRE: PNG en modo RGBA (gris guardado como RGBA); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "3bca80b998aa02698565735591ca0666b2d0d9681fa61ae42ec92996ed6d70cb",
+   "media": 127.52543640136719
+  },
+  {
+   "nombre": "paleta_8_gris",
+   "fichero": "casos/paleta_8_gris.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "44138dc5ae20134ec92a8dd841a02b79fe49d4f2d84c78865f65033ce42ae623",
+   "media": 127.75970458984375
+  },
+  {
+   "nombre": "paleta_8_color_sin_usar",
+   "fichero": "casos/paleta_8_color_sin_usar.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "47c523e48803e225cb578245dc7908411141d92ca74b9cc6a1fc0eb08454a216",
+   "media": 63.36860656738281
+  },
+  {
+   "nombre": "paleta_8_color_usado",
+   "fichero": "casos/paleta_8_color_usado.png",
+   "error": "PRE: la imagen tiene color; se espera escala de grises."
+  },
+  {
+   "nombre": "paleta_4_gris",
+   "fichero": "casos/paleta_4_gris.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "1e1555d53c952c3cc96e01a84f7ca534b732b76ca1f850151a168a20f10c113b",
+   "media": 127.20272827148438
+  },
+  {
+   "nombre": "paleta_1_entrelazado",
+   "fichero": "casos/paleta_1_entrelazado.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "bea4a7cb12f5f6171d99e79e7d890730a06dadf98a7a5d2a2cede75bb264bc5b",
+   "media": 124.615478515625
+  },
+  {
+   "nombre": "paleta_corta_indices_fuera",
+   "fichero": "casos/paleta_corta_indices_fuera.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "7b145eec64a3efe27d1ea6e644f4af38f1ebef27c34ff26a067e9ed108b30a9d",
+   "media": 20.30755615234375
+  },
+  {
+   "nombre": "paleta_sin_plte",
+   "fichero": "casos/paleta_sin_plte.png",
+   "avisos": [
+    "PRE: PNG en modo P (gris guardado como P); se convierte a escala de grises igual que al entrenar."
+   ],
+   "sha256": "de2f256064a0af797747c2b97505dc0b9f3df0de4f489eac731c23ae9ca9cc31",
+   "media": 0.0
+  },
+  {
+   "nombre": "gris_con_trns",
+   "fichero": "casos/gris_con_trns.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "con_gama_e_iccp_falso",
+   "fichero": "casos/con_gama_e_iccp_falso.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "bloque_desconocido",
+   "fichero": "casos/bloque_desconocido.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "idat_en_trozos",
+   "fichero": "casos/idat_en_trozos.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "datos_tras_iend",
+   "fichero": "casos/datos_tras_iend.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "tamano_128",
+   "fichero": "casos/tamano_128.png",
+   "error": "PRE: mide 128x128 px; tiene que ser 256x256 (no se redimensiona)."
+  },
+  {
+   "nombre": "tamano_256x300",
+   "fichero": "casos/tamano_256x300.png",
+   "error": "PRE: mide 256x300 px; tiene que ser 256x256 (no se redimensiona)."
+  },
+  {
+   "nombre": "tamano_0",
+   "fichero": "casos/tamano_0.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "dimensiones_enormes",
+   "fichero": "casos/dimensiones_enormes.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (DecompressionBombError)."
+  },
+  {
+   "nombre": "truncado_mitad",
+   "fichero": "casos/truncado_mitad.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "firma_y_basura",
+   "fichero": "casos/firma_y_basura.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "no_png_jpeg",
+   "fichero": "casos/no_png_jpeg.png",
+   "error": "PRE: no es un PNG (la cabecera no es la de PNG)."
+  },
+  {
+   "nombre": "vacio",
+   "fichero": "casos/vacio.png",
+   "error": "PRE: el fichero esta vacio."
+  },
+  {
+   "nombre": "crc_idat_roto",
+   "fichero": "casos/crc_idat_roto.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (SyntaxError)."
+  },
+  {
+   "nombre": "crc_ihdr_roto",
+   "fichero": "casos/crc_ihdr_roto.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "crc_iend_roto",
+   "fichero": "casos/crc_iend_roto.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "sin_iend",
+   "fichero": "casos/sin_iend.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "truncado_tras_datos_idat",
+   "fichero": "casos/truncado_tras_datos_idat.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (SyntaxError)."
+  },
+  {
+   "nombre": "truncado_en_crc_idat_1",
+   "fichero": "casos/truncado_en_crc_idat_1.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (SyntaxError)."
+  },
+  {
+   "nombre": "truncado_en_crc_idat_3",
+   "fichero": "casos/truncado_en_crc_idat_3.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (SyntaxError)."
+  },
+  {
+   "nombre": "truncado_tras_idat_y_8_de_otro",
+   "fichero": "casos/truncado_tras_idat_y_8_de_otro.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (SyntaxError)."
+  },
+  {
+   "nombre": "truncado_en_ihdr",
+   "fichero": "casos/truncado_en_ihdr.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "truncado_tras_ihdr",
+   "fichero": "casos/truncado_tras_ihdr.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "solo_firma",
+   "fichero": "casos/solo_firma.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "filtro_invalido",
+   "fichero": "casos/filtro_invalido.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "zlib_truncado",
+   "fichero": "casos/zlib_truncado.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "zlib_sin_adler",
+   "fichero": "casos/zlib_sin_adler.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "zlib_adler_roto",
+   "fichero": "casos/zlib_adler_roto.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "zlib_datos_de_mas",
+   "fichero": "casos/zlib_datos_de_mas.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "zlib_corrupto",
+   "fichero": "casos/zlib_corrupto.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "idat_partido_por_otro_bloque",
+   "fichero": "casos/idat_partido_por_otro_bloque.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "nombre_de_bloque_invalido",
+   "fichero": "casos/nombre_de_bloque_invalido.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "ihdr_corto",
+   "fichero": "casos/ihdr_corto.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (ValueError)."
+  },
+  {
+   "nombre": "ihdr_no_es_el_primero",
+   "fichero": "casos/ihdr_no_es_el_primero.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "metodo_filtro_1",
+   "fichero": "casos/metodo_filtro_1.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "metodo_compresion_1",
+   "fichero": "casos/metodo_compresion_1.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "entrelazado_valor_2",
+   "fichero": "casos/entrelazado_valor_2.png",
+   "avisos": [],
+   "sha256": "0184b95965b0afc113c5a315b45b4a3178aaa600ad678ed073ac1cb079c978ed",
+   "media": 127.24029541015625
+  },
+  {
+   "nombre": "profundidad_invalida",
+   "fichero": "casos/profundidad_invalida.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "profundidad_invalida_128",
+   "fichero": "casos/profundidad_invalida_128.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "tipo_color_invalido",
+   "fichero": "casos/tipo_color_invalido.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (UnidentifiedImageError)."
+  },
+  {
+   "nombre": "bloque_mas_largo_que_el_fichero",
+   "fichero": "casos/bloque_mas_largo_que_el_fichero.png",
+   "error": "PRE: el PNG esta corrupto o no se puede leer (OSError)."
+  },
+  {
+   "nombre": "grande_2mb_mas_1",
+   "grande": 2097153,
+   "error": "PRE: ocupa 2.0 MB; el maximo es 2 MB."
+  },
+  {
+   "nombre": "grande_2_25mb_empate",
+   "grande": 2359296,
+   "error": "PRE: ocupa 2.2 MB; el maximo es 2 MB."
+  }
+ ],
+ "corte": [
+  {
+   "nombre": "corte_bien",
+   "ficheros": {
+    "PRE": "ISPY2-329941_z008_PRE.png",
+    "EARLY": "ISPY2-329941_z008_EARLY.png",
+    "LATE": "ISPY2-329941_z008_LATE.png"
+   },
+   "nombres": {
+    "PRE": "ISPY2-329941_z008_PRE.png",
+    "EARLY": "ISPY2-329941_z008_EARLY.png",
+    "LATE": "ISPY2-329941_z008_LATE.png"
+   },
+   "avisos": []
+  },
+  {
+   "nombre": "corte_nombres_cruzados",
+   "ficheros": {
+    "PRE": "ISPY2-329941_z008_PRE.png",
+    "EARLY": "ISPY2-329941_z008_EARLY.png",
+    "LATE": "ISPY2-329941_z008_LATE.png"
+   },
+   "nombres": {
+    "PRE": "ISPY2-329941_z008_EARLY.png",
+    "EARLY": "ISPY2-329941_z008_pre.PNG",
+    "LATE": "sin_sufijo.png"
+   },
+   "avisos": [
+    "El fichero subido como PRE se llama «ISPY2-329941_z008_EARLY.png» (sufijo _EARLY).",
+    "El fichero subido como EARLY se llama «ISPY2-329941_z008_pre.PNG» (sufijo _PRE)."
+   ]
+  },
+  {
+   "nombre": "corte_pre_y_early_intercambiadas",
+   "ficheros": {
+    "PRE": "ISPY2-329941_z008_EARLY.png",
+    "EARLY": "ISPY2-329941_z008_PRE.png",
+    "LATE": "ISPY2-329941_z008_LATE.png"
+   },
+   "nombres": {
+    "PRE": "ISPY2-329941_z008_PRE.png",
+    "EARLY": "ISPY2-329941_z008_EARLY.png",
+    "LATE": "ISPY2-329941_z008_LATE.png"
+   },
+   "avisos": [
+    "La media de EARLY (46.6) no supera a la de PRE (64.7): al inyectar el contraste el tejido se ilumina, asi que puede que las fases esten intercambiadas."
+   ]
+  }
+ ]
+}
