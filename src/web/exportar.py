@@ -1,7 +1,8 @@
 """Exporta el conjunto de los 5 modelos a ONNX para la web estatica (GitHub Pages).
 
     python -m src.web.exportar            # el ONNX, web/modelo.json, web/ejemplos/ y web/datos.json
-    python -m src.web.exportar --solo-datos   # solo web/datos.json (las cifras de las dos paginas)
+    python -m src.web.exportar --solo-datos   # solo web/datos.json (las cifras de las dos paginas),
+                                              # web/historial.json y web/umbral_validacion.json
 
 Un unico ONNX con los 5 pesos del plan (results/test/plan.json, comprobados por SHA-256 al
 cargarlos) en modo evaluacion. El preprocesado va dentro de la red (src/models/cnn.py), asi que
@@ -126,6 +127,49 @@ def descripcion(conjunto: inferencia.Conjunto, onnx: Path) -> dict:
     }
 
 
+def compacto(datos, destino: Path) -> None:
+    destino.write_text(json.dumps(datos, ensure_ascii=False, separators=(",", ":")) + "\n", encoding="utf-8")
+
+
+def historial_por_epoca() -> dict:
+    """web/historial.json: AUC y perdida por epoca de los 5 folds del modelo final (historial.csv de
+    cada ejecucion) y su epoca elegida (metricas.json), para el control de epoca de index.html."""
+    import pandas as pd
+    folds = []
+    for nombre in datos_web.EJECUCIONES:
+        h = pd.read_csv(datos_web.RESULTADOS / nombre / "historial.csv")
+        m = datos_web.leer(nombre, "metricas.json")
+        c = datos_web.leer(nombre, "config.json")
+        folds.append({"fold": int(c["fold"]), "epoca_elegida": int(m["mejor_epoca"]),
+                      "epoca": [int(v) for v in h.epoca],
+                      **{k: [round(float(v), 4) for v in h[k]]
+                         for k in ("auc_train", "auc_val", "perdida_train", "perdida_val")}})
+    return {"aviso": "Generado por src/web/exportar.py desde results/<ejecucion>/historial.csv; "
+                     "no se edita a mano.",
+            "folds": folds}
+
+
+def predicciones_validacion() -> dict:
+    """web/umbral_validacion.json: la probabilidad por paciente fuera de fold (media de sus cortes, la
+    de results/<ejecucion>/predicciones_val.csv de los 5 folds), su etiqueta y su cohorte, para el
+    explorador de umbral. Solo VALIDACION, nunca test; sin identificadores (se ordena por probabilidad)."""
+    import pandas as pd
+
+    from src import config
+    cohorte = config.utils().cargar_patients().set_index("pid").dataset
+    filas = []
+    for nombre in datos_web.EJECUCIONES:
+        p = pd.read_csv(datos_web.RESULTADOS / nombre / "predicciones_val.csv")
+        por_paciente = p.groupby("patient_id").agg(prob=("prob", "mean"), pcr=("pCR", "first"))
+        filas += [(float(r.prob), int(r.pcr), str(cohorte[pid])) for pid, r in por_paciente.iterrows()]
+    filas.sort()
+    umbral = inferencia.leer_umbral()
+    return {"aviso": "Generado por src/web/exportar.py desde results/<ejecucion>/predicciones_val.csv "
+                     "(VALIDACION fuera de fold, nunca test); no se edita a mano.",
+            "umbral_oficial": umbral, "regla": "pCR si probabilidad > umbral",
+            "columnas": ["prob", "pcr", "cohorte"], "pacientes": [list(f) for f in filas]}
+
+
 def main(argv=None) -> None:
     a = argparse.ArgumentParser(description="Exporta el modelo y las cifras de la web (web/).")
     a.add_argument("--solo-datos", action="store_true",
@@ -144,6 +188,9 @@ def main(argv=None) -> None:
         print(f"{onnx.relative_to(REPO)}: {modelo['bytes'] / 1024:.0f} KB, sha256 {modelo['sha256']}")
         print(f"umbral {conjunto.umbral:.4f}; {len(datos['ejemplos'])} ejemplos con referencia de PyTorch")
     cifras = datos_web.escribir(conjunto, [{"corte": f["corte"], "cohorte": f["cohorte"]} for f in filas])
+    compacto(historial_por_epoca(), WEB / "historial.json")
+    compacto(predicciones_validacion(), WEB / "umbral_validacion.json")
+    print("web/historial.json y web/umbral_validacion.json (validacion fuera de fold, sin identificadores)")
     print(f"web/datos.json: {len(cifras['seleccion']['configuraciones'])} configuraciones; "
           f"portada {cifras['portada']['corte']}")
 
