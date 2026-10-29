@@ -232,6 +232,7 @@
   const DIBUJOS = {
     configuraciones: G.configuraciones, curvas: G.curvas, perdida: G.perdida, umbral: G.umbral, roc: G.roc,
     "cohortes-test": G.cohortesTest, calibracion: G.calibracion, comparacion: G.comparacion, saturacion: G.saturacion,
+    folds: G.folds,
   };
 
   async function iniciar() {

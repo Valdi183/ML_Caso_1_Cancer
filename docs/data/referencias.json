@@ -1,11 +1,9 @@
 {
   "aviso": "Referencias externas del informe y de la web. Son la unica fuente de las cifras que no salen de results/: web/datos.json las copia de aqui (src/web/datos.py). Si cambian, se cambian aqui.",
-  "profesor": {
+  "referencia_asignatura": {
     "auc_test": 0.64,
     "rango_buen_trabajo": [0.60, 0.70],
-    "ic_semiancho": 0.08,
-    "restricciones": "un corte 2D, CNN desde cero, sin la caja del tumor ni variables clinicas",
-    "fuente": "comunicacion personal del profesor: correo del 14-10-2026 y respuesta en persona (28-10-2026). Es la referencia directa: cumple las mismas restricciones que este modelo."
+    "fuente": "material de la asignatura: modelo de referencia con AUC aproximado de 0,64 en test (meta realista). No se conoce su intervalo de confianza."
   },
   "fridman_2025": {
     "auc_test": 0.72,

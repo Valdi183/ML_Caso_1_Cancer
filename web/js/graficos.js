@@ -257,21 +257,26 @@
       "AUC en test por cohorte, con intervalo del 95 %");
   }
 
-  /* Comparacion: este modelo, la referencia del profesor, Fridman, y la clinica en validacion. */
+  /* Comparacion: este modelo, la referencia de la asignatura, Fridman y las lineas base; abajo, la
+   * clinica y la red base en validacion. La referencia de la asignatura va sin intervalo: no se conoce. */
   function comparacion(d, W) {
     const t = d.test, refs = d.comparacion.referencias, cmp = d.comparacion.clinica_e_imagen;
+    const base = d.comparacion.baselines.red_base;
     const filas = [
       { grupo: `En test (${entero(t.pacientes.n)} pacientes, el mismo conjunto)` },
       { etiqueta: "Este modelo", detalle: "CNN propia, un corte 2D", valor: t.auc.auc, ic: t.auc.ic95, forma: "circulo", relleno: true,
         fuerte: true, texto: `${d3(t.auc.auc)} [${d3(t.auc.ic95[0])}–${d3(t.auc.ic95[1])}]` },
-      { etiqueta: "Referencia del profesor", detalle: "mismas restricciones; comunicación personal", valor: refs.profesor.auc_test,
-        ic: [refs.profesor.auc_test - refs.profesor.ic_semiancho, refs.profesor.auc_test + refs.profesor.ic_semiancho],
-        forma: "cuadrado", relleno: true, texto: `${d2(refs.profesor.auc_test)} ± ${d2(refs.profesor.ic_semiancho)}` },
+      { etiqueta: "Modelo de referencia de la asignatura", detalle: "intervalo desconocido", valor: refs.referencia_asignatura.auc_test,
+        ic: null, forma: "cuadrado", relleno: true, texto: d2(refs.referencia_asignatura.auc_test) },
       { etiqueta: "Fridman et al. 2025", detalle: "ViT preentrenado: cota superior", valor: refs.fridman_2025.auc_test, ic: null,
         forma: "rombo", relleno: false, texto: d2(refs.fridman_2025.auc_test) },
+      { etiqueta: "Siempre «no pCR»", detalle: "línea base: no ordena a nadie", valor: d.comparacion.baselines.siempre_no_pcr.auc,
+        ic: null, forma: "circulo", relleno: false, texto: d2(d.comparacion.baselines.siempre_no_pcr.auc) },
       { grupo: "En validación, 5 folds (solo comparación; media ± desviación)" },
       { etiqueta: "Imagen sola (esta red)", detalle: "media de todas las épocas", valor: cmp.imagen_todas_las_epocas,
         ic: null, forma: "circulo", relleno: false, texto: d3(cmp.imagen_todas_las_epocas) },
+      { etiqueta: "Red base de 4 bloques", detalle: `línea base; ${base.folds.length === 1 ? "solo el fold " + base.folds[0] : base.folds.length + " folds"}`,
+        valor: base.auc_medio, ic: null, forma: "circulo", relleno: false, texto: d3(base.auc_medio) },
       { etiqueta: "Variables clínicas solas", detalle: "subtipo, edad y volumen", valor: cmp.clinica.media,
         ic: [cmp.clinica.media - cmp.clinica.desviacion, cmp.clinica.media + cmp.clinica.desviacion], forma: "circulo", relleno: false,
         texto: `${d3(cmp.clinica.media)} ± ${d3(cmp.clinica.desviacion)}` },
@@ -280,7 +285,39 @@
         texto: `${d3(cmp.combinada.media)} ± ${d3(cmp.combinada.desviacion)}` },
     ];
     return bosque(W, filas, { dominio: [0.35, 0.8], marcas: [0.4, 0.5, 0.6, 0.7, 0.8], ref: 0.5, refTexto: "azar" },
-                  "AUC de este modelo en test comparado con la referencia del profesor, Fridman y las variables clínicas");
+                  "AUC de este modelo en test comparado con la referencia de la asignatura, Fridman, las líneas base y las variables clínicas");
+  }
+
+  /* Los 5 modelos del conjunto: una fila por modelo y una columna por fold. Relleno: folds con los
+   * que aprendio; caja vacia: el fold que no vio (su validacion). */
+  function folds(d, W) {
+    const pesos = d.modelo.pesos, n = pesos.length;
+    const ancho = W >= 560;
+    const izq = ancho ? 112 : 84, arriba = 34, alto = 34, hueco = 8;
+    const celda = Math.min(96, Math.floor((W - izq - 8) / n) - hueco);
+    let s = "";
+    for (let f = 0; f < n; f++) {
+      s += texto(izq + f * (celda + hueco) + celda / 2, 18, `fold ${f}`, "g-t2", "middle");
+    }
+    pesos.forEach((p, i) => {
+      const y = arriba + i * (alto + hueco);
+      s += texto(0, y + alto / 2 + 6, `Modelo ${i + 1}`, "g-t g-b");
+      for (let f = 0; f < n; f++) {
+        const x = izq + f * (celda + hueco);
+        if (f === p.fold) {
+          s += rect(x, y, celda, alto, "g-fondo", ' stroke="var(--g-tx)" stroke-width="2" stroke-dasharray="5 3"');
+          s += texto(x + celda / 2, y + alto / 2 + 6, ancho ? "no lo ve" : "fuera", "g-t2", "middle");
+        } else {
+          s += rect(x, y, celda, alto, "g-relleno2", ' fill-opacity=".35"');
+        }
+      }
+    });
+    const y = arriba + n * (alto + hueco) + 10;
+    s += rect(izq, y, 18, 14, "g-relleno2", ' fill-opacity=".35"') + texto(izq + 26, y + 12, "aprende con este fold", "g-t2");
+    const x2 = izq + (ancho ? 240 : 0), y2 = ancho ? y : y + 24;
+    s += rect(x2, y2, 18, 14, "g-fondo", ' stroke="var(--g-tx)" stroke-width="2" stroke-dasharray="5 3"') +
+         texto(x2 + 26, y2 + 12, "no lo ve (lo usa para validar)", "g-t2");
+    return svg(W, y2 + 26, s, `Los ${n} modelos: cada uno aprende con cuatro folds y no ve el quinto`);
   }
 
   /* Grafico de intervalos: una fila por estimacion, con etiqueta, valor e intervalo. */
@@ -391,6 +428,6 @@
     }
   }
 
-  raiz.Graficos = { configuraciones, curvas, perdida, umbral, roc, cohortesTest, comparacion, calibracion, saturacion,
+  raiz.Graficos = { configuraciones, curvas, perdida, umbral, roc, cohortesTest, comparacion, calibracion, saturacion, folds,
                     bosque, montar, esc, lin, marcas, svg, texto, linea, circulo, rect, camino, ejeX };
 })(window);

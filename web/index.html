@@ -140,13 +140,35 @@
       </figure>
       <div class="texto">
         <h3>Cinco modelos, no uno</h3>
-        <p>Se entrenaron <span data-v="modelo.n_modelos"></span> redes iguales, cada una sin ver uno de los folds. La probabilidad que da la web es la <strong>media de las cinco</strong>. Todas usan el mismo entrenamiento:</p>
+        <p>Se entrenaron cinco redes con la misma arquitectura y los mismos hiperparámetros. Cada una aprendió con cuatro quintas partes de las pacientes de entrenamiento y no vio la quinta. La probabilidad que muestra la web es la <strong>media de las cinco</strong>.</p>
       </div>
+      <figure class="fig">
+        <div class="grafico" data-grafico="folds"></div>
+        <figcaption>Qué fold deja fuera cada modelo. Cada fold es una quinta parte de las <span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de entrenamiento, separadas por paciente.</figcaption>
+      </figure>
       <figure class="fig">
         <div id="conjunto" class="conjunto"></div>
       </figure>
       <div class="texto">
         <dl class="entrenamiento" id="entrenamiento"></dl>
+        <details>
+          <summary>¿Por qué la media?</summary>
+          <p>Hay dos niveles de agregación, y solo uno se pudo comparar.</p>
+          <p><strong>Entre los cortes de una paciente</strong> (para evaluar por paciente) sí se compararon, en validación y fuera de fold: el AUC es <span data-v="agregacion.cortes_auc.mean" data-f="d3"></span> con la media, <span data-v="agregacion.cortes_auc.median" data-f="d3"></span> con la mediana, <span data-v="agregacion.cortes_auc.max" data-f="d3"></span> con el máximo y <span data-v="agregacion.cortes_auc.voto" data-f="d3"></span> con el voto.</p>
+          <p><strong>Entre los cinco modelos</strong> no se comparó: el conjunto no se puede evaluar en validación, porque cada modelo aprendió con los folds que validan los otros cuatro, y el test se usó una sola vez. <strong>La media se eligió por principio, no por una comparación empírica.</strong></p>
+          <div class="tabla-scroll">
+            <table class="datos">
+              <caption>Cómo juntar las cinco probabilidades de un corte.</caption>
+              <thead><tr><th>Agregación</th><th>Qué hace</th><th>Su problema</th></tr></thead>
+              <tbody>
+                <tr><td>Media</td><td>Promedia las cinco probabilidades.</td><td>Ninguno grave. Para cada paciente, el error cuadrático (Brier) de la media nunca es mayor que la media de los errores de los cinco modelos (desigualdad de Jensen), y el resultado sigue siendo una probabilidad.</td></tr>
+                <tr><td>Mediana</td><td>Toma la del modelo del medio.</td><td>En cada corte usa un solo modelo y descarta lo que dicen los otros cuatro.</td></tr>
+                <tr><td>Máximo</td><td>Toma la más alta.</td><td>Lo decide el modelo más inflado: en test, cada modelo por separado pone entre <span data-v="agregacion.modelos_sobre_umbral_test.min"></span> y <span data-v="agregacion.modelos_sobre_umbral_test.max"></span> pacientes sobre el umbral (el conjunto, <span data-v="agregacion.modelos_sobre_umbral_test.conjunto"></span>).</td></tr>
+                <tr><td>Voto</td><td>Cuenta cuántos modelos superan el umbral.</td><td>Solo da <span data-v="agregacion.valores_voto"></span> valores (de 0 a 5 votos): muchas pacientes empatan, lo que penaliza el AUC, y deja de ser una probabilidad.</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </details>
       </div>
     </section>
 
@@ -281,18 +303,36 @@
     <section class="seccion" id="comparacion" aria-labelledby="t-comparacion">
       <h2 id="t-comparacion"><span class="n">6</span> Comparación y límites</h2>
       <div class="texto">
-        <p>El <strong>modelo de referencia del profesor</strong> da <span data-v="comparacion.referencias.profesor.auc_test" data-f="d2"></span> en test y cumple las mismas restricciones que este: un corte 2D, CNN desde cero, sin la caja del tumor ni variables clínicas (comunicación personal). Es la comparación directa. Este modelo queda por debajo. El margen típico de un AUC en este test es de ±<span data-v="comparacion.referencias.profesor.ic_semiancho" data-f="d2"></span>, así que los dos intervalos se solapan en parte. Aun así, los valores centrales están separados por unos <span data-v="comparacion.diferencia_profesor" data-f="d2"></span> y no sabemos qué lo explica.</p>
+        <p><strong>Referencia de la asignatura:</strong> el material del curso incluye un modelo de referencia con AUC ≈ <span data-v="comparacion.referencias.referencia_asignatura.auc_test" data-f="d2"></span> en test. El mío (<span data-v="test.auc.auc" data-f="d3"></span>; IC <span data-v="test.auc.ic95" data-f="rango3"></span>) queda unos <span data-v="comparacion.diferencia_referencia" data-f="d2"></span> por debajo. No sé qué explica la diferencia. Mis experimentos descartan la arquitectura (<span data-v="seleccion.resumen.n_configuraciones"></span> configuraciones, las <span data-v="seleccion.resumen.n_con_4_o_5_folds"></span> confirmadas en 4-5 folds entre <span data-v="seleccion.resumen.rango_4_o_5_folds.min" data-f="d3"></span> y <span data-v="seleccion.resumen.rango_4_o_5_folds.max" data-f="d3"></span>): lo más probable es que esté en el entrenamiento y el preprocesado.</p>
         <p><strong>Fridman et al.</strong> (autores del dataset) llegan a <span data-v="comparacion.referencias.fridman_2025.auc_test" data-f="d2"></span> en el mismo test con un modelo <strong>preentrenado</strong>. No es comparable con una CNN desde cero: es una cota superior.</p>
       </div>
       <figure class="fig ancha">
         <div class="grafico" data-grafico="comparacion"></div>
-        <figcaption>AUC de este modelo frente a las referencias. Arriba, en test; abajo, en validación (solo comparación). Círculo: este trabajo; cuadrado: referencia del profesor; rombo: publicado.</figcaption>
+        <figcaption>AUC de este modelo frente a las referencias. Arriba, en test; abajo, en validación (solo comparación). Círculo: este trabajo y las líneas base; cuadrado: referencia de la asignatura (sin intervalo: no se conoce); rombo: publicado.</figcaption>
       </figure>
+      <div class="texto">
+        <h3>Líneas base</h3>
+        <p>Como pide el enunciado, el modelo se compara con tres líneas base: no hacer nada (decir siempre «no pCR»), las variables clínicas y la red de partida.</p>
+      </div>
+      <div class="tabla-ancha">
+        <div class="tabla-scroll">
+          <table class="datos">
+            <caption>Este modelo frente a las líneas base. Las cifras de validación son AUC por paciente medio de todas las épocas.</caption>
+            <thead><tr><th>Modelo</th><th>Dónde</th><th class="num">AUC</th><th>Nota</th></tr></thead>
+            <tbody>
+              <tr><td>Este modelo (conjunto de 5)</td><td>test</td><td class="num"><span data-v="test.auc.auc" data-f="d3"></span></td><td>En validación, <span data-v="comparacion.clinica_e_imagen.imagen_todas_las_epocas" data-f="d3"></span>.</td></tr>
+              <tr><td>Siempre «no pCR»</td><td>test</td><td class="num"><span data-v="comparacion.baselines.siempre_no_pcr.auc" data-f="d3"></span></td><td>Exactitud <span data-v="comparacion.baselines.siempre_no_pcr.exactitud" data-f="d3"></span> y F1 macro <span data-v="comparacion.baselines.siempre_no_pcr.f1_macro" data-f="d3"></span>: acierta todas las no pCR y ninguna pCR.</td></tr>
+              <tr><td>Modelo clínico (subtipo, edad y volumen)</td><td>validación, 5 folds</td><td class="num"><span data-v="comparacion.baselines.clinico.media" data-f="d3"></span> ± <span data-v="comparacion.baselines.clinico.desviacion" data-f="d3"></span></td><td>Solo comparación: esta web no pide datos clínicos.</td></tr>
+              <tr><td>Red base de 4 bloques (<span data-v="comparacion.baselines.red_base.etiqueta" data-f="texto"></span>)</td><td>validación, fold <span data-v="comparacion.baselines.red_base.folds.0"></span></td><td class="num"><span data-v="comparacion.baselines.red_base.auc_medio" data-f="d3"></span></td><td>La primera configuración, con <span data-v="comparacion.baselines.red_base.parametros" data-f="entero"></span> parámetros; solo un fold.</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
       <div class="texto">
         <h3>Las variables clínicas</h3>
         <p>Con subtipo, edad y volumen del tumor se llega a <span data-v="comparacion.clinica_e_imagen.clinica.media" data-f="d3"></span> en validación, bastante más que la imagen sola (<span data-v="comparacion.clinica_e_imagen.imagen_todas_las_epocas" data-f="d3"></span>). Añadir la imagen sube el AUC en <span data-v="comparacion.clinica_e_imagen.mejora" data-f="d3"></span> (mejora en <span data-v="comparacion.clinica_e_imagen.folds_a_favor"></span> de 5 folds), pero el margen de esa mejora (<span data-v="comparacion.clinica_e_imagen.mejora_global_ic95" data-f="rangoSigno3"></span>) incluye el cero. Solo se evaluó en validación, y esta web no pide datos clínicos.</p>
         <h3>El límite de lo probado</h3>
-        <p>Con capacidad, resolución, entrada, resumen y localización variados, todas las configuraciones de 4 o 5 folds quedan entre <span data-v="seleccion.resumen.rango_4_o_5_folds.min" data-f="d3"></span> y <span data-v="seleccion.resumen.rango_4_o_5_folds.max" data-f="d3"></span>. Eso es lo que dio este planteamiento: una CNN 2D desde cero, un corte por paciente y ~<span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de entrenamiento. No probamos otros planteamientos (varios cortes, 3D, más datos), así que no sabemos si pasarían de aquí. Que el modelo de referencia del profesor llegue a <span data-v="comparacion.referencias.profesor.auc_test" data-f="d2"></span> sugiere que había margen.</p>
+        <p>Con capacidad, resolución, entrada, resumen y localización variados, todas las configuraciones de 4 o 5 folds quedan entre <span data-v="seleccion.resumen.rango_4_o_5_folds.min" data-f="d3"></span> y <span data-v="seleccion.resumen.rango_4_o_5_folds.max" data-f="d3"></span>. Eso es lo que dio este planteamiento: una CNN 2D desde cero, un corte por paciente y ~<span data-v="datos.train.pacientes" data-f="entero"></span> pacientes de entrenamiento. No probé otros planteamientos (varios cortes, 3D, más datos), así que no sé si pasarían de aquí. Que el modelo de referencia de la asignatura llegue a <span data-v="comparacion.referencias.referencia_asignatura.auc_test" data-f="d2"></span> indica que había margen.</p>
         <h3>Las imágenes saturan</h3>
         <p>En la zona que más realza, el <span data-v="saturacion.todas.early_255.fraccion_cortes" data-f="pct0"></span> de los cortes de train tiene más de la mitad de los píxeles a 255 en EARLY (y el <span data-v="saturacion.todas.late_255.fraccion_cortes" data-f="pct0"></span> en LATE). Con el tumor al máximo, ni cuánto realza ni cómo cambia de EARLY a LATE queda en la imagen. Es una limitación de los PNG de 8 bits del dataset, no del modelo: afecta igual a cualquier modelo que use estos PNG.</p>
       </div>

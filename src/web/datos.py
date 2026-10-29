@@ -4,7 +4,7 @@
 
 Cada cifra sale de results/ (los JSON y CSV que generan los scripts del proyecto), de la red
 (arquitectura, campo receptivo) o de docs/data/referencias.json (lo que no sale de results/:
-la referencia del profesor, Fridman et al., la licencia). La web no escribe ninguna cifra a mano.
+la referencia de la asignatura, Fridman et al., la licencia). La web no escribe ninguna cifra a mano.
 No se pasa ninguna imagen de test por ninguna red: de test solo se leen las predicciones ya
 guardadas en results/test/.
 """
@@ -294,6 +294,32 @@ def elegir_portada(ejemplos: list[dict]) -> dict:
 # Todo junto
 # --------------------------------------------------------------------------- #
 
+def agregacion(umbral: dict, extra: dict, conjunto: inferencia.Conjunto) -> dict:
+    """«¿Por que la media?»: los dos niveles de agregacion. Entre los cortes de una paciente se
+    compararon en validacion (AUC global fuera de fold con percentiles por fold, de
+    results/umbral); entre los 5 modelos no se pudo comparar (el conjunto solo se evalua en test),
+    asi que solo se da lo que muestra el problema del maximo: cuantas pacientes de test pone cada
+    modelo sobre el umbral (results/metricas_extra, descriptivo)."""
+    sobre = extra["modelos_en_test"]["pacientes_sobre_umbral"]
+    sueltos = [v for k, v in sobre.items() if k != "conjunto"]
+    return {"cortes_auc": umbral["normal"]["auc_por_agregacion"],
+            "modelos_sobre_umbral_test": {"min": min(sueltos), "max": max(sueltos),
+                                          "conjunto": sobre["conjunto"]},
+            "valores_voto": len(conjunto.redes) + 1}
+
+
+def baselines(cfgs: list[dict], test: dict, comb: dict) -> dict:
+    """Las lineas base del enunciado (13.3): «siempre no pCR» en test, el modelo clinico en
+    validacion y la red base de 4 bloques (la primera configuracion, sin regularizar, solo fold 0)."""
+    base = next(c for c in cfgs if c["configuracion"] == "16-32-64-128 · 256 px · media · normal · aum")
+    s = test["siempre_no_pcr"]
+    return {"siempre_no_pcr": {"auc": 0.5, "exactitud": s["exactitud"], "f1_macro": s["f1_macro"],
+                               "sensibilidad": s["sensibilidad"], "especificidad": s["especificidad"]},
+            "clinico": comb["clinica"],
+            "red_base": {"etiqueta": base["etiqueta"], "parametros": base["parametros"],
+                         "folds": base["folds"], "auc_medio": base["auc_medio"]}}
+
+
 def construir(conjunto: inferencia.Conjunto, ejemplos: list[dict]) -> dict:
     umbral, test = leer("umbral", "resumen.json"), leer("test", "resumen.json")
     comparacion, extra = leer("comparacion", "resumen.json"), leer("metricas_extra", "resumen.json")
@@ -327,9 +353,11 @@ def construir(conjunto: inferencia.Conjunto, ejemplos: list[dict]) -> dict:
             "umbral": curva_umbral(umbral),
             "atencion_supervisada": comparacion["atencion_supervisada"]},
         "test": resultados_test(test, extra),
+        "agregacion": agregacion(umbral, extra, conjunto),
         "comparacion": {"referencias": refs, "clinica_e_imagen": comb,
-                        "diferencia_profesor": refs["profesor"]["auc_test"]
+                        "diferencia_referencia": refs["referencia_asignatura"]["auc_test"]
                         - test["por_paciente"]["auc"]["auc"],
+                        "baselines": baselines(cfgs, test, comb),
                         "consistencia": {"icc": cons["icc"], "fraccion_pacientes_dos_lados": dos_lados},
                         "combinado": {"auc_por_fold": por_fold_combinado}},
         "saturacion": {"criterio": sat["criterio"], "todas": sat["todas"], "por_cohorte": sat["por_cohorte"]},

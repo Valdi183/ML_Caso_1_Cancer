@@ -814,11 +814,11 @@
      0.7456011824432878
     ],
     "auc_val": [
-     0.43567816091954026,
+     0.4356781609195402,
      0.5083218390804597,
-     0.48009195402298854,
+     0.4800919540229885,
      0.4971954022988506,
-     0.48836781609195407,
+     0.488367816091954,
      0.520551724137931,
      0.5374712643678161,
      0.4925057471264368,
@@ -1098,13 +1098,13 @@
      0.5681362333303981
     ],
     "sensibilidad_05": {
-     "media": 0.010666666666666668,
-     "desviacion": 0.02385139175999776,
+     "media": 0.010666666666666661,
+     "desviacion": 0.023851391759997745,
      "por_fold": [
       0.0,
       0.0,
       0.0,
-      0.05333333333333334,
+      0.0533333333333333,
       0.0
      ]
     },
@@ -1130,12 +1130,12 @@
      0.5566947469351415
     ],
     "sensibilidad_05": {
-     "media": 0.4173632677237106,
+     "media": 0.4173632677237105,
      "desviacion": 0.26372826616205386,
      "por_fold": [
       0.21875,
-      0.41935483870967744,
-      0.13559322033898305,
+      0.4193548387096774,
+      0.135593220338983,
       0.5066666666666667,
       0.8064516129032258
      ]
@@ -2596,18 +2596,30 @@
    "especificidad": 0.95
   }
  },
+ "agregacion": {
+  "cortes_auc": {
+   "mean": 0.5879863754758566,
+   "median": 0.5852614706471648,
+   "max": 0.5869785614105391,
+   "voto": 0.5496032859146464
+  },
+  "modelos_sobre_umbral_test": {
+   "min": 2,
+   "max": 56,
+   "conjunto": 10
+  },
+  "valores_voto": 6
+ },
  "comparacion": {
   "referencias": {
    "aviso": "Referencias externas del informe y de la web. Son la unica fuente de las cifras que no salen de results/: web/datos.json las copia de aqui (src/web/datos.py). Si cambian, se cambian aqui.",
-   "profesor": {
+   "referencia_asignatura": {
     "auc_test": 0.64,
     "rango_buen_trabajo": [
      0.6,
      0.7
     ],
-    "ic_semiancho": 0.08,
-    "restricciones": "un corte 2D, CNN desde cero, sin la caja del tumor ni variables clinicas",
-    "fuente": "comunicacion personal del profesor: correo del 14-10-2026 y respuesta en persona (28-10-2026). Es la referencia directa: cumple las mismas restricciones que este modelo."
+    "fuente": "material de la asignatura: modelo de referencia con AUC aproximado de 0,64 en test (meta realista). No se conoce su intervalo de confianza."
    },
    "fridman_2025": {
     "auc_test": 0.72,
@@ -2657,7 +2669,28 @@
    ],
    "pacientes": 1097
   },
-  "diferencia_profesor": 0.09559134836631389,
+  "diferencia_referencia": 0.09559134836631389,
+  "baselines": {
+   "siempre_no_pcr": {
+    "auc": 0.5,
+    "exactitud": 0.6988636363636364,
+    "f1_macro": 0.411371237458194,
+    "sensibilidad": 0.0,
+    "especificidad": 1.0
+   },
+   "clinico": {
+    "media": 0.6922992217299856,
+    "desviacion": 0.03222485925556891
+   },
+   "red_base": {
+    "etiqueta": "16-32-64-128 · 256 px · sin regularizar",
+    "parametros": 294129,
+    "folds": [
+     0
+    ],
+    "auc_medio": 0.5415456989247311
+   }
+  },
   "consistencia": {
    "icc": 0.9155940864094263,
    "fraccion_pacientes_dos_lados": 0.15496809480401094
